@@ -1,3 +1,4 @@
+ex de outputs: https://gu.pro.br/betake-records/
 
 ## esses scripts estão o mais simples possível pois estou sempre que possível testando, 
 
