@@ -8,7 +8,7 @@ pactl unload-module ladspa-sink;
 equalizer=f=800:width_type=h:width=100:g=-3,\
 deesser=f=1.0,\
 ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0.35,aecho=0.8:0.9:55:0.255,speechnorm=e=8:r=0.0001:l=1[avoc];\
-[avoc][1:a]amix=inputs=2:weights=0.6|0.4"\
+[avoc][1:a]amix=inputs=2:weights=0.4|0.6"\
 							${1}_go.mp3 -y;
 
 # [amixed]compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7" 
