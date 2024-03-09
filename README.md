@@ -51,26 +51,38 @@ Este comando ffmpeg é usado para processar um arquivo de áudio vocal (${1}_voc
 
 -filter_complex "...": Indica o início da cadeia de filtros complexos.
 
-[0:a]anlmdn=s=30,...: Aplica o filtro ANLMDN (Redução de Ruído Através da Mediana Adaptativa) com um nível de supressão de 30 para reduzir o ruído do áudio vocal de entrada.
+Redução de Ruído ANLMDN (anlmdn=s=30):
 
-equalizer=f=800:width_type=h:width=100:g=-3: Aplica um equalizador para realçar as frequências em torno de 800 Hz com uma largura de banda de 100 Hz e um ganho de -3 dB.
+Este filtro ANLMDN (Adaptive Non-Linear Median Denoising) é usado para reduzir o ruído de fundo no áudio vocal. Ele aplica uma técnica adaptativa de filtragem não linear que é eficaz na redução de ruídos de baixo nível e não estacionários.
+Equalização (equalizer=f=800:width_type=h:width=100:g=-3):
 
-deesser=f=1.0: Aplica o filtro de de-essing com um fator de 1.0 para reduzir a sibilância no áudio vocal.
+A equalização é usada para ajustar as características de frequência do áudio. Neste caso, a frequência central de 800 Hz é realçada com uma largura de banda de 100 Hz e um ganho de -3 dB. Isso pode ajudar a realçar certas frequências importantes no áudio vocal.
+Correção de Afinação (ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=444 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0.05 1.0 1.0):
 
-ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=444 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0.05 1.0 1.0: Aplica a correção de afinação usando o plugin Autotalent com os parâmetros especificados.
+Este filtro utiliza o plugin Autotalent através do LADSPA para aplicar correção de afinação ao áudio vocal. Os parâmetros fornecidos (como tom, escala, etc.) determinam o comportamento da correção de afinação.
+De-essing (deesser=f=0.25):
 
-aecho=0.8:0.9:1000:0.3: Adiciona um eco ao áudio vocal com os parâmetros especificados.
+O filtro de de-essing é usado para reduzir a sibilância no áudio vocal. O parâmetro f=0.25 ajusta a intensidade do efeito de de-essing.
+Eco (aecho=0.5:0.6:100:0.3):
 
-speechnorm=e=6:r=0.0001:l=1: Normaliza o volume do áudio vocal para um nível de energia de 6 dB com um tempo de resposta de 0.0001 segundos e um limite de amplitude de 1.
+O filtro de eco adiciona um efeito de eco ao áudio vocal. Os parâmetros especificam a taxa de feedback, o atraso inicial, a taxa de decaimento e a atenuação do eco.
+Normalização de Volume (speechnorm=e=6:r=0.0001:l=1):
 
-[avoc]: Indica o final da cadeia de filtros para o áudio vocal e atribui o nome [avoc] ao resultado.
+A normalização de volume é usada para ajustar o nível de volume do áudio vocal. Os parâmetros especificam o nível de energia alvo (e=6), o tempo de resposta (r=0.0001) e o limite de amplitude (l=1).
+Compressão/Expansão Dinâmica (compand=points=-90/-90|-70/-70|-30/-15|0/-15|20/-15):
 
-[avoc][1:a]amix=inputs=2:weights=0.7|0.3[amixed];: Mistura os áudios vocal e instrumental usando a proporção de 70% para o áudio vocal e 30% para o áudio instrumental.
+O filtro de compressão/expansão é usado para ajustar a faixa dinâmica do áudio. Os pontos de curva especificados determinam como a compressão/expansão é aplicada em diferentes níveis de sinal.
+Divisão de Áudio (asplit=2[bg][fg]):
 
-[amixed]compand=points=-90/-90|-70/-70|-30/-15|0/-15|20/-15[w]: Aplica o filtro compand para comprimir/expansão o áudio com os pontos de curva especificados.
+Este filtro divide o áudio vocal e o áudio de fundo em dois fluxos separados.
+Sidechain Compress ([fg][bg]sidechaincompress=threshold=0.5:ratio=5:attack=0.1:release=0.1[side]):
 
--map "[w]": Define a saída do mapa para o resultado do compand.
+Este filtro comprime o áudio de fundo (bg) com base na energia do áudio vocal (fg). Isso ajuda a garantir que a voz permaneça audível mesmo quando a música de fundo estiver mais alta.
+Mixagem de Áudio ([bg][side]amix=inputs=2[audio]):
 
-${1}_go.mp3: Especifica o nome do arquivo de saída, que será convertido para o formato MP3.
-
--y: Sobrescreve o arquivo de saída se ele já existir.
+Este filtro mistura o áudio de fundo comprimido (bg) com o áudio vocal original (side). Os pesos dos inputs são determinados pela compressão sidechain.
+Mapeamento de Saída (-map "[audio]"):
+Define a saída do áudio misturado como a saída final.
+Salvando o Áudio (${1}_go.mp3 -y):
+Salva o áudio finalizado em um arquivo MP3 com o nome especificado.
+Essas são as operações realizadas no comando ffmpeg para processar o áudio vocal e instrumental. Cada filtro desempenha um papel específico na manipulação do áudio para alcançar o resultado desejado. Os filtros na ordem errada podem prejudicar muito a qualidade do resultado!!!!!
