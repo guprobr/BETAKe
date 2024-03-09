@@ -7,10 +7,10 @@ pactl unload-module ladspa-sink;
 [0:a]anlmdn=s=3,\
 deesser=f=0.25,\
 ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=444 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0.05 1.0 1.0,\
-aecho=0.8:0.9:1000:0.3,\
+aecho=0.8:0.9:100:0.3,\
 speechnorm=e=6:r=0.0001:l=1,\
-equalizer=f=800:width_type=h:width=100:g=-3,\
 compand=points=-90/-90|-70/-70|-30/-15|0/-15|20/-15[avoc];\
+equalizer=f=800:width_type=h:width=100:g=-3,\
 [avoc][1:a]amix=inputs=2:weights=0.7|0.3;\
 " ${1}_go.mp3 -y;
 
