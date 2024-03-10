@@ -9,7 +9,7 @@ ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440.000 0.000 0.000
 deesser=f=0.1,\
 dynaudnorm,\
 speechnorm,\
-aecho=0.8:0.8:300:0.3,\
+aecho=0.8:0.8:169:0.3,\
 compand=points=-90/-90|-70/-70|-30/-15|0/-15|20/-15,\
 equalizer=f=100:width_type=q:width=2:g=-3,\
 highpass=f=100,lowpass=f=15000,\
