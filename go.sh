@@ -14,7 +14,7 @@ aecho=0.8:0.9:69:0.255,\
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,\
 aresample=resampler=soxr:osf=s16[avoc];\
 [1:a]aresample=resampler=soxr:osf=s16[a1];\
-[avoc][a1]amix=inputs=2;"\
+[avoc][a1]amix=inputs=2:weights=0.6|0.4;"\
  ${1}_go.mp3 -y;
 
 
