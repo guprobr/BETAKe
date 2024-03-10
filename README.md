@@ -51,36 +51,45 @@ Este comando ffmpeg é usado para processar um arquivo de áudio vocal (${1}_voc
 
 -filter_complex "...": Indica o início da cadeia de filtros complexos.
 
-Input Files:
+Vou descrever cada uma das técnicas utilizadas no comando e como elas se relacionam, explicando sua relevância e a ordem em que são aplicadas:
 
-${1}_voc.wav: Represents the input vocal audio file.
-${1}.wav: Represents the input instrumental audio file.
-Filter Complex:
+anlmdn (Noise Reduction):
 
-[0:a]: Selects the audio stream from the first input file (vocal audio).
-anlmdn=s=10: Applies noise reduction using the anlmdn filter with a suppression value of 10 dB.
-ladspa: Applies the autotalent LADSPA plugin with specified parameters for pitch correction.
-deesser: Reduces sibilance in the vocal audio.
-dynaudnorm: Normalizes the audio volume dynamically.
-speechnorm: Normalizes the speech level.
-aecho: Adds an echo effect to the vocal audio with specified parameters.
-compand: Applies compression and expansion to the audio waveform.
-equalizer: Applies equalization to adjust the frequency response.
-highpass and lowpass: Filters out frequencies below 100 Hz and above 15 kHz respectively.
-stereowiden: Widens the stereo image of the audio.
-acontrast: Adjusts the contrast of the audio.
-alimiter: Applies limiting to prevent clipping.
-aformat: Specifies the audio format.
-aresample: Resamples the audio to the desired output format.
-Output:
+O filtro ANLMDN é usado para reduzir o ruído de fundo indesejado presente na gravação de áudio, especialmente em faixas vocais. Ele usa um algoritmo avançado para identificar e atenuar o ruído sem afetar negativamente o sinal de áudio principal.
+ladspa (Auto-Tune):
 
-[avoc]: Represents the processed vocal audio stream.
-[1:a]: Selects the audio stream from the second input file (instrumental audio).
-[a1]: Represents the processed instrumental audio stream.
-[avoc][a1]: Mixes the processed vocal and instrumental audio streams.
-amix=inputs=2:weights=0.6|0.4: Mixes the vocal and instrumental audio streams with specified weights (60% for vocals and 40% for instrumental).
-${1}_go.mp3: Represents the output file name in MP3 format.
-Overall, this command applies various audio processing filters to enhance the vocal and instrumental audio and then mixes them to produce the final MP3 output.
+O plug-in LADSPA com o autotune é empregado para ajustar automaticamente o tom e a afinação do áudio vocal. Os parâmetros fornecidos (como frequência central, amplitude e largura do filtro) controlam a intensidade e a natureza do efeito de afinação.
+deesser (Sibilance Reduction):
+
+O filtro deesser é usado para atenuar as frequências de sibilância excessivas presentes na voz, como "s" e "sh". Ele suaviza essas frequências agudas para tornar o áudio mais agradável ao ouvido.
+dynaudnorm (Dynamic Audio Normalization):
+
+Esse filtro normaliza dinamicamente o volume do áudio, ajustando os níveis de amplitude ao longo do tempo. Ele garante uma consistência de volume adequada em toda a faixa de áudio, evitando picos e quedas repentinas.
+speechnorm (Speech Normalization):
+
+O speechnorm é usado para normalizar o nível de áudio específico da fala. Ele ajusta a intensidade do áudio para um nível padronizado, o que é útil para garantir uma audição confortável e consistente em diferentes tipos de gravações vocais.
+compand (Compression and Expansion):
+
+O compand é um filtro que combina compressão e expansão para controlar a faixa dinâmica do áudio. Ele reduz os picos de volume excessivos e aumenta os sons mais silenciosos, resultando em um áudio mais equilibrado e consistente.
+equalizer (Equalization):
+
+Esse filtro é usado para ajustar a resposta de frequência do áudio, realçando ou atenuando determinadas frequências conforme necessário. No caso deste comando, ele ajusta as frequências na faixa de 100 Hz a 15 kHz para melhorar a qualidade geral do áudio.
+highpass e lowpass (High-pass e Low-pass Filters):
+
+Esses filtros removem frequências indesejadas acima (high-pass) e abaixo (low-pass) de determinados limites de frequência. Eles são usados para limpar o áudio de ruídos de baixa frequência (como zumbidos) e de alta frequência (como chiados), melhorando a clareza geral do som.
+stereowiden (Stereo Widening):
+
+Esse filtro amplia a imagem estéreo do áudio, aumentando a separação entre os canais esquerdo e direito. Ele cria uma sensação mais ampla e espacializada de som, o que pode melhorar a experiência auditiva.
+acontrast (Audio Contrast):
+
+O acontrast é usado para ajustar o contraste do áudio, realçando diferenças de volume entre elementos sonoros específicos. Ele pode ajudar a destacar certos elementos musicais ou vocais em relação ao resto da mixagem.
+alimiter (Audio Limiter):
+Esse filtro limita o volume máximo do áudio para evitar distorção e estouro. Ele garante que o áudio permaneça dentro de limites seguros de volume, protegendo contra picos repentinos que possam causar danos aos alto-falantes ou prejudicar a qualidade do som.
+aformat (Audio Format Conversion):
+O aformat converte o formato do áudio para o desejado, especificando a taxa de amostragem, o formato de amostra e o layout de canal desejados.
+aresample (Audio Resampling):
+Esse filtro é usado para alterar a taxa de amostragem do áudio, garantindo que corresponda ao formato de saída desejado.
+Após aplicar esses filtros ao áudio vocal e instrumental, eles são misturados usando o filtro amix, que combina os dois sinais de áudio com pesos especificados (80% para o vocal e 20% para o instrumental) para criar a mixagem final. O resultado é exportado como um arquivo MP3 com o nome ${1}_go.mp3.
 
 Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas. Você pode fazer isso usando o filtro aresample do FFmpeg
  
