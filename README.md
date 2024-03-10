@@ -40,56 +40,43 @@ GO NUTS, ppl!
 No Ubuntu instale esses pacotes e ele vai puxar as dependencias: sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils;
 
 
+O comando ffmpeg fornecido processa dois arquivos de áudio de entrada (${1}_voc.wav e ${1}.wav) e aplica uma série de filtros para aprimorar e misturar o áudio. Aqui está uma explicação do comando:
 
-Este comando ffmpeg é usado para processar um arquivo de áudio vocal (${1}_voc.wav) e um arquivo de áudio instrumental (${1}.wav). Aqui está uma explicação passo a passo do comando:
+ffmpeg -i ${1}_voc.wav -i ${1}.wav -filter_complex \
+-i ${1}_voc.wav: Especifica o primeiro arquivo de áudio de entrada, que contém a voz.
+-i ${1}.wav: Especifica o segundo arquivo de áudio de entrada, que contém a música.
+-filter_complex: Indica o início da cadeia de filtros complexos.
+Aqui está a cadeia de filtros complexos:
 
--loglevel info: Define o nível de detalhamento do log para "info", o que significa que apenas mensagens informativas serão exibidas durante a execução do comando.
 
--i ${1}_voc.wav: Especifica o arquivo de áudio de voz de entrada.
+"[0:a]anlmdn=s=25,\
+equalizer=f=800:width_type=h:width=100:g=-6,\
+deesser=f=0.95,\
+ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 1.0000,\
+alimiter,\
+speechnorm=e=50:r=0.0001:l=1,\
+aecho=0.8:0.9:111:0.255,\
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,\
+aresample=resampler=soxr:osf=s16[avoc];\
+[0:a]: Indica que o filtro será aplicado ao primeiro arquivo de áudio de entrada (a voz).
+anlmdn=s=25: Aplica uma redução de ruído usando o filtro anlmdn, com um nível de sensibilidade de 25.
+equalizer=f=800:width_type=h:width=100:g=-6: Aplica um equalizador para ajustar a resposta de frequência, reduzindo em 6dB a amplitude dos graves a 800Hz.
+deesser=f=0.95: Aplica um filtro de de-esser para reduzir sibilâncias indesejadas na voz.
+ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440 ...: Aplica o plugin Autotalent usando o Ladspa, ajustando as configurações especificadas.
+alimiter: Aplica um limitador de áudio para evitar picos de volume excessivos.
+speechnorm=e=50:r=0.0001:l=1: Normaliza o nível de volume do áudio da voz.
+aecho=0.8:0.9:33:0.255: Adiciona um efeito de eco com as configurações especificadas.
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo: Define o formato de áudio de saída para ponto flutuante de 32 bits, taxa de amostragem de 44100Hz e layout de canais estéreo.
+aresample=resampler=soxr:osf=s16: Usa o resample para converter a saída para o formato desejado.
+Agora, a mistura dos áudios é feita com o seguinte trecho:
 
--i ${1}.wav: Especifica o arquivo de áudio instrumental de entrada.
 
--filter_complex "...": Indica o início da cadeia de filtros complexos.
-
-Vou descrever cada uma das técnicas utilizadas no comando e como elas se relacionam, explicando sua relevância e a ordem em que são aplicadas:
-
-anlmdn (Noise Reduction):
-
-O filtro ANLMDN é usado para reduzir o ruído de fundo indesejado presente na gravação de áudio, especialmente em faixas vocais. Ele usa um algoritmo avançado para identificar e atenuar o ruído sem afetar negativamente o sinal de áudio principal.
-ladspa (Auto-Tune):
-
-O plug-in LADSPA com o autotune é empregado para ajustar automaticamente o tom e a afinação do áudio vocal. Os parâmetros fornecidos (como frequência central, amplitude e largura do filtro) controlam a intensidade e a natureza do efeito de afinação.
-deesser (Sibilance Reduction):
-
-O filtro deesser é usado para atenuar as frequências de sibilância excessivas presentes na voz, como "s" e "sh". Ele suaviza essas frequências agudas para tornar o áudio mais agradável ao ouvido.
-dynaudnorm (Dynamic Audio Normalization):
-
-Esse filtro normaliza dinamicamente o volume do áudio, ajustando os níveis de amplitude ao longo do tempo. Ele garante uma consistência de volume adequada em toda a faixa de áudio, evitando picos e quedas repentinas.
-speechnorm (Speech Normalization):
-
-O speechnorm é usado para normalizar o nível de áudio específico da fala. Ele ajusta a intensidade do áudio para um nível padronizado, o que é útil para garantir uma audição confortável e consistente em diferentes tipos de gravações vocais.
-compand (Compression and Expansion):
-
-O compand é um filtro que combina compressão e expansão para controlar a faixa dinâmica do áudio. Ele reduz os picos de volume excessivos e aumenta os sons mais silenciosos, resultando em um áudio mais equilibrado e consistente.
-equalizer (Equalization):
-
-Esse filtro é usado para ajustar a resposta de frequência do áudio, realçando ou atenuando determinadas frequências conforme necessário. No caso deste comando, ele ajusta as frequências na faixa de 100 Hz a 15 kHz para melhorar a qualidade geral do áudio.
-highpass e lowpass (High-pass e Low-pass Filters):
-
-Esses filtros removem frequências indesejadas acima (high-pass) e abaixo (low-pass) de determinados limites de frequência. Eles são usados para limpar o áudio de ruídos de baixa frequência (como zumbidos) e de alta frequência (como chiados), melhorando a clareza geral do som.
-stereowiden (Stereo Widening):
-
-Esse filtro amplia a imagem estéreo do áudio, aumentando a separação entre os canais esquerdo e direito. Ele cria uma sensação mais ampla e espacializada de som, o que pode melhorar a experiência auditiva.
-acontrast (Audio Contrast):
-
-O acontrast é usado para ajustar o contraste do áudio, realçando diferenças de volume entre elementos sonoros específicos. Ele pode ajudar a destacar certos elementos musicais ou vocais em relação ao resto da mixagem.
-alimiter (Audio Limiter):
-Esse filtro limita o volume máximo do áudio para evitar distorção e estouro. Ele garante que o áudio permaneça dentro de limites seguros de volume, protegendo contra picos repentinos que possam causar danos aos alto-falantes ou prejudicar a qualidade do som.
-aformat (Audio Format Conversion):
-O aformat converte o formato do áudio para o desejado, especificando a taxa de amostragem, o formato de amostra e o layout de canal desejados.
-aresample (Audio Resampling):
-Esse filtro é usado para alterar a taxa de amostragem do áudio, garantindo que corresponda ao formato de saída desejado.
-Após aplicar esses filtros ao áudio vocal e instrumental, eles são misturados usando o filtro amix, que combina os dois sinais de áudio com pesos especificados (80% para o vocal e 20% para o instrumental) para criar a mixagem final. O resultado é exportado como um arquivo MP3 com o nome ${1}_go.mp3.
+[1:a]aresample=resampler=soxr:osf=s16[a1];\
+[avoc][a1]amix=inputs=2;"\
+[1:a]: Indica que o filtro será aplicado ao segundo arquivo de áudio de entrada (a música).
+aresample=resampler=soxr:osf=s16[a1]: Usa o resample para converter a saída para o formato desejado.
+[avoc][a1]amix=inputs=2: Mistura os dois áudios de entrada (voz e música) com pesos iguais.
+Por fim, o áudio resultante é salvo como ${1}_go.mp3 com o parâmetro -y para confirmar a sobregravação, se necessário.
 
 Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas. Você pode fazer isso usando o filtro aresample do FFmpeg
  
