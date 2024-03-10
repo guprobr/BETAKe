@@ -50,8 +50,10 @@ GO NUTS, ppl!
 No Ubuntu instale esses pacotes e ele vai puxar as dependencias: sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils;
 
 
-O comando ffmpeg fornecido processa dois arquivos de áudio de entrada (${1}_voc.wav e ${1}.wav) e aplica uma série de filtros para aprimorar e misturar o áudio. Aqui está uma explicação do comando:
+O comando ffmpeg fornecido processa dois arquivos de áudio de entrada (${1}_voc.wav e ${1}.wav) e aplica uma série de filtros para aprimorar e misturar o áudio. 
+Aqui está uma explicação do comando:
 
+```markdown
 ## Processamento de Áudio com FFmpeg
 
 Este é um exemplo de comando `ffmpeg` para processamento de áudio usando uma cadeia de filtros complexos. O comando realiza várias operações, incluindo redução de ruído, equalização, aplicação de efeitos, normalização e mistura de áudio.
@@ -72,18 +74,20 @@ aresample=resampler=soxr:osf=s16[avoc];\
  ${1}_go.mp3 -y;
 ```
 
-## Descrição do Processamento:
+### Descrição do Processamento:
 
-anlmdn=s=25: Redução de ruído com sensibilidade de 25.
-equalizer=f=800:width_type=h:width=100:g=-6: Equalização para ajustar a resposta de frequência.
-deesser=f=0.95: Filtro de de-esser para reduzir sibilâncias.
-ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440 ...: Aplicação do plugin Autotalent.
-alimiter: Limitação de áudio para evitar picos de volume.
-speechnorm=e=50:r=0.0001:l=1: Normalização do nível de volume do áudio da voz.
-aecho=0.8:0.9:111:0.255: Adição de um efeito de eco.
-aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo: Definição do formato de áudio de saída.
-aresample=resampler=soxr:osf=s16: Conversão da saída para o formato desejado.
-A música resultante é salva como ${1}_go.mp3.
+- `anlmdn=s=25`: Redução de ruído com sensibilidade de 25.
+- `equalizer=f=800:width_type=h:width=100:g=-6`: Equalização para ajustar a resposta de frequência.
+- `deesser=f=0.95`: Filtro de de-esser para reduzir sibilâncias.
+- `ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440 ...`: Aplicação do plugin Autotalent.
+- `alimiter`: Limitação de áudio para evitar picos de volume.
+- `speechnorm=e=50:r=0.0001:l=1`: Normalização do nível de volume do áudio da voz.
+- `aecho=0.8:0.9:111:0.255`: Adição de um efeito de eco.
+- `aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo`: Definição do formato de áudio de saída.
+- `aresample=resampler=soxr:osf=s16`: Conversão da saída para o formato desejado.
+
+A música resultante é salva como `${1}_go.mp3`.
+```
 
 * Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas.
 * Você pode fazer isso usando o filtro aresample do FFmpeg
