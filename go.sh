@@ -6,7 +6,7 @@ pactl unload-module ladspa-sink;
 	ffmpeg -loglevel info -i ${1}_voc.wav -i ${1}.wav -filter_complex \
 "[0:a]anlmdn=s=30,\
 equalizer=f=800:width_type=h:width=100:g=-3,\
-ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=444 0 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0 0 0 0 0 0 1 1,\
+ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440.000 -10.763 0.000 0 -1 0 -1 0 0 -1 0 -1 0 -1 0 1.000 1.000 0.000 0 0.000 5.412 1.000 1.000 0.000 1.00,\
 deesser=f=1,\
 aecho=0.5:0.6:100:0.3,\
 speechnorm=e=6:r=0.0001:l=1,\
