@@ -19,7 +19,7 @@ alimiter=level_in=0.5:attack=0.1:release=1,\
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,\
 aresample=resampler=soxr:osf=s16,volume=volume=0.2dB[avoc];\
 [1:a]aresample=resampler=soxr:osf=s16,volume=volume=-2dB[a1];\
-[avoc][a1]amix=inputs=2:weights=0.6|0.8;"\
+[avoc][a1]amix=inputs=2:weights=1.0|0.6;"\
  ${1}_go.mp3 -y;
 
 
