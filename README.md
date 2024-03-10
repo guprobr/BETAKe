@@ -51,38 +51,36 @@ Este comando ffmpeg é usado para processar um arquivo de áudio vocal (${1}_voc
 
 -filter_complex "...": Indica o início da cadeia de filtros complexos.
 
-Redução de Ruído ANLMDN (anlmdn=s=30):
+Redução de Ruído (ANLMDN):
 
-Este filtro ANLMDN (Adaptive Non-Linear Median Denoising) é usado para reduzir o ruído de fundo no áudio vocal. Ele aplica uma técnica adaptativa de filtragem não linear que é eficaz na redução de ruídos de baixo nível e não estacionários.
-Equalização (equalizer=f=800:width_type=h:width=100:g=-3):
+O filtro ANLMDN é usado para reduzir o ruído de fundo indesejado no áudio vocal. Ele emprega uma técnica adaptativa de filtragem não linear que é eficaz na remoção de ruídos de baixo nível e não estacionários.
+Equalização:
 
-A equalização é usada para ajustar as características de frequência do áudio. Neste caso, a frequência central de 800 Hz é realçada com uma largura de banda de 100 Hz e um ganho de -3 dB. Isso pode ajudar a realçar certas frequências importantes no áudio vocal.
-Correção de Afinação (ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=444 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0.05 1.0 1.0):
+O equalizador é usado para ajustar as características de frequência do áudio. Neste caso, estamos realçando as frequências em torno de 800 Hz com uma largura de banda de 100 Hz e atenuando em 3 dB. Isso pode ajudar a realçar certas frequências importantes na voz.
+Correção de Afinação (Autotalent):
 
-Este filtro utiliza o plugin Autotalent através do LADSPA para aplicar correção de afinação ao áudio vocal. Os parâmetros fornecidos (como tom, escala, etc.) determinam o comportamento da correção de afinação.
-De-essing (deesser=f=0.25):
+O plugin Autotalent é utilizado para realizar a correção automática de afinação na voz. Ele ajusta automaticamente a afinação da voz de acordo com os parâmetros especificados.
+De-essing:
 
-O filtro de de-essing é usado para reduzir a sibilância no áudio vocal. O parâmetro f=0.25 ajusta a intensidade do efeito de de-essing.
-Eco (aecho=0.5:0.6:100:0.3):
+O filtro de de-essing é usado para reduzir a sibilância ou os sons sibilantes na voz. Isso é feito atenuando as frequências agudas que podem causar sibilância.
+Eco:
 
-O filtro de eco adiciona um efeito de eco ao áudio vocal. Os parâmetros especificam a taxa de feedback, o atraso inicial, a taxa de decaimento e a atenuação do eco.
-Normalização de Volume (speechnorm=e=6:r=0.0001:l=1):
+O filtro de eco adiciona um efeito de eco ao áudio vocal. Ele cria repetições suaves do áudio original, dando uma sensação de espaço e profundidade.
+Normalização de Volume:
 
-A normalização de volume é usada para ajustar o nível de volume do áudio vocal. Os parâmetros especificam o nível de energia alvo (e=6), o tempo de resposta (r=0.0001) e o limite de amplitude (l=1).
-Compressão/Expansão Dinâmica (compand=points=-90/-90|-70/-70|-30/-15|0/-15|20/-15):
+A normalização de volume é usada para ajustar o nível de volume do áudio vocal. Isso garante que o áudio tenha um volume consistente e adequado para a reprodução.
+Compressão/Expansão Dinâmica:
 
-O filtro de compressão/expansão é usado para ajustar a faixa dinâmica do áudio. Os pontos de curva especificados determinam como a compressão/expansão é aplicada em diferentes níveis de sinal.
-Divisão de Áudio (asplit=2[bg][fg]):
+O filtro de compand é usado para controlar a dinâmica do áudio. Ele comprime as partes mais altas do áudio enquanto expande as partes mais baixas, reduzindo assim a faixa dinâmica.
+Divisão de Áudio (asplit):
 
-Este filtro divide o áudio vocal e o áudio de fundo em dois fluxos separados.
-Sidechain Compress ([fg][bg]sidechaincompress=threshold=0.5:ratio=5:attack=0.1:release=0.1[side]):
+O áudio de entrada é dividido em dois fluxos separados: um que será processado e o outro que será usado como referência para a compressão sidechain.
+Compressão Sidechain (sidechaincompress):
 
-Este filtro comprime o áudio de fundo (bg) com base na energia do áudio vocal (fg). Isso ajuda a garantir que a voz permaneça audível mesmo quando a música de fundo estiver mais alta.
-Mixagem de Áudio ([bg][side]amix=inputs=2[audio]):
+Este filtro comprime o áudio de fundo com base na energia do áudio vocal. Isso permite que a voz permaneça audível mesmo quando a música de fundo estiver mais alta.
+Mixagem de Áudio (amix):
 
-Este filtro mistura o áudio de fundo comprimido (bg) com o áudio vocal original (side). Os pesos dos inputs são determinados pela compressão sidechain.
-Mapeamento de Saída (-map "[audio]"):
-Define a saída do áudio misturado como a saída final.
+Finalmente, os áudios comprimidos e não comprimidos são misturados novamente para criar o áudio final. Isso garante que a voz e a música de fundo sejam combinadas de forma equilibrada, levando em consideração a compressão sidechain aplicada.
 Salvando o Áudio (${1}_go.mp3 -y):
 Salva o áudio finalizado em um arquivo MP3 com o nome especificado.
 Essas são as operações realizadas no comando ffmpeg para processar o áudio vocal e instrumental. Cada filtro desempenha um papel específico na manipulação do áudio para alcançar o resultado desejado. Os filtros na ordem errada podem prejudicar muito a qualidade do resultado!!!!!
