@@ -51,36 +51,37 @@ Este comando ffmpeg é usado para processar um arquivo de áudio vocal (${1}_voc
 
 -filter_complex "...": Indica o início da cadeia de filtros complexos.
 
-Redução de Ruído (ANLMDN):
+Input Files:
 
-O filtro ANLMDN é usado para reduzir o ruído de fundo indesejado no áudio vocal. Ele emprega uma técnica adaptativa de filtragem não linear que é eficaz na remoção de ruídos de baixo nível e não estacionários.
-Equalização:
+${1}_voc.wav: Represents the input vocal audio file.
+${1}.wav: Represents the input instrumental audio file.
+Filter Complex:
 
-O equalizador é usado para ajustar as características de frequência do áudio. Neste caso, estamos realçando as frequências em torno de 800 Hz com uma largura de banda de 100 Hz e atenuando em 3 dB. Isso pode ajudar a realçar certas frequências importantes na voz.
-Correção de Afinação (Autotalent):
+[0:a]: Selects the audio stream from the first input file (vocal audio).
+anlmdn=s=10: Applies noise reduction using the anlmdn filter with a suppression value of 10 dB.
+ladspa: Applies the autotalent LADSPA plugin with specified parameters for pitch correction.
+deesser: Reduces sibilance in the vocal audio.
+dynaudnorm: Normalizes the audio volume dynamically.
+speechnorm: Normalizes the speech level.
+aecho: Adds an echo effect to the vocal audio with specified parameters.
+compand: Applies compression and expansion to the audio waveform.
+equalizer: Applies equalization to adjust the frequency response.
+highpass and lowpass: Filters out frequencies below 100 Hz and above 15 kHz respectively.
+stereowiden: Widens the stereo image of the audio.
+acontrast: Adjusts the contrast of the audio.
+alimiter: Applies limiting to prevent clipping.
+aformat: Specifies the audio format.
+aresample: Resamples the audio to the desired output format.
+Output:
 
-O plugin Autotalent é utilizado para realizar a correção automática de afinação na voz. Ele ajusta automaticamente a afinação da voz de acordo com os parâmetros especificados.
-De-essing:
+[avoc]: Represents the processed vocal audio stream.
+[1:a]: Selects the audio stream from the second input file (instrumental audio).
+[a1]: Represents the processed instrumental audio stream.
+[avoc][a1]: Mixes the processed vocal and instrumental audio streams.
+amix=inputs=2:weights=0.6|0.4: Mixes the vocal and instrumental audio streams with specified weights (60% for vocals and 40% for instrumental).
+${1}_go.mp3: Represents the output file name in MP3 format.
+Overall, this command applies various audio processing filters to enhance the vocal and instrumental audio and then mixes them to produce the final MP3 output.
 
-O filtro de de-essing é usado para reduzir a sibilância ou os sons sibilantes na voz. Isso é feito atenuando as frequências agudas que podem causar sibilância.
-Eco:
-
-O filtro de eco adiciona um efeito de eco ao áudio vocal. Ele cria repetições suaves do áudio original, dando uma sensação de espaço e profundidade.
-Normalização de Volume:
-
-A normalização de volume é usada para ajustar o nível de volume do áudio vocal. Isso garante que o áudio tenha um volume consistente e adequado para a reprodução.
-Compressão/Expansão Dinâmica:
-
-O filtro de compand é usado para controlar a dinâmica do áudio. Ele comprime as partes mais altas do áudio enquanto expande as partes mais baixas, reduzindo assim a faixa dinâmica.
-Divisão de Áudio (asplit):
-
-O áudio de entrada é dividido em dois fluxos separados: um que será processado e o outro que será usado como referência para a compressão sidechain.
-Compressão Sidechain (sidechaincompress):
-
-Este filtro comprime o áudio de fundo com base na energia do áudio vocal. Isso permite que a voz permaneça audível mesmo quando a música de fundo estiver mais alta.
-Mixagem de Áudio (amix):
-
-Finalmente, os áudios comprimidos e não comprimidos são misturados novamente para criar o áudio final. Isso garante que a voz e a música de fundo sejam combinadas de forma equilibrada, levando em consideração a compressão sidechain aplicada.
-Salvando o Áudio (${1}_go.mp3 -y):
-Salva o áudio finalizado em um arquivo MP3 com o nome especificado.
+Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas. Você pode fazer isso usando o filtro aresample do FFmpeg
+ 
 Essas são as operações realizadas no comando ffmpeg para processar o áudio vocal e instrumental. Cada filtro desempenha um papel específico na manipulação do áudio para alcançar o resultado desejado. Os filtros na ordem errada podem prejudicar muito a qualidade do resultado!!!!!
