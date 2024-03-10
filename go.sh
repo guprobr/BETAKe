@@ -11,9 +11,11 @@ deesser=f=0.25,\
 aecho=0.5:0.6:100:0.3,\
 speechnorm=e=6:r=0.0001:l=1,\
 compand=points=-90/-90|-70/-70|-30/-15|0/-15|20/-15[avoc];\
-[1:a][avoc]sidechaincompress=threshold=0.5:ratio=5:attack=0.1:release=0.1[side];\
-[1:a][side]amix=inputs=2:duration=first[audio]\
-" -map "[audio]" ${1}_go.mp3 -y;
+[1:a]volume=volume=-20dB[a1];\
+[avoc]volume=volume=-15dB[a2];\
+[a1][a2]amix=inputs=2:weights=1|1[audio]\
+" ${1}_go.mp3 -y;
+
 
 
 echo  "PLAY!";
