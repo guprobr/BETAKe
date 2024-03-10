@@ -13,7 +13,7 @@ speechnorm=e=6:r=0.0001:l=1,\
 compand=points=-90/-90|-70/-70|-30/-15|0/-15|20/-15[avoc];\
 [1:a]volume=volume=-20dB[a1];\
 [avoc]volume=volume=-15dB[a2];\
-[a1][a2]amix=inputs=2:weights=1|1[audio]\
+[a1][a2]amix=inputs=2:weights=1|1;\
 " ${1}_go.mp3 -y;
 
 
