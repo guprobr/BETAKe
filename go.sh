@@ -10,7 +10,7 @@ deesser=f=0.95,\
 ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 1.0000,\
 alimiter,\
 speechnorm=e=50:r=0.0001:l=1,\
-aecho=0.8:0.9:111:0.255,\
+aecho=0.8:0.9:33:0.255,\
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,\
 aresample=resampler=soxr:osf=s16[avoc];\
 [1:a]aresample=resampler=soxr:osf=s16[a1];\
