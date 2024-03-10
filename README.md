@@ -9,9 +9,16 @@ DE FORMA ALGUMA ISSO já é UMA APLICAÇÃO PARA USUÁRIO FINAL!
 * Para flexibilidade, separei em dois scripts. 
 * Os playbacks devem ser formato WAV de preferencia nao ADPCM Microsoft.
 * Coloque os playback na mesma pasta, ex, "We_are_the_Champions.wav"
-
-Nunca grave sem fones de ouvido, pois não é para gravar a saída do playback no arquivo da voz.
-O arquivo de voz gravado passa por processos de transformação e filtros, que o timbre dos instrumentos não é válido para o algoritmo.
+* Nunca grave sem fones de ouvido, pois não é para gravar a saída do playback no arquivo da voz.
+* O arquivo de voz gravado passa por processos de transformação e filtros, que o timbre dos instrumentos não é válido para o algoritmo.
+* o princípio de todo bom resultado é ajustar o volume do microfone
+* volume de input mto alto vai distorcer sua voz
+* gritar não é cantar, mas se quiser pode, só vai ficar ruim seu karaoke
+* teste antes de pegar o  jeito, o volume do microfone em si que resulta numa voz decente
+* depois também ajuste o volume do playback se necessario, isso é outra fonte de empecilhos para um bom resultado
+* quando você roda o script *yeah.sh* ele aciona o módulo de loopback do input,
+* para q você ouça sua própria voz quando estiver gravando
+* também para ajustar antes de gravar definitivamente, sua voz o microfone em função do volume do playback
 
 para gravar você usa: 
 
