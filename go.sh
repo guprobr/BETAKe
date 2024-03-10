@@ -11,10 +11,11 @@ deesser=f=0.25,\
 aecho=0.5:0.6:100:0.3,\
 speechnorm=e=6:r=0.0001:l=1,\
 compand=points=-90/-90|-70/-70|-30/-15|0/-15|20/-15[avoc];\
-[1:a]aresample=resampler=soxr:osf=s16:aos=48000,volume=volume=-5dB[a1];\
-[avoc]aresample=resampler=soxr:osf=s16:aos=48000,volume=volume=0dB[a2];\
+[1:a]aresample=resampler=soxr:osf=s16,volume=volume=-5dB[a1];\
+[avoc]aresample=resampler=soxr:osf=s16,volume=volume=0dB[a2];\
 [a1][a2]amix=inputs=2:weights=0.3|0.6;"\
  ${1}_go.mp3 -y;
+
 
 echo  "PLAY!";
 mplayer ${1}_go.mp3;
