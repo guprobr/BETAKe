@@ -9,7 +9,7 @@ ffmpeg -hide_banner -thread_queue_size 8291 -filter_complex_threads 64 -i ${1}_v
 anlmdn=s=1000,\
 dynaudnorm,\
 
-ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:\
+ladspa=tap_autotalent:plugin=autotalent:\
 c=440 0.0 0.000 \
 0 0 0 0 0 0 0 0 0 0 0 0 \
 1.00 1.000 0.000 0 \
