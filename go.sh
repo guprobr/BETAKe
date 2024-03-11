@@ -3,7 +3,7 @@
 pactl unload-module module-loopback;
 pactl unload-module ladspa-sink;
 
-ffmpeg -hide_banner -thread_queue_size 8291 -filter_complex_threads 64 -i ${1}_voc.wav -i ${1}.wav -filter_complex "\
+ffmpeg -hide_banner   -i ${1}_voc.wav -i ${1}.wav -filter_complex "\
 
 [0:a]adeclip,\
 anlmdn=s=1000,\
