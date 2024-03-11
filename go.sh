@@ -15,7 +15,7 @@ c=440 0.0 0.000
 1.00 1.000 0.000 0 
 0.000 0 
 0.000 0.000 0.000 
-1.0,
+0.25,
 treble=g=5,
 equalizer=f=150:width_type=h:width=100:g=3,
 equalizer=f=800:width_type=h:width=100:g=-3,
@@ -24,7 +24,7 @@ firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
 ladspa=sc4_1882:plugin=sc4:c=0.5 50 100 -10 5 1 10,
 loudnorm=I=-16:LRA=11:TP=-1.5:print_format=summary,
-aecho=0.8:0.9:75:0.255,
+aecho=0.8:0.9:125:0.255,
 
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[enhanced];
