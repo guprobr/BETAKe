@@ -8,6 +8,7 @@ ffmpeg -hide_banner -thread_queue_size 8291 -filter_complex_threads 64 -i ${1}_v
 [0:a]adeclip,\
 anlmdn=s=1000,\
 dynaudnorm,\
+
 ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:\
 c=440 0.0 0.000 \
 0 0 0 0 0 0 0 0 0 0 0 0 \
@@ -15,15 +16,20 @@ c=440 0.0 0.000 \
 0.000 0 \
 1.000 1.000 0.000 \
 0.15,\
+
 compand=attacks=0:points=-80/-80|-12.4/-12.4|-6/-8|0/-6.8|20/-2.8,\
 aecho=0.8:0.9:75:0.255,\
-volume=volume=10dB,\
-aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,\
+loudnorm=I=-16:LRA=11:TP=-1.5:print_format=summary,
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,\
 aresample=resampler=soxr:osf=s16[enhanced];\
-[1:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,\
-aresample=resampler=soxr:osf=s16,volume=volume=8dB[audio];\
-[audio][enhanced]amix=inputs=2;\
+
+[1:a]loudnorm=I=-16:LRA=11:TP=-1.5:print_format=summary,\
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,\
+aresample=resampler=soxr:osf=s16[audio];\
+
+[audio][enhanced]amix=inputs=2:weights=0.4|0.6;\
 " ${1}_go.wav -y;
+
 
 #lv2=p='urn\\:jeremy.salwen\\:plugins\\:talentedhack':c=mix=1.00|\
 #voiced_threshold=1.00|pitchpull_amount=0.0|pitchsmooth_amount=1.00|\
