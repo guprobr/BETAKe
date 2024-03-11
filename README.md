@@ -54,49 +54,36 @@ GO NUTS, ppl!
 * pulseaudio-utils - Command line tools for the PulseAudio sound server
 * alsa-utils - Utilities for configuring and using ALSA
 
-No Ubuntu instale esses pacotes e ele vai puxar as dependencias: sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils;
+No Ubuntu instale esses pacotes e ele vai puxar as dependencias: 
 
+### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils;
+Este script do FFmpeg processa dois arquivos de áudio de entrada (${1}_voc.wav e ${1}.wav) e aplica uma série de filtros para melhorar as vozes e a qualidade de áudio em geral. Aqui está uma explicação de cada filtro utilizado no comando:
 
-O comando ffmpeg fornecido processa dois arquivos de áudio de entrada (${1}_voc.wav e ${1}.wav) e aplica uma série de filtros para aprimorar e misturar o áudio. 
-Aqui está uma explicação do comando:
+adeclip: Este filtro é usado para eliminar a distorção de clipe do áudio.  (clipping)
 
-```markdown
-## Processamento de Áudio com FFmpeg
+anlmdn: Aplica redução de ruído usando o filtro dinâmico multibanda adaptativo.
 
-Este é um exemplo de comando `ffmpeg` para processamento de áudio usando uma cadeia de filtros complexos. O comando realiza várias operações, incluindo redução de ruído, equalização, aplicação de efeitos, normalização e mistura de áudio.
+dynaudnorm: Realiza compressão de alcance dinâmico e normalização para garantir níveis de áudio consistentes.
 
-```bash
-ffmpeg -i ${1}_voc.wav -i ${1}.wav -filter_complex \
-"[0:a]anlmdn=s=25,\
-equalizer=f=800:width_type=h:width=100:g=-6,\
-deesser=f=0.95,\
-ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 1.0000,\
-alimiter,\
-speechnorm=e=50:r=0.0001:l=1,\
-aecho=0.8:0.9:111:0.255,\
-aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,\
-aresample=resampler=soxr:osf=s16[avoc];\
-[1:a]aresample=resampler=soxr:osf=s16[a1];\
-[avoc][a1]amix=inputs=2;"\
- ${1}_go.mp3 -y;
-```
+ladspa: Utiliza o plugin Ladspa tap_autotalent para realizar a correção de tom e o auto-ajuste. Os parâmetros fornecidos controlam o comportamento do efeito de correção automática.
 
-### Descrição do Processamento:
+compand: Este filtro aplica compressão e expansão dinâmica ao sinal de áudio. Os parâmetros especificados definem o tempo de ataque e a curva de compressão.
 
-- `anlmdn=s=25`: Redução de ruído com sensibilidade de 25.
-- `equalizer=f=800:width_type=h:width=100:g=-6`: Equalização para ajustar a resposta de frequência.
-- `deesser=f=0.95`: Filtro de de-esser para reduzir sibilâncias.
-- `ladspa=/usr/lib/ladspa/tap_autotalent.so:plugin=autotalent:c=440 ...`: Aplicação do plugin Autotalent.
-- `alimiter`: Limitação de áudio para evitar picos de volume.
-- `speechnorm=e=50:r=0.0001:l=1`: Normalização do nível de volume do áudio da voz.
-- `aecho=0.8:0.9:111:0.255`: Adição de um efeito de eco.
-- `aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo`: Definição do formato de áudio de saída.
-- `aresample=resampler=soxr:osf=s16`: Conversão da saída para o formato desejado.
+aecho: Adiciona um efeito de eco ao áudio. Os parâmetros fornecidos controlam o atraso, o fator de decaimento e a intensidade do eco.
 
-A música resultante é salva como `${1}_go.mp3`.
-```
+volume: Ajusta o nível de volume global do áudio.
+
+aformat: Define o formato de áudio em PCM flutuante com uma frequência de amostragem de 48000 Hz e um layout de canal estéreo.
+
+aresample: Reamostra o áudio usando o reamostrador SoX com um formato de saída alvo em PCM de 16 bits.
+
+amix: Mistura os fluxos de áudio processados dos filtros anteriores.
+
+O resultado final é salvo com o nome ${1}_go.wav com as melhorias especificadas aplicadas.
 
 * Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas.
 * Você pode fazer isso usando o filtro aresample do FFmpeg
  
-Essas são as operações realizadas no comando ffmpeg para processar o áudio vocal e instrumental. Cada filtro desempenha um papel específico na manipulação do áudio para alcançar o resultado desejado. Os filtros na ordem errada podem prejudicar muito a qualidade do resultado!!!!!
+* Essas são as operações realizadas no comando ffmpeg para processar o áudio vocal e instrumental. 
+* Cada filtro desempenha um papel específico na manipulação do áudio para alcançar o resultado desejado.
+* Os filtros na ordem errada podem prejudicar muito a qualidade do resultado!!!!!
