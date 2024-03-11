@@ -57,27 +57,38 @@ GO NUTS, ppl!
 No Ubuntu instale esses pacotes e ele vai puxar as dependencias: 
 
 ### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils;
-Este script do FFmpeg processa dois arquivos de áudio de entrada (${1}_voc.wav e ${1}.wav) e aplica uma série de filtros para melhorar as vozes e a qualidade de áudio em geral. Aqui está uma explicação de cada filtro utilizado no comando:
 
-adeclip: Este filtro é usado para eliminar a distorção de clipe do áudio.  (clipping)
 
-anlmdn: Aplica redução de ruído usando o filtro dinâmico multibanda adaptativo.
+Aqui está a explicação detalhada do comando:
 
-dynaudnorm: Realiza compressão de alcance dinâmico e normalização para garantir níveis de áudio consistentes.
+1. `-y`: Sobrescreve o arquivo de saída sem perguntar.
+2. `-hide_banner`: Esconde o banner de apresentação do ffmpeg.
+3. `-i ${1}_voc.wav -i ${1}.wav`: Define os arquivos de entrada, onde `${1}_voc.wav` é o arquivo de áudio do vocal e `${1}.wav` é o outro arquivo de áudio.
+4. `-filter_complex`: Define um filtro complexo, permitindo múltiplas entradas e saídas.
+5. `[0:a]`: Indica que estamos operando na primeira entrada de áudio (o vocal).
+6. `adeclip`: Remove a distorção do áudio (clipping).
+7. `anlmdn=s=25`: Aplica o filtro de redução de ruído anlmdn com uma sensibilidade de 25.
+8. `compand`: Aplica a expansão e compressão dinâmica do áudio para ajustar o volume em diferentes partes do áudio.
+9. `speechnorm`: Normaliza o volume do áudio, especificamente projetado para a fala.
+10. `ladspa=tap_autotalent:plugin=autotalent`: Aplica o plugin Autotalent usando o Ladspa para ajustar o tom do vocal.
+11. `treble=g=5`: Ajusta o tom de agudos do áudio em 5dB.
+12. `equalizer`: Aplica equalização de áudio para ajustar as frequências em diferentes bandas.
+13. `firequalizer`: Aplica um equalizador paramétrico gráfico para ajustar as características tonais do áudio.
+14. `ladspa=sc4_1882`: Aplica o plugin SC4 usando o Ladspa para controle de dinâmica (compressão).
+15. `loudnorm`: Normaliza o volume do áudio para padrões específicos de intensidade, faixa dinâmica e pico.
+16. `aecho`: Adiciona eco ao áudio.
+17. `aformat`: Define o formato de áudio de saída.
+18. `aresample`: Realiza a amostragem do áudio.
+19. `[enhanced]`: Nome da saída do filtro complexo.
+20. `[1:a]`: Indica que estamos operando na segunda entrada de áudio (o áudio principal).
+21. `loudnorm`: Normaliza o volume do áudio para padrões específicos de intensidade, faixa dinâmica e pico.
+22. `[audio]`: Nome da saída da segunda entrada de áudio.
+23. `amix=inputs=2:weights=0.4|0.6`: Mistura os dois fluxos de áudio com pesos diferentes.
+24. `-ar 44100`: Define a taxa de amostragem de saída como 44100 Hz.
+25. `${1}_go.wav`: Nome do arquivo de saída.
+26. `&& mplayer ${1}_go.wav`: Reproduz o arquivo de saída usando o mplayer após a conclusão do processo.
 
-ladspa: Utiliza o plugin Ladspa tap_autotalent para realizar a correção de tom e o auto-ajuste. Os parâmetros fornecidos controlam o comportamento do efeito de correção automática.
-
-compand: Este filtro aplica compressão e expansão dinâmica ao sinal de áudio. Os parâmetros especificados definem o tempo de ataque e a curva de compressão.
-
-aecho: Adiciona um efeito de eco ao áudio. Os parâmetros fornecidos controlam o atraso, o fator de decaimento e a intensidade do eco.
-
-volume: Ajusta o nível de volume global do áudio.
-
-aformat: Define o formato de áudio em PCM flutuante com uma frequência de amostragem de 48000 Hz e um layout de canal estéreo.
-
-aresample: Reamostra o áudio usando o reamostrador SoX com um formato de saída alvo em PCM de 16 bits.
-
-amix: Mistura os fluxos de áudio processados dos filtros anteriores.
+Este comando realiza uma série de operações de processamento de áudio para melhorar a qualidade do vocal e do áudio principal, incluindo remoção de clipping, redução de ruído, normalização de volume, ajuste de tom, equalização e compressão dinâmica, entre outros.
 
 O resultado final é salvo com o nome ${1}_go.wav com as melhorias especificadas aplicadas.
 
