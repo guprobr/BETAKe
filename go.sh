@@ -7,10 +7,9 @@ ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 
 [0:a]
 adeclip,
-anlmdn=s=128,
+anlmdn=s=35,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
 speechnorm=e=8:r=0.0001:l=1,
-deesser,
 ladspa=tap_autotalent:plugin=autotalent:
 c=440 0 0 
 0 0 0 0 0 0 0 0 0 0 0 0 
@@ -30,5 +29,6 @@ aresample=resampler=soxr:osf=s16[enhanced];
 [1:a]
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[audio];
-[audio][enhanced]amix=inputs=2:weights=0.3|0.7;
+[audio][enhanced]amix=inputs=2:weights=0.2|0.7;
 " -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav;
+
