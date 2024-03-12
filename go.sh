@@ -34,7 +34,7 @@ aresample=resampler=soxr:osf=s16[enhanced];
 [1:a]volume=volume=3dB,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[audio];
-[audio][enhanced]amix=inputs=2:weights=0.4|0.6;
+[audio][enhanced]amix=inputs=2:weights=0.3|0.7;
 " -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav;
 
 
