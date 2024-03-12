@@ -18,21 +18,23 @@ c=440 0 0
 0.000 0 
 0.000 0.000 0.000 
 1.0,
-treble=g=10,
+treble=g=6,
 equalizer=f=150:width_type=h:width=100:g=3,
 equalizer=f=800:width_type=h:width=100:g=-3,
 equalizer=f=5000:width_type=h:width=100:g=3,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
 
+volume=volume=5dB,
 loudnorm=I=-16:LRA=11:TP=-1.5,
 aecho=0.8:0.9:69:0.2,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[enhanced];
 
-[1:a]
+[1:a]volume=volume=3dB,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[audio];
-[audio][enhanced]amix=inputs=2:weights=0.45|0.84;
+[audio][enhanced]amix=inputs=2:weights=0.4|0.6;
 " -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav;
+
 
