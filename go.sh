@@ -3,8 +3,8 @@
 pactl unload-module module-loopback;
 pactl unload-module ladspa-sink;
 
-ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 
+ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 [0:a]
 adeclip,
 anlmdn=s=55,
@@ -21,7 +21,10 @@ treble=g=5,
 equalizer=f=150:width_type=h:width=100:g=3,
 equalizer=f=800:width_type=h:width=100:g=-3,
 equalizer=f=5000:width_type=h:width=100:g=3,
-
+ladspa=sc4_1882:plugin=sc4:c=0.5 50 100 -10 5 1 10,
+ladspa=plate:plugin=plate:room_size=75:pre_delay=20:decay=4:lowpass=16000:highpass=30,
+ladspa=fast_lookahead_limiter:plugin=fast_lookahead_limiter:lookahead=5:threshold=0.5:attack=0.5:release=20,
+ladspa=deesser_mono:plugin=deesser_mono:threshold=6:ratio=0.5:fattack=1:frelease=60,
 loudnorm=I=-16:LRA=11:TP=-1.5,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[enhanced];
