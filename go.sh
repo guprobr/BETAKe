@@ -6,13 +6,13 @@ pactl unload-module ladspa-sink;
 ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 [0:a]
 adeclip,
-anlmdn=s=25,
+anlmdn=s=35,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
 speechnorm=e=8:r=0.0001:l=1,
 ladspa=tap_autotalent:plugin=autotalent:
 c=440 0.0 0.000 
 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 
-1.00 1.000 0.000 0 
+0.84 0.98 0.000 0 
 0.000 0 
 0.000 0.000 0.000 
 0.25,
@@ -24,7 +24,7 @@ firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
 ladspa=sc4_1882:plugin=sc4:c=0.5 50 100 -10 5 1 10,
 loudnorm=I=-16:LRA=11:TP=-1.5:print_format=summary,
-aecho=0.8:0.9:125:0.255,
+aecho=0.8:0.9:94:0.255,
 
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[enhanced];
@@ -32,7 +32,7 @@ aresample=resampler=soxr:osf=s16[enhanced];
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16,
 loudnorm=I=-16:LRA=11:TP=-1.5:print_format=summary[audio];
-[audio][enhanced]amix=inputs=2:weights=0.4|0.6;
+[audio][enhanced]amix=inputs=2:weights=0.4|0.8;
 " -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav;
 
 
