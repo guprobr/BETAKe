@@ -1,4 +1,4 @@
-#### V1.69A
+#### V1.69 B
 
 
 ex de outputs: https://gu.pro.br/betake-records/
@@ -61,39 +61,75 @@ No Ubuntu instale esses pacotes e ele vai puxar as dependencias:
 
 ### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils;
 
+### explicação do comando da última versão
 
-Aqui está a explicação detalhada do comando:
+ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 
-1. `-y`: Sobrescreve o arquivo de saída sem perguntar.
-2. `-hide_banner`: Esconde o banner de apresentação do ffmpeg.
-3. `-i ${1}_voc.wav -i ${1}.wav`: Define os arquivos de entrada, onde `${1}_voc.wav` é o arquivo de áudio do vocal e `${1}.wav` é o outro arquivo de áudio.
-4. `-filter_complex`: Define um filtro complexo, permitindo múltiplas entradas e saídas.
-5. `[0:a]`: Indica que estamos operando na primeira entrada de áudio (o vocal).
-6. `adeclip`: Remove a distorção do áudio (clipping).
-7. `anlmdn=s=25`: Aplica o filtro de redução de ruído anlmdn com uma sensibilidade de 25.
-8. `compand`: Aplica a expansão e compressão dinâmica do áudio para ajustar o volume em diferentes partes do áudio.
-9. `speechnorm`: Normaliza o volume do áudio, especificamente projetado para a fala.
-10. `ladspa=tap_autotalent:plugin=autotalent`: Aplica o plugin Autotalent usando o Ladspa para ajustar o tom do vocal.
-11. `treble=g=5`: Ajusta o tom de agudos do áudio em 5dB.
-12. `equalizer`: Aplica equalização de áudio para ajustar as frequências em diferentes bandas.
-13. `firequalizer`: Aplica um equalizador paramétrico gráfico para ajustar as características tonais do áudio.
-14. `ladspa=sc4_1882`: Aplica o plugin SC4 usando o Ladspa para controle de dinâmica (compressão).
-15. `loudnorm`: Normaliza o volume do áudio para padrões específicos de intensidade, faixa dinâmica e pico.
-16. `aecho`: Adiciona eco ao áudio.
-17. `aformat`: Define o formato de áudio de saída.
-18. `aresample`: Realiza a amostragem do áudio.
-19. `[enhanced]`: Nome da saída do filtro complexo.
-20. `[1:a]`: Indica que estamos operando na segunda entrada de áudio (o áudio principal).
-21. `loudnorm`: Normaliza o volume do áudio para padrões específicos de intensidade, faixa dinâmica e pico.
-22. `[audio]`: Nome da saída da segunda entrada de áudio.
-23. `amix=inputs=2:weights=0.4|0.6`: Mistura os dois fluxos de áudio com pesos diferentes.
-24. `-ar 44100`: Define a taxa de amostragem de saída como 44100 Hz.
-25. `${1}_go.wav`: Nome do arquivo de saída.
-26. `&& mplayer ${1}_go.wav`: Reproduz o arquivo de saída usando o mplayer após a conclusão do processo.
+# Aplicando filtros de processamento de áudio para o arquivo de voz (${1}_voc.wav):
 
-Este comando realiza uma série de operações de processamento de áudio para melhorar a qualidade do vocal e do áudio principal, incluindo remoção de clipping, redução de ruído, normalização de volume, ajuste de tom, equalização e compressão dinâmica, entre outros.
+[0:a] # Stream de áudio de entrada (voz)
+adeclip, # Remover clipe
+anlmdn=s=55, # Redução de ruído usando anlmdn com uma sensibilidade de 55
+compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7, # Compressão de amplitude
+speechnorm=e=8:r=0.0001:l=1, # Normalização de volume de fala
+ladspa=tap_autotalent:plugin=autotalent:c=440 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0.000 0 0.000 0.000 0.000 1.0, # Aplicação do filtro autotalent para ajuste fino do tom
+aecho=0.8:0.9:45:0.3, # Adicionando um leve eco
+treble=g=5, # Ajuste de tons altos
+equalizer=f=150:width_type=h:width=100:g=3, # Equalização de frequência para tons baixos
+equalizer=f=800:width_type=h:width=100:g=-3, # Equalização de frequência para tons médios
+equalizer=f=5000:width_type=h:width=100:g=3, # Equalização de frequência para tons altos
+afftdn=nr=12:nf=-50:nt=w:om=o:adaptivity=0.5:floor_offset=1.0:band_multiplier=1.25, # Denoiser FFT
+ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=-3 -3 0.1, # Limitador de antecipação rápida
+ladspa=sc4_1882:plugin=sc4:c=0.5 50 100 -20 10 5 12, # Compressor SC4
+loudnorm=I=-16:LRA=11:TP=-1.5, # Normalização de volume
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, # Formatação do áudio de saída (taxa de amostragem, formato de áudio e layout de canal)
+aresample=resampler=soxr:osf=s16[enhanced]; # Redimensionamento e resampling do áudio de saída
+
+# Adicionando efeitos ao arquivo de música (${1}.wav):
+
+[1:a] # Stream de áudio de entrada (música)
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, # Formatação do áudio de entrada
+aresample=resampler=soxr:osf=s16[audio]; # Redimensionamento e resampling do áudio de entrada
+
+# Misturando os streams de áudio de voz e música com pesos específicos:
+
+[audio][enhanced]amix=inputs=2:weights=0.4|0.6; # Mistura de áudio com pesos
+
+" -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav; # Taxa de amostragem final e reprodução do arquivo de saída
 
 O resultado final é salvo com o nome ${1}_go.wav com as melhorias especificadas aplicadas.
+
+## explicação de cada filtro
+
+adeclip: Remove distorções de clipe do áudio, melhorando a qualidade do som.
+
+anlmdn: Aplica redução de ruído usando o algoritmo ANLMDN, com uma sensibilidade de 55, reduzindo o ruído indesejado no áudio.
+
+compand: Aplica compressão e expansão de amplitude para suavizar as variações de volume no áudio.
+
+speechnorm: Normaliza o volume da fala, garantindo que o nível de áudio seja consistente em toda a gravação.
+
+ladspa=tap_autotalent: Aplica o filtro de autotalent para ajustar sutilmente o tom da voz para a nota A4 (440 Hz) sem alterar drasticamente a afinação.
+
+aecho: Adiciona um leve eco ao áudio, criando um efeito espacial sutil.
+
+treble: Ajusta os tons altos no áudio, melhorando a clareza e a nitidez.
+
+equalizer: Aplica equalização de frequência para ajustar os tons baixos, médios e altos do áudio, melhorando o equilíbrio tonal.
+
+afftdn: Usa a técnica FFT para remover o ruído do áudio, ajustando os parâmetros de redução de ruído, nível de ruído, tipo de ruído, entre outros.
+
+ladspa=fast_lookahead_limiter_1913: Aplica um limitador de antecipação rápida para controlar os picos de volume, garantindo um áudio consistente e evitando distorções.
+
+ladspa=sc4_1882: Aplica um compressor SC4 para ajustar a dinâmica do áudio, reduzindo a diferença entre os picos de volume e o volume médio.
+
+loudnorm: Normaliza o volume do áudio para garantir que esteja dentro dos limites desejados, evitando que fique muito alto ou muito baixo.
+
+aformat: Formata o áudio de saída para o formato desejado, especificando a taxa de amostragem, formato de áudio e layout de canal.
+
+aresample: Redimensiona e faz resampling do áudio de saída para garantir a qualidade desejada.
+
+amix: Mistura os streams de áudio de voz e música com pesos específicos para equilibrar os níveis de volume.
 
 * Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas.
 * Você pode fazer isso usando o filtro aresample do FFmpeg
