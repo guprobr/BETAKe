@@ -21,17 +21,15 @@ treble=g=5,
 equalizer=f=150:width_type=h:width=100:g=3,
 equalizer=f=800:width_type=h:width=100:g=-3,
 equalizer=f=5000:width_type=h:width=100:g=3,
+ladspa=tap_deesser:plugin=tap_deesser:c=-20 2000 1 1,
+ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=-20 -3 0.1,
+ladspa=caps:plugin=Plate:c=0.5 0.5 0.5 0.5,
 ladspa=sc4_1882:plugin=sc4:c=0.5 50 100 -10 5 1 10,
-ladspa=plate:plugin=plate:room_size=75:pre_delay=20:decay=4:lowpass=16000:highpass=30,
-ladspa=fast_lookahead_limiter:plugin=fast_lookahead_limiter:lookahead=5:threshold=0.5:attack=0.5:release=20,
-ladspa=deesser_mono:plugin=deesser_mono:threshold=6:ratio=0.5:fattack=1:frelease=60,
 loudnorm=I=-16:LRA=11:TP=-1.5,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[enhanced];
-
 [1:a]
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[audio];
 [audio][enhanced]amix=inputs=2:weights=0.2|0.7;
 " -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav;
-
