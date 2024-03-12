@@ -56,10 +56,11 @@ GO NUTS, ppl!
 * autotalent -  pitch correction LADSPA plugin
 * pulseaudio-utils - Command line tools for the PulseAudio sound server
 * alsa-utils - Utilities for configuring and using ALSA
+* Steve Harris LADSPA plugins
 
 No Ubuntu instale esses pacotes e ele vai puxar as dependencias: 
 
-### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils;
+### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils swh-plugins;
 
 ### explicação do comando da última versão
 
