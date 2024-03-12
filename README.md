@@ -67,7 +67,7 @@ No Ubuntu instale esses pacotes e ele vai puxar as dependencias:
 ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 
 # Aplicando filtros de processamento de áudio para o arquivo de voz (${1}_voc.wav):
-'''
+´´´
 [0:a] # Stream de áudio de entrada (voz)
 adeclip, # Remover clipe
 anlmdn=s=55, # Redução de ruído usando anlmdn com uma sensibilidade de 55
@@ -85,19 +85,20 @@ ladspa=sc4_1882:plugin=sc4:c=0.5 50 100 -20 10 5 12, # Compressor SC4
 loudnorm=I=-16:LRA=11:TP=-1.5, # Normalização de volume
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, # Formatação do áudio de saída (taxa de amostragem, formato de áudio e layout de canal)
 aresample=resampler=soxr:osf=s16[enhanced]; # Redimensionamento e resampling do áudio de saída
-'''
+´´´
 # Adicionando efeitos ao arquivo de música (${1}.wav):
-'''
+´´´
 [1:a] # Stream de áudio de entrada (música)
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, # Formatação do áudio de entrada
 aresample=resampler=soxr:osf=s16[audio]; # Redimensionamento e resampling do áudio de entrada
-'''
+´´´
 # Misturando os streams de áudio de voz e música com pesos específicos:
 '''
 [audio][enhanced]amix=inputs=2:weights=0.4|0.6; # Mistura de áudio com pesos
 
 " -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav; # Taxa de amostragem final e reprodução do arquivo de saída
-'''
+´´´
+
 O resultado final é salvo com o nome ${1}_go.wav com as melhorias especificadas aplicadas.
 
 ## explicação de cada filtro
