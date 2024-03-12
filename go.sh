@@ -7,7 +7,7 @@ ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 
 [0:a]
 adeclip,
-anlmdn=s=35,
+anlmdn=s=55,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
 speechnorm=e=8:r=0.0001:l=1,
 ladspa=tap_autotalent:plugin=autotalent:
