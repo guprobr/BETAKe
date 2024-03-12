@@ -24,7 +24,6 @@ equalizer=f=800:width_type=h:width=100:g=-3,
 equalizer=f=5000:width_type=h:width=100:g=3,
 
 loudnorm=I=-16:LRA=11:TP=-1.5,
-aecho=0.8:0.9:125:0.2,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[enhanced];
 
