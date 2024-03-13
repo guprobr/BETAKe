@@ -68,7 +68,7 @@ No Ubuntu instale esses pacotes e ele vai puxar as dependencias:
 Este comando do FFmpeg é usado para aprimorar as vozes em um arquivo de áudio ${1}_voc.wav, processando-o com vários filtros e depois misturando-o com outro arquivo de áudio ${1}.wav. Aqui está uma explicação de cada parte do comando:
 
 Arquivos de Entrada: -i ${1}_voc.wav -i ${1}.wav
-
+```
 ${1}_voc.wav: O arquivo de entrada contendo as vozes.
 ${1}.wav: O arquivo de entrada contendo a música ou áudio de fundo.
 Filtro Complexo:
@@ -100,7 +100,7 @@ Saída: -ar 44100 ${1}_go.wav
 
 Define a taxa de amostragem de áudio de saída como 44100 Hz e salva o resultado como ${1}_go.wav.
 Reprodução: && mplayer ${1}_go.wav
-
+```
 Reproduz o arquivo de áudio resultante ${1}_go.wav usando mplayer após a execução do comando FFmpeg.
 
 * Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas.
