@@ -1,5 +1,6 @@
 #### V1.7 b
-
+**Audio Processing Pipeline Documentation**
+This document describes an audio processing pipeline using ffmpeg to preprocess vocals with Autotalent, enhance the pitch-corrected vocals with effects, and masterize the audio for streaming, combining both playback and enhanced vocals.
 
 ex de outputs: https://gu.pro.br/betake-records/
 
