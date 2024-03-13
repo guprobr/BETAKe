@@ -62,47 +62,53 @@ No Ubuntu instale esses pacotes e ele vai puxar as dependencias:
 
 ### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils swh-plugins;
 
-### explicação do comando da última versão
 
 
-Este comando do FFmpeg é usado para aprimorar as vozes em um arquivo de áudio ${1}_voc.wav, processando-o com vários filtros e depois misturando-o com outro arquivo de áudio ${1}.wav. Aqui está uma explicação de cada parte do comando:
+#### Audio Processing Pipeline Documentation
 
-Arquivos de Entrada: -i ${1}_voc.wav -i ${1}.wav
+This document describes an audio processing pipeline using ffmpeg to preprocess vocals with Autotalent, enhance the pitch-corrected vocals with effects, and masterize the audio for streaming, combining both playback and enhanced vocals.
+
+### Preprocessing with Autotalent:
+
 ```
-${1}_voc.wav: O arquivo de entrada contendo as vozes.
-${1}.wav: O arquivo de entrada contendo a música ou áudio de fundo.
-Filtro Complexo:
-
-[0:a]: Refere-se ao primeiro fluxo de áudio de entrada (vocais).
-adeclip: Remove o clipe do áudio.
-anlmdn: Realiza redução de ruído usando o algoritmo NLMD com a força s=XX.
-compand: Comprime e expande a dinâmica de áudio com parâmetros de ataque, decaimento, pontos e soft-knee especificados.
-ladspa: Aplica o plugin Autotalent usando LADSPA, corrigindo o tom das vozes.
-compand: Outra compressão e expansão da dinâmica de áudio.
-deesser: Reduz a sibilância nas vozes.
-aecho: Adiciona um efeito de eco ao áudio. [REMOVIDO]
-afftdn: de-reverberator!
-treble: Ajusta a faixa de frequência de agudos.
-equalizer: Aplica equalização para amplificar ou atenuar faixas de frequência específicas.
-ladspa: Aplica um plugin de limitador de antecipação rápida.
-ladspa: Aplica o plugin compressor SC4.
-[voc_enhanced]: Rótulo para o fluxo de áudio de voz aprimorado.
-[voc_enhanced]: Refere-se ao fluxo de áudio de voz aprimorado.
-loudnorm: Realiza normalização de volume novamente.
-aformat: Define o formato de áudio para PCM de ponto flutuante.
-aresample: Remostura o áudio para uma taxa de amostragem de 44100 Hz usando o remisturador SoX.
-[voc_master]: Rótulo para o fluxo de áudio de voz processado.
-[1:a]: Refere-se ao segundo fluxo de áudio de entrada (música ou áudio de fundo).
-aformat: Define o formato de áudio para PCM de ponto flutuante.
-aresample: Remistura o áudio para uma taxa de amostragem de 44100 Hz usando o remisturador SoX.
-[play_master]: Rótulo para o fluxo de áudio de música processado.
-[play_master][voc_master]amix=inputs=2:weights=0.5|0.5: Mistura os fluxos de áudio de voz e música processados com pesos iguais.
-Saída: -ar 44100 ${1}_go.wav
-
-Define a taxa de amostragem de áudio de saída como 44100 Hz e salva o resultado como ${1}_go.wav.
-Reprodução: && mplayer ${1}_go.wav
+Noise Reduction and Equalization:
+adeclip: Remove clipping distortion from audio.
+anlmdn: Apply noise reduction using a speech noise suppressor.
+Autotalent Pitch Correction:
+ladspa=tap_autotalent:plugin=autotalent: Correct pitch using Autotalent 
 ```
-Reproduz o arquivo de áudio resultante ${1}_go.wav usando mplayer após a execução do comando FFmpeg.
+
+## Additional Processing:
+```
+afftdn: Adaptive Free-Form Time-Domain Noise Reduction.
+Equalization: Adjust frequency response with three equalizer bands centered at 150 Hz, 800 Hz, and 5000 Hz.
+Firequalizer: Apply additional gain adjustments to specific frequency bands.
+Treble: Boost high-frequency content.
+Enhancement with Effects:
+Echo Effect:
+aecho: Apply echo effect
+Fast Lookahead Limiter:
+ladspa=fast_lookahead_limiter_1913: Apply dynamic range compression to control peaks.
+SC4 Compressor:
+ladspa=sc4_1882: Apply dynamic range compression to further control peaks.
+```
+
+## Masterization:
+```
+Loudness Normalization:
+loudnorm: Normalize audio to -16 LUFS Integrated Loudness with an 11 LU Loudness Range and a True Peak of -1.5 dBFS.
+Format Conversion:
+aformat: Convert audio to floating-point format with a sample rate of 44100 Hz and stereo channel layout.
+Resampling:
+aresample: Resample audio using the SoX Resampler with high-quality settings.
+Mixing:
+amix: Mix the processed vocal and the original audio with a 40:60 weight ratio.
+```
+
+# Usage:
+```
+To use this audio processing pipeline, replace ${1} with the input file name (without extension) and execute the provided ffmpeg command. The processed audio will be saved as ${1}_go.wav and played using the mplayer utility.
+```
 
 * Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas.
 * Você pode fazer isso usando o filtro aresample do FFmpeg
