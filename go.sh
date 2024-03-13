@@ -22,7 +22,7 @@ firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
 ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=-3 -3 0.1,
 ladspa=sc4_1882:plugin=sc4:c=0.5 50 100 -20 10 5 12,
-treble=g=3,
+treble=g=5,
 aecho=0.8:0.7:300:0.05
 [voc_enhanced];
 
@@ -36,6 +36,6 @@ loudnorm=I=-16:LRA=11:TP=-1.5,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[play_master];
 
-[play_master][voc_master]amix=inputs=2:weights=0.5|0.5;
+[play_master][voc_master]amix=inputs=2:weights=0.4|0.6;
 " -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav; #then PLAY!
 
