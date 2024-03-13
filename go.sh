@@ -27,15 +27,16 @@ aecho=0.8:0.7:100:0.2
 [voc_enhanced];
 
 [voc_enhanced]
-loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=3dB,
+loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=4dB,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[voc_master];
 
 [1:a]
-loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=4dB,
+loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=3dB,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[play_master];
 
 [play_master][voc_master]amix=inputs=2;
+
 " -ar 44100 ${1}_go.wav && mplayer ${1}_go.wav; #then PLAY!
 
