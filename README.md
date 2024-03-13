@@ -1,4 +1,4 @@
-#### V1.69 D
+#### V1.7 b
 
 
 ex de outputs: https://gu.pro.br/betake-records/
