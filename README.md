@@ -1,4 +1,4 @@
-#### V1.69 c
+#### V1.69 D
 
 
 ex de outputs: https://gu.pro.br/betake-records/
@@ -80,7 +80,8 @@ compand: Comprime e expande a dinâmica de áudio com parâmetros de ataque, dec
 ladspa: Aplica o plugin Autotalent usando LADSPA, corrigindo o tom das vozes.
 compand: Outra compressão e expansão da dinâmica de áudio.
 deesser: Reduz a sibilância nas vozes.
-aecho: Adiciona um efeito de eco ao áudio.
+aecho: Adiciona um efeito de eco ao áudio. [REMOVIDO]
+afftdn: de-reverberator!
 treble: Ajusta a faixa de frequência de agudos.
 equalizer: Aplica equalização para amplificar ou atenuar faixas de frequência específicas.
 ladspa: Aplica um plugin de limitador de antecipação rápida.
