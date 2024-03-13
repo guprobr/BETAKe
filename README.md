@@ -79,9 +79,9 @@ anlmdn: Realiza redução de ruído usando o algoritmo NLMD com a força s=XX.
 compand: Comprime e expande a dinâmica de áudio com parâmetros de ataque, decaimento, pontos e soft-knee especificados.
 ladspa: Aplica o plugin Autotalent usando LADSPA, corrigindo o tom das vozes.
 compand: Outra compressão e expansão da dinâmica de áudio.
-deesser: Reduz a sibilância nas vozes.
+deesser: Reduz a sibilância nas vozes. [REMOVIDO por enquanto]
 aecho: Adiciona um efeito de eco ao áudio.
-treble: Ajusta a faixa de frequência de agudos.
+treble: Ajusta a faixa de frequência de agudos. [REMOVIDO por enquanto]
 equalizer: Aplica equalização para amplificar ou atenuar faixas de frequência específicas.
 ladspa: Aplica um plugin de limitador de antecipação rápida.
 ladspa: Aplica o plugin compressor SC4.
