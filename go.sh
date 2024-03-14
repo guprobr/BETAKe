@@ -1,10 +1,11 @@
 #!/bin/bash
 
-pactl unload-module module-loopback;
-pactl unload-module ladspa-sink;
+pactl unload-module module-ladspa-sink
+pactl unload-module module-loopback
+pactl unload-module module-echo-cancel
 
-#provide preprocessing for Autotalent, 
-#then, enhance pitch corrected vocal with effects
+#Now on v2.0 live-processing for Autotalent, 
+#we just have to enhance already pitch corrected vocal with effects
 #then MASTERIZE for streaming both playback and enhanced vocals, mixing both
 #
 ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
@@ -12,8 +13,6 @@ ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 adeclip,
 anlmdn=s=69,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
-ladspa=tap_autotalent:plugin=autotalent:
-c=440 1.6726875 0.0003 0 0 0 0 0 0 0 0 0 0 0 0 0.25 1.00 0 0 0 0.33825 1.000 1.000 0 0 0.0 0.15,
 afftdn,
 treble=g=5,
 equalizer=f=150:width_type=h:width=100:g=3,
@@ -21,8 +20,6 @@ equalizer=f=800:width_type=h:width=100:g=-3,
 equalizer=f=5000:width_type=h:width=100:g=3,      
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
-ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=-3 -3 0.1,
-ladspa=sc4_1882:plugin=sc4:c=0.5 50 100 -20 10 5 12,
 aecho=0.8:0.7:100:0.2
 [voc_enhanced];
 
