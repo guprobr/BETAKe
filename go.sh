@@ -13,7 +13,7 @@ anlmdn=s=33,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
-speechnorm,afftdn,aecho=0.8:0.9:45:0.3,
+speechnorm,aecho=0.8:0.9:45:0.3,
 adeclip,loudnorm=I=-16:LRA=11:TP=-1.5,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[voc_master];
