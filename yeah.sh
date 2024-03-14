@@ -20,7 +20,7 @@ pactl load-module module-ladspa-sink sink_name=ladspa_dyna label=tap_dynamics_m 
 pactl move-sink-input  $( pactl list sink-inputs | grep ladspa_dyna -B25 | grep Sink\ Input | awk '{ print $3 }' | sed 's/#//g' )  ${SINKA};
 
 echo tap_pitch;
-pactl load-module module-ladspa-sink sink_name=ladspa_pitch plugin="tap_pitch" label=tap_pitch control="0,0,0,-3,-3";
+pactl load-module module-ladspa-sink sink_name=ladspa_pitch plugin="tap_pitch" label=tap_pitch control="0,0,0,0,0";
 pactl move-sink-input  $( pactl list sink-inputs | grep ladspa_pitch -B25 | grep Sink\ Input | awk '{ print $3 }' | sed 's/#//g' )  ${SINKA};
 
 echo fastLookaheadLimiter;
