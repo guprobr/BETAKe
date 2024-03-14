@@ -7,7 +7,7 @@ pactl unload-module module-echo-cancel
 #Now on v2.0 live-processing for Autotalent,
 #we just have to enhance already pitch corrected vocal with effects
 #then MASTERIZE for streaming both playback and enhanced vocals, mixing both
-#ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
+ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 [0:a]
 anlmdn=s=33,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
