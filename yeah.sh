@@ -36,7 +36,6 @@ pactl move-sink-input  $( pactl list sink-inputs | grep -i ladspa_equal -B25 | g
 #pactl set-default-sink ladspa_sink;
 #audacity ${1}; #if u feel like editing not recording one-shot
 
-pactl unload-module module-loopback
 pactl load-module module-loopback;
 
 aplay ${1}.wav &
