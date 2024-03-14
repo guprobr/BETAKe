@@ -1,14 +1,18 @@
-#### V1.7 b
-**Audio Processing Pipeline Documentation**
-This document describes an audio processing pipeline using ffmpeg to preprocess vocals with Autotalent, enhance the pitch-corrected vocals with effects, and masterize the audio for streaming, combining both playback and enhanced vocals.
+#### V2.0
+ex de outputs: https://xiclet.com.br
 
-ex de outputs: https://gu.pro.br/betake-records/
+## yeah.sh
+This script sets up live audio processing with Autotalent pitch correction, dynamics processing, and equalization using PulseAudio's pactl utility. 
 
- * esses scripts estão o mais simples possível,
- * quanto mais se tenta efeitos sonoros mirabolantes, mais fácil estragar o audio final. 
+## go.sh
+Now on v2.0 live-processing for Autotalent, 
+we just have to enhance already pitch corrected vocal with effects
+then MASTERIZE for streaming both playback and enhanced vocals, mixing both
+
+ * esses scripts focam ser o mais simples possível,
+ * tenha em mente, que, quanto mais se tenta efeitos sonoros mirabolantes, mais fácil estragar o audio final. 
 
 DE FORMA ALGUMA ISSO já é UMA APLICAÇÃO PARA USUÁRIO FINAL!
-
 
 * Para flexibilidade, separei em dois scripts. 
 * Os playbacks devem ser formato WAV de preferencia nao ADPCM Microsoft.
@@ -63,57 +67,24 @@ No Ubuntu instale esses pacotes e ele vai puxar as dependencias:
 
 ### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils swh-plugins;
 
-
-
-#### Audio Processing Pipeline Documentation
-
-This document describes an audio processing pipeline using ffmpeg to preprocess vocals with Autotalent, enhance the pitch-corrected vocals with effects, and masterize the audio for streaming, combining both playback and enhanced vocals.
-
-### Preprocessing with Autotalent:
-
-```
-Noise Reduction and Equalization:
-adeclip: Remove clipping distortion from audio.
-anlmdn: Apply noise reduction using a speech noise suppressor.
-Autotalent Pitch Correction:
-ladspa=tap_autotalent:plugin=autotalent: Correct pitch using Autotalent 
-```
-
-## Additional Processing:
-```
-afftdn: Adaptive Free-Form Time-Domain Noise Reduction.
-Equalization: Adjust frequency response with three equalizer bands centered at 150 Hz, 800 Hz, and 5000 Hz.
-Firequalizer: Apply additional gain adjustments to specific frequency bands.
-Treble: Boost high-frequency content.
-Enhancement with Effects:
-Echo Effect:
-aecho: Apply echo effect
-Fast Lookahead Limiter:
-ladspa=fast_lookahead_limiter_1913: Apply dynamic range compression to control peaks.
-SC4 Compressor:
-ladspa=sc4_1882: Apply dynamic range compression to further control peaks.
-```
-
-## Masterization:
-```
-Loudness Normalization:
-loudnorm: Normalize audio to -16 LUFS Integrated Loudness with an 11 LU Loudness Range and a True Peak of -1.5 dBFS.
-Format Conversion:
-aformat: Convert audio to floating-point format with a sample rate of 44100 Hz and stereo channel layout.
-Resampling:
-aresample: Resample audio using the SoX Resampler with high-quality settings.
-Mixing:
-amix: Mix the processed vocal and the original audio with a 40:60 weight ratio.
-```
-
-# Usage:
-```
-To use this audio processing pipeline, replace ${1} with the input file name (without extension) and execute the provided ffmpeg command. The processed audio will be saved as ${1}_go.wav and played using the mplayer utility.
-```
-
 * Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas.
 * Você pode fazer isso usando o filtro aresample do FFmpeg
  
 * Essas são as operações realizadas no comando ffmpeg para processar o áudio vocal e instrumental. 
 * Cada filtro desempenha um papel específico na manipulação do áudio para alcançar o resultado desejado.
 * Os filtros na ordem errada podem prejudicar muito a qualidade do resultado!!!!!
+
+#### Audio Processing Pipeline Documentation
+
+This document describes an audio processing pipeline using ffmpeg to preprocess vocals with Autotalent, enhance the pitch-corrected vocals with effects, and masterize the audio for streaming, combining both playback and enhanced vocals.
+This script performs the following actions:
+
+```
+Unloads previous PulseAudio modules (module-ladspa-sink, module-loopback, module-echo-cancel).
+Utilizes FFmpeg to process audio files ${1}_voc.wav (pitch-corrected vocals) and ${1}.wav (original vocals).
+Applies various audio filters such as adeclip, anlmdn, compand, afftdn, treble adjustment, equalization, firequalizer, and aecho to enhance the vocals.
+Normalizes the audio volume and formats it for playback.
+Mixes the enhanced vocals with the original vocals.
+Outputs the mixed audio to ${1}_go.wav.
+Plays the final audio using mplayer.
+```
