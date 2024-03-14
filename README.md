@@ -74,8 +74,18 @@ No Ubuntu instale esses pacotes e ele vai puxar as dependencias:
 * Cada filtro desempenha um papel específico na manipulação do áudio para alcançar o resultado desejado.
 * Os filtros na ordem errada podem prejudicar muito a qualidade do resultado!!!!!
 
-#### Audio Processing Pipeline Documentation
+#### BETAKê v2.0 main feature: live-processing!
 
+# Unload any existing PulseAudio modules to ensure clean setup
+# Define the sink name for echo cancellation
+# Load the echo cancellation module with specific settings (using WebRTC method)
+# Load the autotalent plugin using ladspa-sink module with specified controls
+# Move the sink input to the echo-cancel-sink
+# Load loopback module for audio playback
+# Start audio recording and processing
+
+
+#### Audio Processing Pipeline Documentation
 This document describes an audio processing pipeline using ffmpeg to preprocess vocals with Autotalent, enhance the pitch-corrected vocals with effects, and masterize the audio for streaming, combining both playback and enhanced vocals.
 This script performs the following actions:
 
