@@ -4,20 +4,19 @@ pactl unload-module module-ladspa-sink
 pactl unload-module module-loopback
 pactl unload-module module-echo-cancel
 
-#Now on v2.0 live-processing for Autotalent, 
+#Now on v2.0 live-processing for Autotalent,
 #we just have to enhance already pitch corrected vocal with effects
 #then MASTERIZE for streaming both playback and enhanced vocals, mixing both
 #
 ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 [0:a]
 adeclip,
-anlmdn=s=69,
-compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
+anlmdn=s=13,
 afftdn,
-treble=g=5,
+treble=g=1,
 equalizer=f=150:width_type=h:width=100:g=3,
-equalizer=f=800:width_type=h:width=100:g=-3,      
-equalizer=f=5000:width_type=h:width=100:g=3,      
+equalizer=f=800:width_type=h:width=100:g=-3,
+equalizer=f=5000:width_type=h:width=100:g=3,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
 aecho=0.8:0.7:100:0.2
