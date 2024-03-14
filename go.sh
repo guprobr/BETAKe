@@ -10,7 +10,6 @@ pactl unload-module module-echo-cancel
 #
 ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 [0:a]
-adeclip,
 afftdn,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
 treble=g=5,
