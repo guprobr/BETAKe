@@ -11,11 +11,9 @@ pactl unload-module module-echo-cancel
 ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -filter_complex "
 [0:a]
 anlmdn,
-acompressor=threshold=-20dB:ratio=3:attack=50:release=100,
-equalizer=f=150:width_type=h:width=100:g=3,
+ladspa=sc4m_1916:plugin=sc4m:c=0 1.5 2 0 1 1 1,equalizer=f=150:width_type=h:width=100:g=3,
 equalizer=f=800:width_type=h:width=100:g=-3,
 equalizer=f=5000:width_type=h:width=100:g=3,
-ladspa=sc4m_1916:plugin=sc4m:c=0 1.5 2 0 1 1 1,
 treble=g=5,
 afftdn,aecho=0.8:0.9:100:0.3
 [voc_enhanced];
