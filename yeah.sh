@@ -9,7 +9,7 @@ pactl unload-module module-echo-cancel
 SINKA="echo-cancel-sink"; SRC_MASTER="alsa_input.usb-C-Media_Electronics_Inc._USB_PnP_Sound_Device-00.mono-fallback"; #adjust according to your cfg ( pactl list sources )
 
 echo module-echo-cancel;
-pactl load-module module-echo-cancel aec_method=speex;
+pactl load-module module-echo-cancel;
 
 echo tap_autotalent;
 pactl load-module module-ladspa-sink sink_name=ladspa_talent plugin="tap_autotalent" control="440,1.6726875,0.0003,0,0,0,0,0,0,0,0,0,0,0,0,0.25,1.00,0,0,0,0.33825,1.000,1.000,0,0,0.0,0.15" label=autotalent;
