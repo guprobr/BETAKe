@@ -76,24 +76,13 @@ No Ubuntu instale esses pacotes e ele vai puxar as dependencias:
 * Cada filtro desempenha um papel específico na manipulação do áudio para alcançar o resultado desejado.
 * Os filtros na ordem errada podem prejudicar muito a qualidade do resultado!!!!!
 
-#### BETAKê v2.0 main feature: live-processing!
-
-# Unload any existing PulseAudio modules to ensure clean setup
-# Define the sink name for echo cancellation
-# Load the echo cancellation module with specific settings (using WebRTC method)
-# Load the autotalent plugin using ladspa-sink module with specified controls
-# Move the sink input to the echo-cancel-sink
-# Load loopback module for audio playback
-# Start audio recording and processing
-
-
-#### Audio Processing Pipeline Documentation
+## Audio Processing Pipeline Documentation
 This document describes an audio processing pipeline using ffmpeg to preprocess vocals with Autotalent, enhance the pitch-corrected vocals with effects, and masterize the audio for streaming, combining both playback and enhanced vocals.
 This script performs the following actions:
 
-```
 Let's break down each filter used in the ffmpeg command:
 
+```
 anlmdn:
 
 This filter performs noise reduction using the NLMDenoise algorithm.
@@ -139,5 +128,6 @@ This filter mixes audio streams together.
 inputs=2: Specifies the number of input streams to mix.
 weights=0.4|0.6: Sets the relative weights of the input streams.
 This filter combines the processed vocal audio (voc_master) with the original playback audio (play_master) and applies fading.
-These filters together process the vocal and playback audio, applying noise reduction, pitch correction, equalization, echo, and other effects, and then mix them together for the final output. Adjusting the parameters of these filters can result in different audio processing effects.
 ```
+
+These filters together process the vocal and playback audio, applying noise reduction, pitch correction, equalization, echo, and other effects, and then mix them together for the final output. Adjusting the parameters of these filters can result in different audio processing effects.
