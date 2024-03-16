@@ -60,6 +60,6 @@ afade=t=in:st=0:d=2;" -ar 44100 -acodec aac -b:a 320k \
 echo "Sleep 2sec";
 sleep 2;
 
-mplayer recz/"${2}_[BETAKe]"; #then PLAY!
+mplayer recz/"${2}_[BETAKe].mp4"; #then PLAY!
 
 # 2024 by gu.pro.br
