@@ -30,19 +30,20 @@ compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
 aecho=0.8:0.7:111:0.13,treble=g=5,
-loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=5dB,
+loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=1dB,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[voc_master];
 [1:a]
-loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=5dB,
+loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=0dB,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[play_master];
 [play_master][voc_master]amix=inputs=2,
 afade=t=in:st=0:d=2;
 
-[0:a]showcqt=size=320x200[cqt]; [1:a]avectorscope=size=320x200[ascope];
-[ascope][cqt]overlay[viz] ; [2:v]scale=1920x1080[scoop]; 
-[scoop]colorchannelmixer=aa=0.8[tux]; [viz][tux]overlay=10:3
+[0:a]showcqt=size=240x120[cqt];[1:a]avectorscope=size=240x120[ascope];
+[cqt]colorchannelmixer=aa=0.4[tux];
+[ascope][tux]overlay[graphz];[2:v]scale=960x540[origi];
+[origi][graphz]overlay=5:2
 " -strict experimental -ar 44100 -acodec aac -b:a 320k \
                                 recz/"${2}_[BETAKe].mp4"
 
