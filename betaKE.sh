@@ -40,7 +40,7 @@ aresample=resampler=soxr:osf=s16[play_master];
 afade=t=in:st=0:d=2;
 
 [0:a]showcqt=size=164x94[cqt]; [0:a]avectorscope=size=250x250[vscope];
-[ouch][vscope]overlay=5:2[scoop];
+[2:v][vscope]overlay=5:2[scoop];
 [scoop][cqt]overlay=2:5;
 " -strict experimental -ar 44100 -b:a 320k \
                                 recz/"${BETA_TITLE}_[BETAKe].avi"
