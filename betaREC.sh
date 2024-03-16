@@ -59,7 +59,7 @@ then
 	yt-dlp "${2}" -o playz/${1}_playback \
 	--embed-subs --progress;
 	if [ $? -eq 0 ]; then
-		ffmpeg -loglevel quiet -hide_banner -y -i playz/"${1}_playback.* playz/"${1}.wav";
+		ffmpeg -loglevel quiet -hide_banner -y -i playz/"${1}_playback.*" playz/"${1}.wav";
 		echo "RECORDING!!!! Recording audio with effects applied..."
 		parec --device=${SINKB} | sox -t raw -r 44100 -b 24 -c 2 \
 		-e signed-integer - -t wav recz/"${1}_voc.wav" \
