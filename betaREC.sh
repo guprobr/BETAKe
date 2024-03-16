@@ -65,7 +65,7 @@ then
 		-e signed-integer - -t wav recz/"${1}_voc.wav" \
 							dither trim 0 ${PLAYBETA_LENGTH} &
 	       #Launch lyrics video
-		mplayer -quiet playz/"${1}_playback.*"; 
+		vlc -I ncurses playz/"${1}_playback.*"; 
 		#SING!
 	else
 		echo "FAILED LYRICS VIDEO."; 

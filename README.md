@@ -1,6 +1,10 @@
-# V2.6
+# V2.69
 
-*PARA RODAR: use o python3*
+*PARA RODAR: abra o terminal e use o python3*
+
+```
+$ python3 BETAKe.py
+```
 
 ## python3 BETAKe.py
 Insira uma ID unica para seu karaoke, eu normalmente coloco o primeiro nome da música em maiúsculo.
