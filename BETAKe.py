@@ -28,12 +28,12 @@ window = tk.Tk()
 window.title("Karaoke Shell Interface")
 
 # Set window size and position
-window.geometry("400x600")
+window.geometry("400x1200")
 window.resizable(False, False)
 
 # Customize the theme
-window.configure(bg="#f0f0f0")
-tk.Label(window, text="Karaoke Shell Interface", bg="#f0f0f0", font=("Arial", 16)).pack(pady=10)
+window.configure(bg="#BABACA")
+tk.Label(window, text="BETAKe Karaoke Shell Interface", bg="#f0f0f0", font=("Arial", 16)).pack(pady=10)
 
 # Create labels and entry widgets for parameters
 tk.Label(window, text="Karaoke Name:", bg="#f0f0f0", font=("Arial", 12)).pack(anchor="w")
