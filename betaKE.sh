@@ -30,7 +30,7 @@ fi
 
 #post-processing
 ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -i tux.jpeg -filter_complex "
-[0:a]
+[0:a]adeclip,
 anlmdn=s=13,highpass=f=100,lowpass=f=15000,
 ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 0.25 1.00 0 0 0 0.33825 1.000 1.000 0 0 000.0 0.35,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
@@ -48,7 +48,10 @@ aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[play_master];
 
 [play_master][voc_master]amix=inputs=2:weights=0.4|0.6,
-afade=t=in:st=0:d=2;" -ar 44100 -acodec aac -b:a 320k \
+afade=t=in:st=0:d=2;
+
+[0:a]showcqt=size=320x200[cqt]; [0:a]avectorscope=size=1920x1080[ascope]; [ascope][cqt]overlay[viz] ; [2:v]scale=180x125[tux]; [tux]colorchannelmixer=aa=0.3[scoop]; [viz][scoop]overlay=10:3
+" -ar 44100 -acodec aac -b:a 320k \
                                 recz/"${2}_[BETAKe].mp4"
 
 ### clean the mess
