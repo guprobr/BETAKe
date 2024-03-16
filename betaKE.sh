@@ -49,7 +49,7 @@ aresample=resampler=soxr:osf=s16[play_master];
 
 [play_master][voc_master]amix=inputs=2:weights=0.4|0.6,
 afade=t=in:st=0:d=2;" -ar 44100 -acodec aac -b:a 320k \
-                                recz/"${2} _ cover by Guzpido.mp4"
+                                recz/"${2}_[BETAKe].mp4"
 
 ### clean the mess
                 killall -HUP pipewire-pulse;
