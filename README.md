@@ -33,7 +33,14 @@ DE FORMA ALGUMA ISSO já é UMA APLICAÇÃO PARA USUÁRIO FINAL!
 
 para gravar você usa: 
 
-## ./yeah.sh  We_are_the_Champions 
+### ./betaREC.sh  
+
+2 parameters are mandatory, filename without extension followed by a string, usually " title/author"
+so to SING "WONDERFUL.wav" , run
+. 
+```
+./betaREC.sh "WONDERFUL" "What  a Wonderful World by Louis Armstrong"
+```
 
 (note que o comando recebe o nome da arquivo como parametro, mas sem extensao)
 
