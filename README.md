@@ -1,13 +1,47 @@
-#### V2.5
-v2.5 AINDA NAO TEM EXEMPLOS DE OUTPUT: https://xiclet.com.br
+# V2.6
+
+*PARA RODAR: use o python3*
+
+## python3 BETAKe.py
+Insira uma ID unica para seu karaoke, eu normalmente coloco o primeiro nome da música em maiúsculo.
+
+Insira a  URL do vídeo que vamos extrair para cantar junto como playback.
+
+Overall, betaREC.sh sets up the environment for live recording with effects applied, while betaKE.sh performs post-processing to enhance the recorded audio and video. Together, they provide a comprehensive solution for karaoke recording.
 
 ## betaREC.sh
 This script sets up live audio processing with Autotalent pitch correction, dynamics processing, and equalization using PulseAudio's pactl utility,
 and records to a filename with name followed by _voc.wav, every time you run it overwrites again. This is file is used by next script, which generates the final video.
 
+Vamos documentar os filtros LADSPA e PulseAudio usados no primeiro script, betaREC.sh, e explicar como o vídeo do YouTube é baixado.
+```
+Filtros LADSPA:
+declip_1195:
+Este plugin é utilizado para remover a distorção de clipagem do áudio. Ele suaviza os picos de áudio que ultrapassam o limite de amplitude, resultando em um som menos distorcido.
+tap_pitch:
+Este plugin é usado para ajustar o tom do áudio, o que é útil em karaoke para corrigir pequenos desvios de afinação na voz. Os parâmetros controlam o ajuste do tom: o primeiro e o segundo controlam o tom em semitons e centavos, respectivamente, enquanto os terceiro, quarto e quinto controlam o deslocamento do volume.
+Módulos PulseAudio:
+module-echo-cancel:
+Este módulo é carregado para cancelar o eco do áudio, especialmente do retorno de áudio proveniente do loopback. Isso ajuda a melhorar a qualidade do áudio, removendo ecos indesejados.
+module-loopback:
+Este módulo é carregado para criar um loopback de áudio, permitindo que o áudio seja redirecionado de uma fonte de entrada para uma fonte de saída. No contexto do script, é usado para redirecionar o áudio processado de volta para o sistema de áudio para reprodução.
+```
+Baixando o Vídeo do YouTube:
+O script utiliza a ferramenta yt-dlp para baixar o vídeo do YouTube. Aqui está como funciona:
+```
+Obtenção do Título do Vídeo:
+Primeiro, o script usa yt-dlp --get-title para obter o título do vídeo do YouTube fornecido como argumento. Isso é feito para exibir informações sobre o vídeo que está sendo baixado.
+Download do Vídeo:
+Em seguida, o script usa yt-dlp novamente para baixar o vídeo do YouTube. Ele especifica a opção --embed-subs para incorporar legendas se estiverem disponíveis e --progress para exibir o progresso do download.
+Conversão para WAV:
+Depois que o vídeo é baixado, o script utiliza o ffmpeg para extrair o áudio do vídeo baixado e convertê-lo para o formato WAV. Isso é necessário para processamento adicional e gravação posterior.
+```
+
+Essas etapas permitem que o script baixe vídeos do YouTube, extraia o áudio e o prepare para gravação, permitindo a criação de karaokês com playback instrumental de alta qualidade e legendas embutidas, se disponíveis. Existem muitos canais hoje em dia, como ZOOM, KaraFun, ou até mesmo covers independentes instrumentais. Na verdade você pode usar esse programa vom qualquer vídeo.
+
 ## betaKE.sh
 
-* betaKE.sh is the post-processing script that renders a final MP4 video with tux.jpeg as fixed image of video;
+* betaKE.sh is the post-processing script that renders a final MP4 video
 * Now some enhancemente live, during recording time, except autotalent;
 * we just have to enhance already pitch corrected vocal with effects in order to masterize:
 * then MASTERIZE for streaming both playback and enhanced vocals, mixing both tracks.
@@ -31,37 +65,53 @@ DE FORMA ALGUMA ISSO já é UMA APLICAÇÃO PARA USUÁRIO FINAL!
 * para q você ouça sua própria voz quando estiver gravando
 * também para ajustar antes de gravar definitivamente, sua voz o microfone em função do volume do playback
 
-para gravar você usa: 
+para *gravar* você usa: 
 
-### ./betaREC.sh  
 
-2 parameters are mandatory, filename without extension followed by a string, usually " title/author"
-so to SING "WONDERFUL.wav" , run
-. 
+# betaREC.sh ID_SUA_MUSICA URL_VIDEO_KARAOKE:
+
+This script is designed to set up and perform live recording with various effects applied, primarily for karaoke purposes. It will download a karaoke video, actually any video, and will mix the recording with the video original audio at the next step. Here's a breakdown of its functionality:
+
 ```
-./betaREC.sh "WONDERFUL" "What  a Wonderful World by Louis Armstrong"
+Unload Existing Modules and Restart PulseAudio: T
+his section unloads any existing PulseAudio modules and restarts PulseAudio to ensure a clean audio setup.
+Load Configuration Variables: 
+efines variables for sink names.
+Load the Null Sink Module:
+Creates a virtual sink named "loopback" using the ALSA source.
+Load Echo Cancellation Module:
+Loads the echo cancellation module to cancel echo from the loopback.
+Load Ladspa Effects:
+Loads Ladspa effects for declipping and pitch correction.
+Prepare to Record:
+Determines the length of the audio to be recorded and prepares for downloading a lyrics video if a URL is provided.
+Start Recording:
+Starts recording audio with applied effects using parec and sox.
+Launch Lyrics Video:
+Downloads and plays the lyrics video using mplayer.
+Stop Recording:
+Stops recording after the lyrics video is finished or interrupted.
+Housekeeping:
+Cleans up by terminating unnecessary processes.
 ```
 
-(note que o comando recebe o nome da arquivo como parametro, mas sem extensao)
+Trigger Post Processing: 
+Calls the betaKE.sh script for post-processing.
 
-* imediatamente ele começa a tocar o playback gravando o input da placa em um arquivo
-* Pressionar CTRL+C uma UNICA vez, interrompe a gravação e salva o q foi gravado.
+# betaKE.sh ID_SEU_KARAOKE TITULO_DO_VIDEO_FINAL_Mp4:
 
-O script automaticamente chama o *betaKE.sh* -- Este script executa o mix do input com o arquivo do playback e aplica os fitros.
-Assim que o ffmpeg terminar a pipeline, ele executa o *mplayer* para você ouvir a mazela que acabou de fazer :)
+This script performs post-processing on the recorded audio and video. Here's an overview:
+```
+Clean Up:
+Unloads modules and cleans up the audio setup left by betaREC.sh.
+Check Parameters:
+Checks if the required parameters are provided, which are the name of the playback without the WAV extension and the title in MP3 format.
+Perform Post-Processing:
+ Uses ffmpeg to apply various audio filters, including echo cancellation, autotune, volume normalization, and mixing. It also overlays visual effects on the video.
+Play Processed Video:
+Uses mplayer to play the processed video.
 
-São dois scripts separados para ser bem fácil mudar se você quiser a programação para tentar adaptar.
-Rodando porventura 
-
-## ./betaKE.sh  We_are_the_Champions 
-
-assim ele nao grava de novo, apenas aplica novamente os filtros
-
-O nome do produto final ficará  "We_are_the_Champions_go.mp3"
-
-Note que sempre que você rodar o ./yeah.sh você vai sobrescrever a gravação anterior
-
-GO NUTS, ppl!
+```
 
 ## Requisitos de instalação
 
@@ -86,56 +136,45 @@ No Ubuntu instale esses pacotes e ele vai puxar as dependencias:
 
 ## Audio Processing Pipeline Documentation
 This document describes an audio processing pipeline using ffmpeg to preprocess vocals with Autotalent, enhance the pitch-corrected vocals with effects, and masterize the audio for streaming, combining both playback and enhanced vocals.
-This script performs the following actions:
 
-Let's break down each filter used in the ffmpeg command:
+The audio pipeline in the betaKE.sh script involves several steps of audio processing using ffmpeg. Let's break down the pipeline in detail:
 
 ```
-anlmdn:
+Input Sources:
 
-This filter performs noise reduction using the NLMDenoise algorithm.
-s=13: Sets the strength of the noise reduction. Higher values result in more aggressive noise reduction.
-highpass=f=100,lowpass=f=15000: Applies a high-pass and low-pass filter to limit the frequency range of the audio being processed.
-ladspa (Tap Autotalent):
+Original Vocal Recording: This is the raw vocal recording obtained from the karaoke session.
+Original Playback Audio: The original audio playback without any effects.
+Lyrics Video Audio: The audio extracted from the lyrics video.
+Filtering and Processing:
 
-This filter applies pitch correction and harmonization.
-plugin=autotalent: Specifies the Autotalent plugin.
-The numbers following autotalent are control parameters for the plugin. These parameters control aspects such as pitch correction strength, format, and other settings.
-compand:
+adeclip: This filter removes clipping distortion from the original vocal recording.
+anlmdn: A noise gate filter that reduces low-level background noise.
+ladspa=tap_autotalent: Applies autotune effect to the vocal recording for pitch correction. The parameters include the fundamental frequency, bandwidth, and formant shift.
+compand: Compressor/expander filter that adjusts the dynamic range of the audio to make it sound more consistent.
+firequalizer: Graphic equalizer filter that adjusts the frequency response of the audio.
+aecho: Adds a simulated echo effect to the vocal recording.
+treble: Adjusts the treble frequency range of the audio.
+loudnorm: Loudness normalization filter that adjusts the volume level to a standardized level.
+volume: Increases the overall volume of the audio.
+aformat: Converts the audio format to a standardized format (floating-point PCM, 44100 Hz sample rate, stereo channels).
+aresample: Resamples the audio to a standardized sample rate using the SoX resampler.
+Mixing and Output:
 
-This filter performs dynamic range compression/expansion.
-points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7: Specifies the compression/expansion curve points.
-This filter helps to normalize the audio's loudness levels.
-firequalizer (Equalizer):
+Mixing: The processed vocal recording is mixed with the original playback audio using the amix filter.
+Fading: The mixed audio is faded in over a duration of 2 seconds using the afade filter.
+Visualization:
 
-This filter applies equalization to adjust the frequency response of the audio.
-gain_entry='entry(250,-5);entry(4000,3)': Specifies the gain for specific frequency bands. In this case, it boosts frequencies around 250Hz and 4kHz.
-aecho:
+showcqt and avectorscope: Generate visualizations of the audio, including a continuous frequency transform (CQT) and an audio vectorscope.
+Overlaying:
 
-This filter adds echo to the audio.
-0.8:0.7:111:0.13: Specifies parameters for the echo effect, including delay time, feedback, and other properties.
-extrastereo:
+Overlaying Visual Effects: The visualizations are overlaid onto the video output.
+Output Format:
 
-This filter increases the stereo width of the audio.
-m=1.5: Sets the amount of stereo expansion. Higher values result in more pronounced stereo width.
-loudnorm:
-
-This filter performs loudness normalization.
-I=-16:LRA=11:TP=-1.5: Specifies loudness normalization parameters such as target integrated loudness (I), loudness range (LRA), and true peak level (TP).
-aformat:
-
-This filter adjusts the audio format settings.
-sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo: Specifies the desired sample format, sample rate, and channel layout.
-aresample:
-
-This filter resamples the audio.
-resampler=soxr:osf=s16: Specifies the resampling algorithm (soxr) and output sample format (s16).
-amix:
-
-This filter mixes audio streams together.
-inputs=2: Specifies the number of input streams to mix.
-weights=0.4|0.6: Sets the relative weights of the input streams.
-This filter combines the processed vocal audio (voc_master) with the original playback audio (play_master) and applies fading.
+The processed audio is encoded in AAC format with a bitrate of 320 kbps.
+The output video format is MP4.
+This pipeline applies a series of audio filters and effects to enhance the original vocal recording and mixes it with the original playback audio to create a final karaoke video with improved audio quality and visualizations.
 ```
 
 These filters together process the vocal and playback audio, applying noise reduction, pitch correction, equalization, echo, and other effects, and then mix them together for the final output. Adjusting the parameters of these filters can result in different audio processing effects.
+
+
