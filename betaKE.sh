@@ -8,7 +8,8 @@ else
         fi
 fi
 
-#Now on v2.0 live-processing for Autotalent,
+#### v2.5: current version
+#Since v2.0 live-processing for Autotalent, never worked.
 #we just have to enhance already pitch corrected vocal with effects
 #then MASTERIZE for streaming both playback and enhanced vocals, mixing both
 #
@@ -19,7 +20,7 @@ fi
 # new output recording .wav will exist
 #rm -rf recz/"${2} _ cover by Guzpido.wav" 
 # Check if the output recording .wav exists, and wait until it does
-#( while [ ! -f recz/"${2} _ cover by Guzpido.wav" ]; 
+#( while [ ! -f recz/"${2}_[BETAKE].mp4" ]; 
 #       do 
 #               sleep 0.1; 
 #               echo -n '.'; 
@@ -59,6 +60,6 @@ afade=t=in:st=0:d=2;" -ar 44100 -acodec aac -b:a 320k \
 echo "Sleep 2sec";
 sleep 2;
 
-mplayer recz/"${2} _ cover by Guzpido.mp4"; #then PLAY!
+mplayer recz/"${2}_[BETAKe]"; #then PLAY!
 
 # 2024 by gu.pro.br
