@@ -66,7 +66,7 @@ then
 		-e signed-integer - -t wav recz/"${1}_voc.wav" \
 							dither trim 0 ${PLAYBETA_LENGTH} &
 	       #Launch lyrics video
-		vlc -I ncurses "${BETA_PLAYFILE}"; 
+		ffplay -hide_banner "${BETA_PLAYFILE}"; 
 		#SING!
 	else
 		echo "FAILED LYRICS VIDEO."; 

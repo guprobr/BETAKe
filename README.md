@@ -122,7 +122,6 @@ Uses mplayer to play the processed video.
 * yt-dlp -   downloader of videos from YouTube and **other sites**
 * sox - Swiss **army knife of sound** processing
 * ffmpeg - Tools for **transcoding, streaming and playing** of multimedia files
-* mplayer - movie **player** for Unix-like systems
 * autotalent -  **pitch correction** LADSPA plugin
 * pulseaudio-utils - Command line **tools for the PulseAudio** sound server
 * alsa-utils - Utilities for configuring and **using** **ALSA**

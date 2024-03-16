@@ -48,6 +48,6 @@ afade=t=in:st=0:d=2;
 
 
 
-mplayer recz/"${BETA_TITLE}_[BETAKe].avi"; #then PLAY!
+ffplay -hide_banner recz/"${BETA_TITLE}_[BETAKe].mp4"; #then PLAY!
 
 # 2024 by gu.pro.br
