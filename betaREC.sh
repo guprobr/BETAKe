@@ -41,25 +41,58 @@ pactl load-module module-loopback;
 
 echo "**";
 echo "**";
-echo "Test output or CTRL+c to abort..."
-echo "Starting to record audio in 6sec"; 
-sleep 6;
+echo "NOW Test output or CTRL+c to abort..."
+echo "Starting to donwload lyrics video and record audio"; 
 ##################################
-# Record the audio with effects applied
-echo "Recording audio with effects applied..."
-aplay ${1}.wav &  # Start playback
-parec --device=${SINKB} | sox -t raw -r 44100 -b 16 -c 2 -e signed-integer - -t wav ${1}_voc.wav; 
-##################################
+# PREPARE to Record the audio with effects applied
+PLAYBETA_LENGTH=$( mplayer -ao null -identify -frames 0 \
+				${1}.wav 2>&1 \
+| grep ID_LENGTH | cut -d= -f2 );
 
-# Unload existing modules and restart PulseAudio
-pactl unload-module module-ladspa-sink
-pactl unload-module module-loopback
-pactl unload-module module-echo-cancel
-killall -HUP pipewire-pulse
-## kill playback if it is playing
-killall -9 aplay
+## quickly prepare a lyrics video - from YouTube
+
+if [ "${2}" != "" ];
+then
+	echo "Received apparently a URL, gonna try get lyrics video.."; 
+	PLAYBETA_TITLE="$( yt-dlp --get-title "${2}" )"; 
+	#Got title, gonna get video :D
+	yt-dlp "${2}" -o playz/${1}_playback \
+	--embed-subs --progress --merge-output-format webm;
+	if [ $? -eq 0 ]; then
+		ffmpeg -loglevel quiet -hide_banner -y -i playz/"${1}_playback.webm" playz/"${1}.wav";
+		echo "RECORDING!!!! Recording audio with effects applied..."
+		parec --device=${SINKB} | sox -t raw -r 44100  -b 32 -c 1 -e signed-integer - -t wav recz/"${1}_voc.wav" dither trim 0 ${PLAYBETA_LENGTH} &
+	       #Launch lyrics video
+		mplayer -quiet playz/"${1}_playback.webm"; 
+		#SING!
+	else
+		echo "FAILED LYRICS VIDEO."; 
+		echo ABORT; exit 1;
+		#echo "will use existing ${1}.wav";
+		#vlc -I ncurses playz/${1}.wav --sub-track 0 &
+	fi
+else
+	echo "INVALID URL --- no lyrics video";
+	echo ABORT; exit 1;
+	#vlc -I ncurses playz/${1}.wav --sub-track 0 &
+fi
+
+
+##################################
+###### STOP RECORDING after mplayer exits
+# or if BETA_LENGTH reaches;
+# signal sox to interrupt recording if necessary
+killall -SIGINT sox;
+
+### HOUSEKEEP
+# rly termate useless process by now
+killall -9 vlc;
+killall -9 mplayer
+killall -9 parec 
+killall -9 ffmpeg
+
 
 ######################### trigger post processing
-./betaKE.sh ${1} ${2}
+./betaKE.sh "${1}" "${BETA_TITLE}"
 
 # 2024 by gu.pro.br
