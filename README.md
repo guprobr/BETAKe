@@ -115,17 +115,18 @@ Uses mplayer to play the processed video.
 
 ## Requisitos de instalação
 
-* sox - Swiss army knife of sound processing
-* ffmpeg - Tools for transcoding, streaming and playing of multimedia files
-* mplayer - movie player for Unix-like systems
-* autotalent -  pitch correction LADSPA plugin
-* pulseaudio-utils - Command line tools for the PulseAudio sound server
-* alsa-utils - Utilities for configuring and using ALSA
-* Steve Harris LADSPA plugins
+* yt-dlp -   downloader of videos from YouTube and **other sites**
+* sox - Swiss **army knife of sound** processing
+* ffmpeg - Tools for **transcoding, streaming and playing** of multimedia files
+* mplayer - movie **player** for Unix-like systems
+* autotalent -  **pitch correction** LADSPA plugin
+* pulseaudio-utils - Command line **tools for the PulseAudio** sound server
+* alsa-utils - Utilities for configuring and **using** **ALSA**
+* Steve Harris **LADSPA** plugins
 
 No Ubuntu instale esses pacotes e ele vai puxar as dependencias: 
 
-### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils swh-plugins;
+### sudo apt install -y sox ffmpeg mplayer autotalent pulseaudio-utils alsa-utils swh-plugins yt-dlp;
 
 * Se os arquivos de áudio de entrada tiverem diferentes frequências de amostragem, é uma boa prática convertê-los para a mesma frequência antes de misturá-los, a fim de evitar distorções e outros problemas.
 * Você pode fazer isso usando o filtro aresample do FFmpeg
