@@ -4,9 +4,9 @@ v2.5 AINDA NAO TEM EXEMPLOS DE OUTPUT: https://xiclet.com.br
 ## yeah.sh
 This script sets up live audio processing with Autotalent pitch correction, dynamics processing, and equalization using PulseAudio's pactl utility. 
 
-## go.sh
+## betaKE.sh
 
-* go.sh is the post-processing script that renders a final MP4 video with tux.jpeg as fixed image of video;
+* betaKE.sh is the post-processing script that renders a final MP4 video with tux.jpeg as fixed image of video;
 * Now some enhancemente live, during recording time, except autotalent;
 * we just have to enhance already pitch corrected vocal with effects in order to masterize:
 * then MASTERIZE for streaming both playback and enhanced vocals, mixing both tracks.
@@ -39,7 +39,7 @@ para gravar você usa:
 * imediatamente ele começa a tocar o playback gravando o input da placa em um arquivo
 * Pressionar CTRL+C uma UNICA vez, interrompe a gravação e salva o q foi gravado.
 
-O script automaticamente chama o *go.sh* -- Este script executa o mix do input com o arquivo do playback e aplica os fitros.
+O script automaticamente chama o *betaKE.sh* -- Este script executa o mix do input com o arquivo do playback e aplica os fitros.
 Assim que o ffmpeg terminar a pipeline, ele executa o *mplayer* para você ouvir a mazela que acabou de fazer :)
 
 São dois scripts separados para ser bem fácil mudar se você quiser a programação para tentar adaptar.
