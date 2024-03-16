@@ -28,7 +28,7 @@ window = tk.Tk()
 window.title("Karaoke Shell Interface")
 
 # Set window size and position
-window.geometry("400x1200")
+window.geometry("600x640")
 window.resizable(False, False)
 
 # Customize the theme
@@ -36,12 +36,12 @@ window.configure(bg="#BABACA")
 tk.Label(window, text="BETAKe Karaoke Shell Interface", bg="#f0f0f0", font=("Arial", 16)).pack(pady=10)
 
 # Create labels and entry widgets for parameters
-tk.Label(window, text="Karaoke Name:", bg="#f0f0f0", font=("Arial", 12)).pack(anchor="w")
+tk.Label(window, text="Karaoke Name: ID karaoke, per musique", highlightbackground="red", font=("Arial", 18)).pack(anchor="w")
 karaoke_name_entry = tk.Entry(window, font=("Arial", 12))
 karaoke_name_entry.pack(pady=5)
 
-tk.Label(window, text="Video URL:", bg="#f0f0f0", font=("Arial", 12)).pack(anchor="w")
-video_url_entry = tk.Entry(window, font=("Arial", 12))
+tk.Label(window, text="Video URL: you can use any video from YouTube, vimeo, etc for playback", highlightbackground="blue", bg="#f0f0f0", font=("Arial", 14)).pack(anchor="c")
+video_url_entry = tk.Entry(window, font=("Arial", 10), highlightcolor="orange")
 video_url_entry.pack(pady=5)
 
 # Create a button to execute the shell script
@@ -53,11 +53,11 @@ submit_button = tk.Button(window, text="KILL", command=Terminator, font=("Arial"
 submit_button.pack(pady=13)
 
 # Add image
-image_path = os.path.join(os.path.dirname(__file__), "tux.jpeg")
+image_path = os.path.join(os.path.dirname(__file__), "tux.png")
 if os.path.exists(image_path):
     try:
         img = tk.PhotoImage(file=image_path)
-        img_label = tk.Label(window, image=img, bg="#f0f0f0")
+        img_label = tk.Label(window, image=img)
         img_label.pack()
     except tk.TclError:
         print("Error loading image.")

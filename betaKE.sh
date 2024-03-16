@@ -23,30 +23,30 @@ fi
 #
 #post-processing
 ffmpeg -y -hide_banner -ss 0.36 -i recz/"${1}_voc.wav" -i playz/"${1}.wav" -i playz/"${1}_playback.webm" -filter_complex "
-[0:a]adeclip,
-anlmdn=s=33,highpass=f=100,lowpass=f=15000,
+[0:a]adeclip,anlmdn,afftdn,
 ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 0.25 1.00 0 0 0 0.33825 1.000 1.000 0 0 000.0 0.35,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
-aecho=0.8:0.7:111:0.13,treble=g=5,
-loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=1dB,
+aecho=0.8:0.7:128:0.13,
+loudnorm=I=-16:LRA=11:TP=-1.5,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[voc_master];
 [1:a]
-loudnorm=I=-16:LRA=11:TP=-1.5,volume=volume=0dB,
+loudnorm=I=-16:LRA=11:TP=-1.5,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[play_master];
-[play_master][voc_master]amix=inputs=2,
+[play_master][voc_master]amix=inputs=2:weights=0.45|0.30,
 afade=t=in:st=0:d=2;
 
-[0:a]showcqt=size=240x120[cqt];[1:a]avectorscope=size=240x120[ascope];
-[cqt]colorchannelmixer=aa=0.4[tux];
-[ascope][tux]overlay[graphz];[2:v]scale=960x540[origi];
-[origi][graphz]overlay=5:2
-" -strict experimental -ar 44100 -acodec aac -b:a 320k \
-                                recz/"${2}_[BETAKe].mp4"
+[0:a]showcqt=size=64x40[cqt]; [0:a]avectorscope=size=50x50[vscope];
+[2:v]scale=s=200x128[ouch];[ouch][cqt]overlay=5:2[scoop];
+[scoop][vscope]overlay=5:2;
+" -strict experimental -ar 44100 -b:a 320k \
+                                recz/"${2}_[BETAKe].avi"
 
-mplayer recz/"${2}_[BETAKe].mp4"; #then PLAY!
+
+
+mplayer recz/"${2}_[BETAKe].avi"; #then PLAY!
 
 # 2024 by gu.pro.br
