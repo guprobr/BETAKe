@@ -28,7 +28,7 @@ ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
-aecho=0.8:0.7:128:0.13,
+aecho=0.8:0.7:90:0.13,
 loudnorm=I=-16:LRA=11:TP=-1.5,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16[voc_master];
