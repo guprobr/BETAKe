@@ -1,8 +1,9 @@
 #### V2.5
 v2.5 AINDA NAO TEM EXEMPLOS DE OUTPUT: https://xiclet.com.br
 
-## yeah.sh
-This script sets up live audio processing with Autotalent pitch correction, dynamics processing, and equalization using PulseAudio's pactl utility. 
+## betaREC.sh
+This script sets up live audio processing with Autotalent pitch correction, dynamics processing, and equalization using PulseAudio's pactl utility,
+and records to a filename with name followed by _voc.wav, every time you run it overwrites again. This is file is used by next script, which generates the final video.
 
 ## betaKE.sh
 
