@@ -32,7 +32,7 @@ fi
 ffmpeg -y -hide_banner -i ${1}_voc.wav -i ${1}.wav -i tux.jpeg -filter_complex "
 [0:a]
 anlmdn=s=13,highpass=f=100,lowpass=f=15000,
-ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.000 1.00 0 0 0 0.33825 1.000 1.000 0 0 000.0 1.000,
+ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 0.25 1.00 0 0 0 0.33825 1.000 1.000 0 0 000.0 0.35,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
