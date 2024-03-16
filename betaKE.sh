@@ -39,14 +39,14 @@ aresample=resampler=soxr:osf=s16[play_master];
 [play_master][voc_master]amix=inputs=2:weights=0.45|0.30,
 afade=t=in:st=0:d=2;
 
-[0:a]showcqt=size=64x40[cqt]; [0:a]avectorscope=size=50x50[vscope];
-[2:v]scale=s=200x128[ouch];[ouch][cqt]overlay=5:2[scoop];
-[scoop][vscope]overlay=5:2;
+[0:a]showcqt=size=164x94[cqt]; [0:a]avectorscope=size=250x250[vscope];
+[ouch][vscope]overlay=5:2[scoop];
+[scoop][cqt]overlay=2:5;
 " -strict experimental -ar 44100 -b:a 320k \
-                                recz/"${2}_[BETAKe].avi"
+                                recz/"${BETA_TITLE}_[BETAKe].avi"
 
 
 
-mplayer recz/"${2}_[BETAKe].avi"; #then PLAY!
+mplayer recz/"${BETA_TITLE}_[BETAKe].avi"; #then PLAY!
 
 # 2024 by gu.pro.br
