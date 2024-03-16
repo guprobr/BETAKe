@@ -7,12 +7,15 @@ pactl unload-module module-echo-cancel
 killall -HUP pipewire-pulse
 
 # Load configuration variables
-source ./config
-echo "SinkA: ${SINKA}"
+SINKA="beta_loopy";
+SINKB="beta_kombo";
+SINKC="beta_recz";
 
 # Load the null sink module to create a virtual sink named "loopback"
-echo "Wait 2 seconds to initialize..."
-sleep 2;
+echo "**";
+echo "**";
+echo "Wait 3 seconds to initialize..."
+sleep 3;
 
 pactl load-module module-alsa-source device=$(pactl list short sources | grep alsa_input | head -n1 | awk '{ print $2 }') sink_name=${SINKA}
 
@@ -33,14 +36,20 @@ pactl load-module module-ladspa-sink sink_name=ladspa_dyna label=tap_dynamics_m 
 echo "Load module-ladspa-sink for lookahead limiter"
 pactl load-module module-ladspa-sink sink_name=${SINKB} plugin="fast_lookahead_limiter_1913" label=fastLookaheadLimiter master=ladspa_dyna;
 
-echo "sleep 3sec"; sleep 1;
+echo "sleep 1sec"; sleep 1;
 pactl load-module module-loopback;
 
-echo "Starting record audio in 3sec"; sleep 1;
+echo "**";
+echo "**";
+echo "Test output or CTRL+c to abort..."
+echo "Starting to record audio in 6sec"; 
+sleep 6;
+##################################
 # Record the audio with effects applied
 echo "Recording audio with effects applied..."
 aplay ${1}.wav &  # Start playback
 parec --device=${SINKB} | sox -t raw -r 44100 -b 16 -c 2 -e signed-integer - -t wav ${1}_voc.wav; 
+##################################
 
 # Unload existing modules and restart PulseAudio
 pactl unload-module module-ladspa-sink
@@ -50,10 +59,7 @@ killall -HUP pipewire-pulse
 ## kill playback if it is playing
 killall -9 aplay
 
-## trigger post processing
+######################### trigger post processing
 ./betaKE.sh ${1} ${2}
 
-
-aplay ${1}.wav &
-sox  -d ${1}_voc.wav
-./go.sh "${1}" "${2}" "${3}" "${4}"
+# 2024 by gu.pro.br
