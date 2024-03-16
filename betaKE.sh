@@ -6,12 +6,13 @@
                 pactl unload-module module-echo-cancel;
                 pactl unload-module module-ladspa-sink;
 
-BETA_TITLE="${2}";
+BETA_TITLE="${3}";
+BETA_PLAYFILE="${2}"
 
 if [ "${1}" == "" ]; then
         echo INFORMAR DOIS PARAMETROS, nome_playback sem extensao WAV e TITULO mp3;
 else
-        if [ "${2}" == "" ]; then
+        if [ "${3}" == "" ]; then
                 BETA_TITLE="${1}"
         fi
 fi
@@ -22,7 +23,7 @@ fi
 #then MASTERIZE for streaming both playback and enhanced vocals, mixing both
 #
 #post-processing
-ffmpeg -y -hide_banner -ss 0.36 -i recz/"${1}_voc.wav" -i playz/"${1}.wav" -i playz/"${1}_playback.*" -filter_complex "
+ffmpeg -y -hide_banner -ss 0.36 -i recz/"${1}_voc.wav" -i playz/"${1}.wav" -i  "${BETA_PLAYFILE}" -filter_complex "
 [0:a]adeclip,anlmdn,afftdn,
 ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 0.25 1.00 0 0 0 0.33825 1.000 1.000 0 0 000.0 0.35,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,

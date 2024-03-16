@@ -59,13 +59,14 @@ then
 	yt-dlp "${2}" -o playz/${1}_playback \
 	--embed-subs --progress;
 	if [ $? -eq 0 ]; then
-		ffmpeg -loglevel quiet -hide_banner -y -i playz/"${1}_playback.*" playz/"${1}.wav";
+		BETA_PLAYFILE="$( ls -1 playz/${1}_playback.* | head -n1 )"
+		ffmpeg -loglevel quiet -hide_banner -y -i "${BETA_PLAYFILE}" playz/"${1}.wav";
 		echo "RECORDING!!!! Recording audio with effects applied..."
 		parec --device=${SINKB} | sox -t raw -r 44100 -b 24 -c 2 \
 		-e signed-integer - -t wav recz/"${1}_voc.wav" \
 							dither trim 0 ${PLAYBETA_LENGTH} &
 	       #Launch lyrics video
-		vlc -I ncurses playz/"${1}_playback.*"; 
+		vlc -I ncurses "${BETA_PLAYFILE}"; 
 		#SING!
 	else
 		echo "FAILED LYRICS VIDEO."; 
@@ -95,6 +96,6 @@ killall -9 ffmpeg
 
 
 ######################### trigger post processing
-./betaKE.sh "${1}" "${BETA_TITLE}"
+./betaKE.sh "${1}" "${BETA_PLAYFILE}" "${BETA_TITLE}"
 
 # 2024 by gu.pro.br
