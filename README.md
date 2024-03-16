@@ -1,13 +1,15 @@
-#### V2.0
-ex de outputs: https://xiclet.com.br
+#### V2.5
+v2.5 AINDA NAO TEM EXEMPLOS DE OUTPUT: https://xiclet.com.br
 
 ## yeah.sh
 This script sets up live audio processing with Autotalent pitch correction, dynamics processing, and equalization using PulseAudio's pactl utility. 
 
 ## go.sh
-Now on v2.0 live-processing for Autotalent, 
-we just have to enhance already pitch corrected vocal with effects
-then MASTERIZE for streaming both playback and enhanced vocals, mixing both
+
+* go.sh is the post-processing script that renders a final MP4 video with tux.jpeg as fixed image of video;
+* Now some enhancemente live, during recording time, except autotalent;
+* we just have to enhance already pitch corrected vocal with effects in order to masterize:
+* then MASTERIZE for streaming both playback and enhanced vocals, mixing both tracks.
 
  * esses scripts focam ser o mais simples possível,
  * tenha em mente, que, quanto mais se tenta efeitos sonoros mirabolantes, mais fácil estragar o audio final. 
@@ -43,7 +45,7 @@ Assim que o ffmpeg terminar a pipeline, ele executa o *mplayer* para você ouvir
 São dois scripts separados para ser bem fácil mudar se você quiser a programação para tentar adaptar.
 Rodando porventura 
 
-## ./go.sh  We_are_the_Champions 
+## ./betaKE.sh  We_are_the_Champions 
 
 assim ele nao grava de novo, apenas aplica novamente os filtros
 
@@ -90,11 +92,52 @@ This document describes an audio processing pipeline using ffmpeg to preprocess 
 This script performs the following actions:
 
 ```
-Unloads previous PulseAudio modules (module-ladspa-sink, module-loopback, module-echo-cancel).
-Utilizes FFmpeg to process audio files ${1}_voc.wav (pitch-corrected vocals) and ${1}.wav (original vocals).
-Applies various audio filters such as adeclip, anlmdn, compand, afftdn, treble adjustment, equalization, firequalizer, and aecho to enhance the vocals.
-Normalizes the audio volume and formats it for playback.
-Mixes the enhanced vocals with the original vocals.
-Outputs the mixed audio to ${1}_go.wav.
-Plays the final audio using mplayer.
+Let's break down each filter used in the ffmpeg command:
+
+anlmdn:
+
+This filter performs noise reduction using the NLMDenoise algorithm.
+s=13: Sets the strength of the noise reduction. Higher values result in more aggressive noise reduction.
+highpass=f=100,lowpass=f=15000: Applies a high-pass and low-pass filter to limit the frequency range of the audio being processed.
+ladspa (Tap Autotalent):
+
+This filter applies pitch correction and harmonization.
+plugin=autotalent: Specifies the Autotalent plugin.
+The numbers following autotalent are control parameters for the plugin. These parameters control aspects such as pitch correction strength, format, and other settings.
+compand:
+
+This filter performs dynamic range compression/expansion.
+points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7: Specifies the compression/expansion curve points.
+This filter helps to normalize the audio's loudness levels.
+firequalizer (Equalizer):
+
+This filter applies equalization to adjust the frequency response of the audio.
+gain_entry='entry(250,-5);entry(4000,3)': Specifies the gain for specific frequency bands. In this case, it boosts frequencies around 250Hz and 4kHz.
+aecho:
+
+This filter adds echo to the audio.
+0.8:0.7:111:0.13: Specifies parameters for the echo effect, including delay time, feedback, and other properties.
+extrastereo:
+
+This filter increases the stereo width of the audio.
+m=1.5: Sets the amount of stereo expansion. Higher values result in more pronounced stereo width.
+loudnorm:
+
+This filter performs loudness normalization.
+I=-16:LRA=11:TP=-1.5: Specifies loudness normalization parameters such as target integrated loudness (I), loudness range (LRA), and true peak level (TP).
+aformat:
+
+This filter adjusts the audio format settings.
+sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo: Specifies the desired sample format, sample rate, and channel layout.
+aresample:
+
+This filter resamples the audio.
+resampler=soxr:osf=s16: Specifies the resampling algorithm (soxr) and output sample format (s16).
+amix:
+
+This filter mixes audio streams together.
+inputs=2: Specifies the number of input streams to mix.
+weights=0.4|0.6: Sets the relative weights of the input streams.
+This filter combines the processed vocal audio (voc_master) with the original playback audio (play_master) and applies fading.
+These filters together process the vocal and playback audio, applying noise reduction, pitch correction, equalization, echo, and other effects, and then mix them together for the final output. Adjusting the parameters of these filters can result in different audio processing effects.
 ```
