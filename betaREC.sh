@@ -71,7 +71,7 @@ then
 		awk '{ print substr($2, 2, 3)}' ) | grep DE | \
 		awk '{print $2}' | head -n1	) \
 		-i /dev/video0 -f pulse -i ${SINKB}.monitor \
-    	-c:v h264 -c:a aac -b 320k -strict experimental \
+    	-c:v h264 -c:a aac -b:a 320k -strict experimental \
 		-t ${PLAYBETA_LENGTH} recz/${1}_voc.mp4 &
 		
 		#Launch lyrics video
