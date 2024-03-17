@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 import subprocess
 
-BETAKE_PATH=@@FIXME@@
+BETAKE_PATH="./"
 
 def run_shell_script():
     karaoke_name = karaoke_name_entry.get()
