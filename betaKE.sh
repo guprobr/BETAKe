@@ -26,7 +26,7 @@ fi
 #then MASTERIZE for streaming both playback and enhanced vocals, mixing both
 #
 #post-processing
-ffmpeg -y -hide_banner -ss 0.36 -i ${4}recz/"${1}_voc.wav" -i ${4}playz/"${1}.wav" -i  ${4}"${BETA_PLAYFILE}" -filter_complex "
+ffmpeg -y -hide_banner -ss 0.36 -i ${4}recz/"${1}_voc.mp4" -i ${4}playz/"${1}.wav" -i  ${4}"${BETA_PLAYFILE}" -filter_complex "
 [0:a]adeclip,anlmdn,afftdn,
 ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 0.25 1.00 0 0 0 0.33825 1.000 1.000 0 0 000.0 0.35,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
@@ -44,8 +44,9 @@ aresample=resampler=soxr:osf=s16[play_master];
 afade=t=in:st=0:d=2;
 
 [0:a]showcqt=size=164x94[cqt]; [0:a]avectorscope=size=250x250[vscope];
-[2:v][vscope]overlay=5:2[scoop];
-[scoop][cqt]overlay=2:5;
+[2:v][vscope]overlay=5:5[vidz];
+[scoop][cqt]overlay=5:3; [0:v]format=rgba,colorchannelmixer=aa=0.64[tux];
+[vidz][tux]overlay=5:10;
 " -strict experimental -ar 44100 -acodec aac -b:a 320k \
                                ${4}recz/"${BETA_TITLE}_[BETAKe].mp4"
 

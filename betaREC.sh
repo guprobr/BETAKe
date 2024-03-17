@@ -47,9 +47,6 @@ echo "NOW Test output or CTRL+c to abort..."
 echo "Starting to donwload lyrics video and record audio"; 
 ##################################
 # PREPARE to Record the audio with effects applied
-PLAYBETA_LENGTH=$( mplayer -ao null -identify -frames 0 \
-				${1}.wav 2>&1 \
-| grep ID_LENGTH | cut -d= -f2 );
 
 ## quickly prepare a lyrics video - from YouTube
 
@@ -62,12 +59,22 @@ then
 	--embed-subs --progress;
 	if [ $? -eq 0 ]; then
 		BETA_PLAYFILE="$( ls -1 playz/${1}_playback.* | head -n1 )"
-		ffmpeg -loglevel quiet -hide_banner -y -i "${BETA_PLAYFILE}" playz/"${1}.wav";
+		PLAYBETA_LENGTH=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${BETA_PLAYFILE}")
+
+		
 		echo "RECORDING!!!! Recording audio with effects applied..."
-		parec --device=${SINKB} | sox -t raw -r 44100 -b 16 -c 2 \
-		-e signed-integer - -t wav recz/"${1}_voc.wav" \
-							dither trim 0 ${PLAYBETA_LENGTH} &
-	       #Launch lyrics video
+		#parec --device=${SINKB} | sox -t raw -r 44100 -b 16 -c 2 \
+		#-e signed-integer - -t wav recz/"${1}_voc.wav" \
+		#					dither trim 0 ${PLAYBETA_LENGTH} &
+		ffmpeg -f v4l2 -input_format ffmpeg -hide_banner -formats \
+		| grep -i $( v4l2-ctl --list-formats | egrep '\[0\]' | \
+		awk '{ print substr($2, 2, 3)}' ) | grep DE | \
+		awk '{print $2}' | head -n1	\
+		-i /dev/video0 -f pulse -i ${SINKB}.monitor \
+    	-c:v h264 -c:a aac -b 320k -strict experimental \
+		-t ${PLAYBETA_LENGTH} recz/${1}_voc.mp4 &
+		
+		#Launch lyrics video
 		ffplay -hide_banner "${BETA_PLAYFILE}"; 
 		#SING!
 	else
