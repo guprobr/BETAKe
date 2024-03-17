@@ -1,4 +1,6 @@
-# V2.69
+# V2.7
+
+# grandes avanços na interface python3
 
 *PARA RODAR: abra o terminal e use o python3*
 
@@ -119,8 +121,10 @@ Uses mplayer to play the processed video.
 
 ## Requisitos de instalação
 
-* yt-dlp -   downloader of videos from YouTube and **other sites**
-* sox - Swiss **army knife of sound** processing
+* sox - Swiss army knife of sound processing
+* pavumeter - PulseAudio Volume Meter
+* yt-dlp - downloader of videos from YouTube and **other sites**
+* python3-pexpect - Python 3 module for automating interactive applications
 * ffmpeg - Tools for **transcoding, streaming and playing** of multimedia files
 * autotalent -  **pitch correction** LADSPA plugin
 * pulseaudio-utils - Command line **tools for the PulseAudio** sound server
