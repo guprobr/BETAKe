@@ -13,6 +13,7 @@ BETA_PLAYFILE="${2}";
 
 if [ "${1}" == "" ]; then
         echo INFORMAR DOIS PARAMETROS, nome_playback sem extensao WAV e TITULO mp3;
+        exit;
 else
         if [ "${3}" == "" ]; then
                 BETA_TITLE="${1}"
@@ -25,7 +26,7 @@ fi
 #then MASTERIZE for streaming both playback and enhanced vocals, mixing both
 #
 #post-processing
-ffmpeg -y -hide_banner -ss 0.36 -i recz/"${1}_voc.wav" -i playz/"${1}.wav" -i  "${BETA_PLAYFILE}" -filter_complex "
+ffmpeg -y -hide_banner -ss 0.36 -i ${4}recz/"${1}_voc.wav" -i ${4}playz/"${1}.wav" -i  ${4}"${BETA_PLAYFILE}" -filter_complex "
 [0:a]adeclip,anlmdn,afftdn,
 ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 0.25 1.00 0 0 0 0.33825 1.000 1.000 0 0 000.0 0.35,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
@@ -46,10 +47,10 @@ afade=t=in:st=0:d=2;
 [2:v][vscope]overlay=5:2[scoop];
 [scoop][cqt]overlay=2:5;
 " -strict experimental -ar 44100 -acodec aac -b:a 320k \
-                                recz/"${BETA_TITLE}_[BETAKe].mp4"
+                               ${4}recz/"${BETA_TITLE}_[BETAKe].mp4"
 
 
 
-ffplay -hide_banner recz/"${BETA_TITLE}_[BETAKe].mp4"; #then PLAY!
+ffplay -hide_banner ${4}recz/"${BETA_TITLE}_[BETAKe].mp4"; #then PLAY!
 
 # 2024 by gu.pro.br

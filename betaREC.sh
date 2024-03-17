@@ -91,13 +91,12 @@ killall -SIGINT sox;
 
 ### HOUSEKEEP
 # rly termate useless process by now
-killall -9 vlc;
 killall -9 mplayer
 killall -9 parec 
 killall -9 ffmpeg
-
+killall -9 ffplay
 
 ######################### trigger post processing
-./betaKE.sh "${1}" "${BETA_PLAYFILE}" "${PLAYBETA_TITLE}" "${3}"
+${3}/betaKE.sh "${1}" "${BETA_PLAYFILE}" "${PLAYBETA_TITLE}" "${3}"
 
 # 2024 by gu.pro.br
