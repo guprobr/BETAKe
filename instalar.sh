@@ -16,7 +16,7 @@ if [[ $response == "yes" ]]; then
     echo "You chose to continue."
     cp -ra BETAKe.desktop ~/.local/share/applications/
     echo "rodando sudo cp -ra BETAKe.py /usr/bin/";
-    sed -i "s/\.\//${DIR_ARQUIVOS}/" BETAKe.py;
+    sed -i "s/\.\//${DIR_ARQUIVOS}" BETAKe.py;
     sudo cp -ra BETAKe.py /usr/bin/
 elif [[ $response == "no" ]]; then
     echo "You chose to cancel."
