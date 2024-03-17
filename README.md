@@ -1,4 +1,4 @@
-# V2.7
+# V2.8
 
 # grandes avanços na interface python3
 
@@ -11,7 +11,7 @@ $ python3 BETAKe.py
 ## python3 BETAKe.py
 Insira uma ID unica para seu karaoke, eu normalmente coloco o primeiro nome da música em maiúsculo.
 
-Insira a  URL do vídeo que vamos extrair para cantar junto como playback.
+Insira a  URL do vídeo que vamos extrair para cantar como playback.
 
 Overall, betaREC.sh sets up the environment for live recording with effects applied, while betaKE.sh performs post-processing to enhance the recorded audio and video. Together, they provide a comprehensive solution for karaoke recording.
 
