@@ -55,7 +55,7 @@ submit_button = tk.Button(window, text="KILL", command=Terminator, font=("Arial"
 submit_button.pack(pady=13)
 
 # Add image
-image_path = os.path.join(os.path.dirname(__file__), "tux.png")
+image_path = os.path.join(os.path.dirname(__file__), BETAKE_PATH + "tux.png")
 if os.path.exists(image_path):
     try:
         img = tk.PhotoImage(file=image_path)
