@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=BETAKe
+Exec=python3 /usr/bin/BETAKe.py
+Terminal=True
+Icon=/usr/share/pixmaps/mainline/tux.png
+Categories=AudioVideo;Recorder;
