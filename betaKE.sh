@@ -32,14 +32,14 @@ echo "POST_PROCESSING____________________________________"
  
 ffmpeg -y -hide_banner  -ss 1s -i "${3}${BETA_PLAYFILE}.avi" -i ${3}recz/${1}_voc.wav -filter_complex "
 [1:a]
-adeclip,anlmdn,afftdn,speechnorm,lowpass=3000,highpass=200,
-ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.000 1.00 0 0 0 0.33825 1.000 1.000 0 1 000.0 1.000,
+adeclip,anlmdn,afftdn,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
-firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
-firequalizer=gain_entry='entry(-10,0);entry(10,2)',
-aecho=0.7:0.6:88:0.13,
-treble=g=1,loudnorm=I=-16:LRA=11:TP=-1.5,
-aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
+speechnorm,
+ladspa=tap_autotalent:plugin=autotalent:c=440 0 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.000 1.00 0 0 0 0 1.000 1.000 0 1 000.0 1.000,
+treble=g=5,
+aecho=0.7:0.6:44:0.13,
+loudnorm=I=-16:LRA=11:TP=-1.5,
+aformat=sample_fmts=fltp:sample_rates=48k:channel_layouts=stereo,
 aresample=resampler=soxr:osf=s16
 [voc_enhanced];
 [0:a]loudnorm=I=-16:LRA=11:TP=-1.5,
