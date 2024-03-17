@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "${3}";
+
 # Unload existing modules and restart PulseAudio
 pactl unload-module module-ladspa-sink
 pactl unload-module module-loopback
@@ -96,6 +98,6 @@ killall -9 ffmpeg
 
 
 ######################### trigger post processing
-./betaKE.sh "${1}" "${BETA_PLAYFILE}" "${PLAYBETA_TITLE}"
+./betaKE.sh "${1}" "${BETA_PLAYFILE}" "${PLAYBETA_TITLE}" "${3}"
 
 # 2024 by gu.pro.br
