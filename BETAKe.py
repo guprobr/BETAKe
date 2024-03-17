@@ -3,12 +3,14 @@ import tkinter as tk
 from tkinter import messagebox
 import subprocess
 
+BETAKE_PATH=@@FIXME@@
+
 def run_shell_script():
     karaoke_name = karaoke_name_entry.get()
     video_url = video_url_entry.get()
 
     # Call the shell script with parameters
-    script_command = ["sh", "betaREC.sh", karaoke_name, video_url]
+    script_command = ["sh", BETAKE_PATH + "betaREC.sh", karaoke_name, video_url]
     try:
         subprocess.run(script_command, check=True)
         messagebox.showinfo("Success", "Shell script executed successfully.")
