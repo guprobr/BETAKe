@@ -96,6 +96,6 @@ killall -9 ffmpeg
 
 
 ######################### trigger post processing
-./betaKE.sh "${1}" "${BETA_PLAYFILE}" "${BETA_TITLE}"
+./betaKE.sh "${1}" "${BETA_PLAYFILE}" "${PLAYBETA_TITLE}"
 
 # 2024 by gu.pro.br
