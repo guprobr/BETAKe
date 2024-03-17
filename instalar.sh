@@ -18,7 +18,7 @@ if [[ $response == "yes" ]]; then
     cp -ra BETAKe.desktop ~/.local/share/applications/;
     echo "rodando sudo cp -ra BETAKe.py /usr/bin/";
     sudo cp -ra BETAKe.py /usr/bin/;
-    sed -i "s/\.\//$BETA_PATH\//" /usr/bin/BETAKe.py;
+    sudo sed -i "s/\.\//$BETA_PATH\//" /usr/bin/BETAKe.py;
 elif [[ $response == "no" ]]; then
     echo "You chose to cancel.";
 else
