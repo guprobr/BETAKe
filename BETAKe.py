@@ -10,7 +10,7 @@ def run_shell_script():
     video_url = video_url_entry.get()
 
     # Call the shell script with parameters
-    script_command = ["sh", BETAKE_PATH + "betaREC.sh", karaoke_name, video_url]
+    script_command = ["sh", BETAKE_PATH + "betaREC.sh", karaoke_name, video_url, BETAKE_PATH]
     try:
         subprocess.run(script_command, check=True)
         messagebox.showinfo("Success", "Shell script executed successfully.")
