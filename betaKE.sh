@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "${4}";
+
 ### clean the mess left by betaREC
                 killall -HUP pipewire-pulse;
                 pactl unload-module module-loopback;
@@ -7,7 +9,7 @@
                 pactl unload-module module-ladspa-sink;
 
 BETA_TITLE="${3}";
-BETA_PLAYFILE="${2}"
+BETA_PLAYFILE="${2}";
 
 if [ "${1}" == "" ]; then
         echo INFORMAR DOIS PARAMETROS, nome_playback sem extensao WAV e TITULO mp3;
