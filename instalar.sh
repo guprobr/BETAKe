@@ -1,6 +1,7 @@
 #!/bin/bash
 
-DIR_ARQUIVOS=$( pwd );
+DIR_aqui=$( pwd );
+BETA_PATH=$(printf '%s\n' "$DIR_aqui" | sed 's/[\/&]/\\&/g');
 
 echo "Esse script vai instalar em /usr/bin um script python \
 esse script usará este diretório atual ( ${DIR_ARQUIVOS} )  \
@@ -13,14 +14,13 @@ read -p "Do you want to continue? (yes/no): " response
 
 # Check the response
 if [[ $response == "yes" ]]; then
-    echo "You chose to continue."
-    cp -ra BETAKe.desktop ~/.local/share/applications/
+    echo "You chose to continue.";
+    cp -ra BETAKe.desktop ~/.local/share/applications/;
     echo "rodando sudo cp -ra BETAKe.py /usr/bin/";
-    sed -i "s/\.\//${DIR_ARQUIVOS}" BETAKe.py;
-    sudo cp -ra BETAKe.py /usr/bin/
+    sed -i "s/\.\//$BETA_PATH/" BETAKe.py;
+    sudo cp -ra BETAKe.py /usr/bin/;
 elif [[ $response == "no" ]]; then
-    echo "You chose to cancel."
-    # Add your actions here
+    echo "You chose to cancel.";
 else
-    echo "Invalid response. Please enter 'yes' or 'no'."
+    echo "Invalid response. Please enter 'yes' or 'no'.";
 fi
