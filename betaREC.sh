@@ -62,7 +62,7 @@ then
 		BETA_PLAYFILE="$( ls -1 playz/${1}_playback.* | head -n1 )"
 		ffmpeg -loglevel quiet -hide_banner -y -i "${BETA_PLAYFILE}" playz/"${1}.wav";
 		echo "RECORDING!!!! Recording audio with effects applied..."
-		parec --device=${SINKB} | sox -t raw -r 48000 -b 16 -c 1 \
+		parec --device=${SINKB} | sox -t raw -r 44100 -b 16 -c 2 \
 		-e signed-integer - -t wav recz/"${1}_voc.wav" \
 							dither trim 0 ${PLAYBETA_LENGTH} &
 	       #Launch lyrics video
