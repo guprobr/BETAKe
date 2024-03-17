@@ -66,7 +66,7 @@ then
 		#parec --device=${SINKB} | sox -t raw -r 44100 -b 16 -c 2 \
 		#-e signed-integer - -t wav recz/"${1}_voc.wav" \
 		#					dither trim 0 ${PLAYBETA_LENGTH} &
-		ffmpeg -f v4l2 -input_format $( ffmpeg -hide_banner -formats \
+		ffmpeg -y -f v4l2 -input_format $( ffmpeg -hide_banner -formats \
 		| grep -i $( v4l2-ctl --list-formats | egrep '\[0\]' | \
 		awk '{ print substr($2, 2, 3)}' ) | grep DE | \
 		awk '{print $2}' | head -n1	) \
