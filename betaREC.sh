@@ -32,9 +32,9 @@ pactl load-module module-echo-cancel sink_name="echo-cancell" master=${SINKA} \
 
 #Load Ladspa effects
 echo -e "\e[93mLoad module-ladspa-sink for pitch\e[0m"
-pactl load-module module-ladspa-sink sink_name=LADSPA_pitch plugin="tap_pitch" label=tap_pitch control="0.2,0.1,0.3,0.1,0.3" master=echo-cancell;
-#echo -e "\e[93mLoad module-ladspa-sink for autotalent\e[0m"
-#pactl load-module module-ladspa-sink sink_name=ladspa_talent plugin="tap_autotalent" label=autotalent master=LADSPA_pitch;
+pactl load-module module-ladspa-sink sink_name=LADSPA_pitch plugin="tap_pitch" label=tap_pitch control="0.1,0.1,0.5,0.1,0.1" master=echo-cancell;
+echo -e "\e[93mLoad module-ladspa-sink for autotalent\e[0m"
+pactl load-module module-ladspa-sink sink_name=ladspa_talent plugin="tap_autotalent" label=autotalent master=LADSPA_pitch;
 echo -e "\e[93mLoad module-ladspa-sink for declipper\e[0m"
 pactl load-module module-ladspa-sink sink_name=${SINKB} plugin="declip_1195" label=declip master=LADSPA_pitch;
 
@@ -69,7 +69,7 @@ then
 		echo "\e[90mPREPARE-se *5sec* para cantar\e[0m";
 			sleep 3;
 			echo ...2;
-			pactl unload-module loopback-module;
+			#pactl unload-module loopback-module;
 			sleep 1;
 			echo ...1;
 			sleep 1;
@@ -111,8 +111,8 @@ killall -9 ffplay;
 killall -SIGINT sox;
 killall -SIGINT ffmpeg;
 ## trim first, trim once .   . . . . . .
-										ffmpeg -i "${3}recz/${1}_voc.wav" -ss 1.66s -c copy -y "${3}recz/${1}_voc.wav";
-									ffmpeg -i "${3}recz/${1}_voc.avi" -ss 1.66s -c copy -y "${3}recz/${1}_voc.avi";
+										ffmpeg -i "${3}recz/${1}_voc.wav" -ss 1s -c copy -y "${3}recz/${1}_voc.wav";
+									ffmpeg -i "${3}recz/${1}_voc.avi" -ss 1s -c copy -y "${3}recz/${1}_voc.avi";
 ######################### ignite post-processing
 echo -e "\e[91mTRIGGER --- post-processing\e[0m";
 ${3}betaKE.sh "${1}" "${2}" "${3}";

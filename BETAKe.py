@@ -10,7 +10,7 @@ class App:
     def __init__(self, master):
         self.master = master
         master.title("BETAKe Karaoke Shell Interface")
-        master.geometry("640x480")  # Set window size
+        master.geometry("800x600")  # Set window size
         # Example usage
         
 
