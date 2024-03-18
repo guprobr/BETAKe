@@ -28,15 +28,15 @@ pactl load-module module-remap-source source_name=${SINKA} master=$(pactl list s
 # Load the echo cancellation module to cancel echo from the loopback
 echo -e "\e[93mLoad module-echo-cancel\e[0m";
 pactl load-module module-echo-cancel sink_name=echo-cancell master=${SINKA} \
-        aec_method=webrtc aec_args="analog_gain_control=1 digital_gain_control=1";
+        aec_method=webrtc aec_args="analog_gain_control=0 digital_gain_control=0";
 
 #Load Ladspa effects
 echo -e "\e[93mLoad module-ladspa-sink for pitch\e[0m"
-pactl load-module module-ladspa-sink sink_name=ladspa_pitch plugin="tap_pitch" label=tap_pitch control="0,0,0,4,4" master=echo-cancell;
+pactl load-module module-ladspa-sink sink_name=${SINKB} plugin="tap_pitch" label=tap_pitch control="2,1,3,1,3" master=echo-cancell;
 #echo -e "\e[93mLoad module-ladspa-sink for autotalent\e[0m"
 #pactl load-module module-ladspa-sink sink_name=ladspa_talent plugin="tap_autotalent" label=autotalent master=ladspa_pitch;
-echo -e "\e[93mLoad module-ladspa-sink for declipper\e[0m"
-pactl load-module module-ladspa-sink sink_name=${SINKB} plugin="declip_1195" label=declip master=ladspa_pitch;
+#echo -e "\e[93mLoad module-ladspa-sink for declipper\e[0m"
+#pactl load-module module-ladspa-sink sink_name=${SINKB} plugin="declip_1195" label=declip master=ladspa_pitch;
 
 sleep 1
 echo -n .

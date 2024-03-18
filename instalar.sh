@@ -20,7 +20,10 @@ if [[ $response == "yes" ]]; then
 	autotalent python3-pexpect pulseaudio-utils ;
     echo "cp -ra BETAKe.desktop ~/.local/share/applications/;"
     cp -ra BETAKe.desktop ~/.local/share/applications/;
-
+    sudo cp -ra BETAKe.py /usr/bin/;
+    
+escaped_path=$(printf '%q' "$(pwd)")
+sudo sed -i '7s|.*|betake_path = '"$escaped_path"'/|' /usr/bin/BETAKe.py
 elif [[ $response == "no" ]]; then
     echo "You chose to cancel.";
 else
