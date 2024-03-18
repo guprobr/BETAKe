@@ -68,14 +68,14 @@ then
 			# Lauch vocal recorder via SoX AND LISTEN while recoding	
 			# Lauch vocal recorder via SoX	
 			parec --device=${SINKB} | sox -t raw -r 48000 -b 16 -c 2  -e signed-integer -  \
-				-t wav -e signed-integer "${3}recz/${1}_voc.wav" \
+				-t wav -r 48000 -b 16 -c 2 -e signed-integer "${3}recz/${1}_voc.wav" \
    									 dither -s &
 
-		ffmpeg -hide_banner  -loglevel quiet  -y -f v4l2 -input_format $( ffmpeg -loglevel quiet -hide_banner -formats \
+		ffmpeg -hide_banner  -loglevel info  -y -f v4l2 -input_format $( ffmpeg -loglevel quiet -hide_banner -formats \
 			| grep -i $( v4l2-ctl --list-formats | egrep '\[[0-9]*\]' | \
 			awk '{ print substr($2, 2, 3)}' | head -n1 ) | grep DE | \
 			awk '{print $2}' | head -n1	) \
-				-ss  -i /dev/video0 \
+				 	-i /dev/video0 \
     							-strict experimental \
 				-t ${PLAYBETA_LENGTH} -b:v 900k "${3}recz/${1}_voc.avi" &
 		
