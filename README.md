@@ -33,7 +33,7 @@ module-loopback:
 Este módulo é carregado para criar um loopback de áudio, permitindo que o áudio seja redirecionado de uma fonte de entrada para uma fonte de saída. No contexto do script, é usado para redirecionar o áudio processado de volta para o sistema de áudio para reprodução.
 ```
 Baixando o Vídeo do YouTube:
-O script utiliza a ferramenta yt-dlp para baixar o vídeo do YouTube. Aqui está como funciona:
+O script utiliza a ferramenta **yt-dlp** para baixar o vídeo do YouTube. Aqui está como funciona:
 ```
 Obtenção do Título do Vídeo:
 Primeiro, o script usa yt-dlp --get-title para obter o título do vídeo do YouTube fornecido como argumento. Isso é feito para exibir informações sobre o vídeo que está sendo baixado.
