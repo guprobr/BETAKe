@@ -11,7 +11,7 @@ echo -e "\e[90clean the mess left by betaREC\e[0m"
                 pactl unload-module module-ladspa-sink;
 
 PLAYBETA_TITLE="$( yt-dlp --get-title "${2}" )"; 
-BETA_PLAYFILE="$( ls -1 playz/${1}_playback.* | head -n1 )";
+BETA_PLAYFILE="$( ls -1 "playz/${1}_playback.*" | head -n1 )";
 BETA_TITLE="${PLAYBETA_TITLE}";
 
 if [ "${1}" == "" ]; then
@@ -30,53 +30,50 @@ PLAYBETA_LENGTH=$(ffprobe -v error -show_entries format=duration -of default=nop
 echo ${PLAYBETA_LENGTH}; echo ${BETA_TITLE};
 #post-processing
 echo "POST_PROCESSING____________________________________"
- echo -e "\e[90rendering audio mix\e[0m"
-ffmpeg -y -hide_banner -loglevel info  -i "${3}${BETA_PLAYFILE}" -ss -1.66s -i ${3}recz/${1}_voc.wav -filter_complex "
-[1:a]
-adeclip,anlmdn,afftdn,
-ladspa=tap_autotalent:plugin=autotalent:c=440 0 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.000 1.00 0 0 0 0 1.000 1.000 0 1 000.0 1.000,
+ echo -e "\e[90mrendering audio mix\e[0m"
+ffmpeg -y -hide_banner -loglevel info  -i "${3}${BETA_PLAYFILE}" -i "${3}recz/${1}_voc.wav" \
+        -filter_complex "
+[1:a]anlmdn=s=33,speechnorm,
+ladspa=tap_autotalent:plugin=autotalent:c=440 0 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.000 1.00 0 0 0 0 1.000 1.000 0 0 000.0 1.000,
 compand=points=-80/-105|-62/-80|-15.4/-15.4|0/-12|20/-7,
-speechnorm,
 firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
 firequalizer=gain_entry='entry(-10,0);entry(10,2)',
 aecho=0.8:0.7:111:0.13,
-lowpass=3000,highpass=200,
-loudnorm=I=-16:LRA=11:TP=-1.5,
-aformat=sample_fmts=fltp:sample_rates=44100,
-aresample=resampler=soxr:osf=s16
-[voc_enhanced];
-[0:a]loudnorm=I=-16:LRA=11:TP=-1.5,
+extrastereo=m=1.5,lowpass=3000,highpass=200,treble=g=5,
+dynaudnorm=p=1:s=12:g=15,
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
-aresample=resampler=soxr:osf=s16[playback];
-[playback][voc_enhanced]
-amix=inputs=2,extrastereo=m=1.25;" -ar 48k "${3}outz/${BETA_TITLE}_[BETAKe].wav"; 
+aresample=resampler=soxr:osf=s16[voc_master];
+[0:a]
+dynaudnorm=p=1:s=12:g=15,
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
+aresample=resampler=soxr:osf=s16[play_master];
 
-echo -e "\e[90rendering video frames\e[0m"
+[play_master][voc_master]amix=inputs=2:weights=0.4|0.6,
+afade=t=in:st=0:d=2;" -ar 48k "${3}outz/${BETA_TITLE}_[BETAKe].wav";
+
+echo -e "\e[90mrendering video frames\e[0m"
 ffmpeg -y -loglevel info -hide_banner \
         -i "${3}outz/${BETA_TITLE}_[BETAKe].wav" \
         -i "${3}${BETA_PLAYFILE}" \
         -i "${3}recz/${1}_voc.avi" \
         -filter_complex "
-         [1:v]scale=s=1024x768[v0];
-         [0:a]showspatial=s=1024x768[spats];
-         [1:a]avectorscope=m=polar:s=1024x768[vscope];
-          [2:v]scale=s=1024x768[v1]; 
-          [vscope][v1]hstack=inputs=2,scale=s=1024x768[video_merge];
-          [spats][video_merge]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.34,scale=s=1024x768[waveform];
-          [v0][waveform]overlay=10:10:enable='gte(t,0)',format=rgba,scale=s=1920x1080" \
-                                -strict experimental -an "${3}outz/${BETA_TITLE}_[BETAKe].avi";
-
- echo -e "\e[90merging audio + video\e[0m"
+         [1:v]scale=s=640x480[v0];
+         [0:a]showspatial=s=640x480[spats];
+         [1:a]avectorscope=m=polar:s=640x480[vscope];
+          [2:v]scale=s=640x480[v1]; 
+          [vscope][v1]hstack=inputs=2,scale=s=640x480[video_merge];
+          [spats][video_merge]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.34,scale=s=640x480[waveform];
+          [v0][waveform]overlay=10:10:enable='gte(t,0)',format=rgba,scale=s=1920x1080;" \
+                                -strict experimental -an "${3}outz/${BETA_TITLE}_[BETAKe].avi" ;
+ echo -e "\e[90merging audio + video\e[0m";
  echo "We do in separate steps because of a bug which conversion hangs because of bad PCM";
 ffmpeg -y -loglevel info -hide_banner \
         -i "${3}outz/${BETA_TITLE}_[BETAKe].wav" \
         -i "${3}outz/${BETA_TITLE}_[BETAKe].avi" \
              -acodec libmp3lame -ar 48k -b:a 320k \
-             -c:v libx264 -b:v 933k -preset:v veryfast "${3}outz/${BETA_TITLE}_[BETAKe].mp4"
-echo "fyn_PROCESSING____________________________________";
-echo "PLAY";
+             -c:v libx264 -b:v 933k -preset:v veryfast "${3}outz/${BETA_TITLE}_[BETAKe].mp4" ;
 
-ffplay -fs -loglevel info -hide_banner "${3}outz/${BETA_TITLE}_[BETAKe].mp4"; 
-#then PLAY! last successful output
+ffplay -fs -loglevel quiet -hide_banner "${3}outz/${BETA_TITLE}_[BETAKe].mp4";
+
 
 # 2024 by gu.pro.br:weights=0.55|0.45,
