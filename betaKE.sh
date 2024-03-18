@@ -64,7 +64,7 @@ ffmpeg -y -loglevel info -hide_banner \
           [vscope][v1]hstack=inputs=2,scale=s=1024x768[video_merge];
           [spats][video_merge]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.34,scale=s=1024x768[waveform];
           [v0][waveform]overlay=10:10:enable='gte(t,0)',format=rgba,scale=s=1920x1080" \
-                                -strict experimental -an "${3outz/${BETA_TITLE}_[BETAKe].avi";
+                                -strict experimental -an "${3}outz/${BETA_TITLE}_[BETAKe].avi";
 
  echo -e "\e[90merging audio + video\e[0m"
  echo "We do in separate steps because of a bug which conversion hangs because of bad PCM";
