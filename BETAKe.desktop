@@ -1,7 +1,6 @@
 [Desktop Entry]
 Type=Application
 Name=BETAKe
-Exec=gnome-terminal -- /bin/bash -c 'cd ~/BETAKe && ./BETAKe.py; read -p "Press Enter to exit..."'
-Terminal=false
-Icon=/usr/share/pixmaps/mainline/tux.png
+Exec=/usr/bin/BETAKe.sh
+Icon=audio-card.png
 Categories=AudioVideo;Recorder;

@@ -278,3 +278,14 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+    patterns = [
+            (r'\[90m', '☻'),   # Gray
+            (r'\[91m', '♥'),    # Red
+            (r'\[92m', '♣'),  # Green
+            (r'\[93m', '♫'), # Yellow
+            (r'\[94m', '♦'),   # Blue
+            (r'\[95m', '♩'), # Purple
+            (r'\[96m', '♬'),   # Cyan
+            (r'\[97m', '♠'),  # White
+        ]
