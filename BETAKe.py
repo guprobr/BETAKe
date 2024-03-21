@@ -25,18 +25,8 @@ class App:
 
         # Create a button to scroll to the end of the text widget
         self.scroll_to_end_button = tk.Button(master, text="Scroll to End", command=self.scroll_to_end)
-        self.scroll_to_end_button.place(x=690, y=740, width=150, height=30)
+        self.scroll_to_end_button.place(x=550, y=740, width=150, height=30)  
 
-        # Create a sound meter (progress bar)
-        self.sound_meter = Progressbar(master, orient=tk.HORIZONTAL, length=200, mode='determinate')
-        self.sound_meter.place(x=60, y=660)
-        # # Initialize PyAudio with PulseAudio support
-        #self.paudio = pyaudio.PyAudio()
-        #self.stream = self.paudio.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True, frames_per_buffer=1024)
-        #self.chunk_size = 1024  # Define chunk size
-        #self.sound_meter.pack()
-        #self.sound_meter.place(x=640, y=600)
-        
         # Load and display the left-aligned tux.png image
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
         self.left_image_label = tk.Label(master, image=self.left_image)
@@ -60,12 +50,12 @@ class App:
         # Start recording button
         self.start_recording_button = tk.Button(
             master, text="Start Recording", command=self.start_recording)
-        self.start_recording_button.place(x=60, y=660, width=150, height=100)
+        self.start_recording_button.place(x=10, y=690, width=350, height=120)
 
         # Kill recording button
         self.kill_button = tk.Button(
             master, text="Kill BETAKê", command=self.kill_recording)
-        self.kill_button.place(x=900, y=640, width=150, height=100)
+        self.kill_button.place(x=790, y=690, width=350, height=120)
         # Button to fetch random karaoke video URL
         self.random_karaoke_button = tk.Button(
             master, text="Random", command=self.fetch_random_karaoke_url)

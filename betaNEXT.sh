@@ -86,7 +86,7 @@ pactl load-module module-ladspa-sink sink_name="${SINKB}" plugin="tap_autotalent
                                                 master=LADSPA_pitch;
 
 
-PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.avi";
+PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.mp4";
 echo -e "\e[93maAjustar vol do microfone\e[0m";
 pactl set-source-volume "${SINKA}" 55%
 echo -e "\e[92maAtivando monitor do microfone\e[0m";
@@ -99,7 +99,7 @@ echo -e "\e[95mDOWNLOAD video with [yt-dl]";
 # Load the video title
 PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}")"
 # Download the video
-yt-dlp "${video_url}" -o "${REC_DIR}/${karaoke_name}_playback.%(ext)s" --console-title --embed-subs --progress --no-continue --force-overwrites --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300"; 
+yt-dlp "${video_url}" -o "${REC_DIR}/${karaoke_name}_playback.%(ext)s" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --console-title --embed-subs --progress --no-continue --force-overwrites --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300"; 
 
 
 # Display message to start converting
@@ -120,7 +120,7 @@ if [ -n "$filename" ]; then
     echo -e "\e[93mCONVERTING playback to [avi]";
     ffmpeg -hide_banner -loglevel info -y \
                 -i "${filename}" \
-                    -ar 48k "${PLAYBACK_BETA}";
+                  -ar 48k  "${PLAYBACK_BETA}";
 else
     echo "No suitable playback file found."
     exit
@@ -144,36 +144,29 @@ if [ $? == 1 ]; then
 fi
 
 # Recording and Post-production
-OUTFILE="${OUT_DIR}/${karaoke_name}_out.mp4";
+OUTFILE="${OUT_DIR}/${karaoke_name}_out.avi";
 	
 echo -e "\e[93mSING!--------------------------\e[0m";
 echo -e "\e[91m..Launch FFMpeg integrated recorder (AUDIO_VIDEO)\e[0m";
-		echo -e "\e[99mLaunch lyrics video\e[0m"
+		echo -e "\e[99mLaunch lyrics video\e[0m";
+
 	            ffplay \
 			        -window_title "SING" -loglevel info -hide_banner -af "volume=0.35" "${PLAYBACK_BETA}" &
-                ffplay_pid=$!;    
+                ffplay_pid=$!;
+
                      epoch_ffplay=$( get_process_start_time "${ffplay_pid}" ); 	
 
-  ffmpeg -y \
-    -hide_banner -loglevel info \
-            -hwaccel qvs -f v4l2 -framerate 120 -video_size 1280x720             -i /dev/video0 \
-                                                        -f pulse    -i "${SINKB}" \
-    -ss "$(time_diff_seconds "${epoch_ffplay}" "$(date +'%s')")"    -i "${PLAYBACK_BETA}" \
-    \
-    -filter_complex "
-        [1:a]loudnorm=I=-16:LRA=11:TP=-1.5[vocald]; 
-        [2:a]loudnorm=I=-16:LRA=11:TP=-1.5[playback];        
-        [vocald][playback]amix=inputs=2:weights=0.4|0.6[audio_mix];
-        [0:v]format=rgba,scale=s=1920x1080[v1];
-         life=s=1920x1080:mold=1:r=10:ratio=0.1:death_color=blue:life_color=#00ff00,boxblur=2,format=rgba[spats];
-          life=s=1920x1080,format=rgba[spots];
-          [2:v]scale=s=1920x1080[v0]; 
-          [spots][spats]hstack=inputs=2,scale=s=1920x1080[video_merge];
-          [v0][video_merge]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.34,scale=s=1920x1080[playback_merge];
-          [v1][playback_merge]overlay=10:6,scale=s=1920x1080[bg_with_overlay];" \
-                            -map "[bg_with_overlay]" -map "[audio_mix]" -strict experimental  \
-   -vcodec  h264 -b:v 64k -acodec libmp3lame -ar 48k -b:a 128k  -preset:v ultrafast  \
-                                                         -t "${PLAYBACK_LENGTH}"     "${OUTFILE}" &
+#start CAMERA   
+  ffmpeg -y                                                          \
+    -hide_banner -loglevel info  -hwaccel auto                         \
+            -f v4l2 -framerate 90 -video_size 1280x720                 \
+                                    -i /dev/video0                      \
+                        -f pulse    -i "${SINKB}"                        \
+     -ss $(( 1 + "$(time_diff_seconds "${epoch_ffplay}" "$(date +'%s')")" )) -i "${PLAYBACK_BETA}"  \
+                                                                           \
+    -filter_complex "[1:a][2:a]amix=inputs=2:weights=0.5|0.6[betamix];"     \
+        -map "[betamix]" -map "0:v:0" -ar 48k                                      \
+                       -t "${PLAYBACK_LENGTH}" "${OUTFILE}" &
 
  
     
@@ -209,7 +202,7 @@ fi
 
 # Output the final value of karaoke_duration
 cronos_play=$( cat "${OUT_DIR}/${karaoke_name}_dur.txt" );
-echo "Calculated Karaoke duration: $cronos_play";
+echo "elapsed Karaoke duration: $cronos_play";
 echo "Real complete duration: ${PLAYBACK_LENGTH}";
 
 ## when prompt window close, stop all recordings 
@@ -225,6 +218,65 @@ echo "Real complete duration: ${PLAYBACK_LENGTH}";
 # clean up
 pactl unload-module module-loopback;
 
-sleep 1;
-# Show the result using ffplay
-ffplay -af "volume=0.45" -window_title  "Results" -loglevel quiet -hide_banner "${OUTFILE}";
+total_ff=$(( 60 * "$(printf "%.0f" "${PLAYBACK_LENGTH}")" ));
+
+##POSTprod
+echo "POST_PROCESSING____________________________________"
+echo -e "\e[90mrendering final video\e[0m"
+
+
+# Get total frames using ffprobe
+total_final_frames=$(ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 "${OUTFILE}")
+
+# Start ffmpeg in the background and capture its PID
+ffmpeg -y -hide_banner -loglevel info   \
+        -ss $(( 1 + "$(time_diff_seconds "${epoch_ffplay}" "$(date +'%s')")" )) -i "${PLAYBACK_BETA}" \
+                                                                                -i "${OUTFILE}" \
+        -filter_complex "
+    [1:a]adeclip,alimiter,speechnorm,
+    pan=stereo|c0=c0|c1=c0,acompressor,
+    ladspa=tap_autotalent:plugin=autotalent:c=440 0 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0 1.000 1.000 0 0 000.0 0.045,
+    stereowiden,adynamicequalizer,aexciter,treble=g=2,loudnorm=I=-16:LRA=11:TP=-1.5,
+    aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
+    aresample=resampler=soxr:osf=s16[master];
+        [1:v]scale=s=1920x1080[v1];
+        life=s=1920x1080[spats];
+         [0:a]avectorscope=m=polar:s=1920x1080[vscope];
+          [0:v]scale=s=1920x1080[v0]; 
+          [vscope][v1]hstack=inputs=2,scale=s=1920x1080[video_merge];
+          [spats][video_merge]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.34,scale=s=1920x1080[badcoffee];
+          [v0][badcoffee]overlay=10:8,format=rgba,scale=s=1920x1080[BETAKE];" \
+                    -map "[master]"  -map "[BETAKE]" \
+                                           -t "${PLAYBACK_LENGTH}"   "${OUT_DIR}"/"${karaoke_name}"_beta.mp4 &
+        ffmpeg_pid=$!
+
+# Start zenity progress dialog
+(
+    while true; do
+        # Get current frame number using ffmpeg
+        current_frame=$(ffmpeg -i "${OUT_DIR}"/"${karaoke_name}"_beta.mp4 -vf "select='eq(n\,0)'" -vsync vfr -vframes 1 -f null - 2>&1 | grep -o "frame= *[0-9]*" | grep -o "[0-9]*")
+        if [ -z "$current_frame" ]; then
+            current_frame=0
+        fi
+        # Calculate progress percentage
+        progress=$((current_frame * 100 / total_final_frames))
+
+        # Update zenity progress dialog
+        echo "$progress"
+        sleep 0.5
+    done
+) | zenity --progress --title="FFmpeg FINAL RENDER Progress" --text="Encoding video..." --auto-close --auto-kill
+# Check if the progress dialog was canceled/completed
+if [ $? = 1 ]; then
+    echo "render canceled.";
+else
+    echo "Progress completed.";
+    # Show the result using ffplay
+    ffplay -af "volume=0.45" -window_title  "Results" -loglevel quiet \
+                    -hide_banner "${OUT_DIR}"/"${karaoke_name}"_beta.mp4 &
+fi
+# Kill ffmpeg process
+pkill -9 ffmpeg
+
+
+

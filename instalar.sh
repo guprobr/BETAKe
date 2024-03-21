@@ -17,9 +17,9 @@ read -p "Do you want to continue? (yes/no): " response
 if [[ $response == "yes" ]]; then
     echo "You chose to continue.";
     sudo apt -y install fortunes* ffmpeg swh-plugins lsp-plugins alsa-utils yt-dlp \
-	autotalent python3-pexpect pulseaudio-utils ;
-    echo "cp -ra BETAKe.desktop ~/.local/share/applications/;"
-    cp -ra BETAKe.desktop ~/.local/share/applications/;
+	autotalent python3-pexpect pulseaudio-utils pavumeter ;
+    echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
+    cp -ra BETAq.desktop ~/.local/share/applications/;
     sudo cp -ra BETAKe.* /usr/bin/;
     
 escaped_path=$(printf '%q' "$(pwd)")
