@@ -254,7 +254,7 @@ ffmpeg -y -hide_banner -loglevel info   \
 (
     while true; do
         # Get current frame number using ffmpeg
-        current_frame=$(ffmpeg -i "${OUT_DIR}"/"${karaoke_name}"_beta.mp4 -vf "select='eq(n\,0)'" -vsync vfr -vframes 1 -f null - 2>&1 | grep -o "frame= *[0-9]*" | grep -o "[0-9]*")
+        current_frame=$(ffmpeg -i "${OUT_DIR}"/"${karaoke_name}"_beta.mp4 -vf "select='eq(n\,0)'" -vsync vfr -vframes 1 -f null - 2>&1 | grep -o "frame= *[0-9]*" | grep -o "[0-9]*" || true)
         if [ -z "$current_frame" ]; then
             current_frame=0
         fi
