@@ -363,11 +363,11 @@ ffmpeg -y -hide_banner -loglevel info   \
           [video_merge][spats]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.36,scale=s=848x480[badcoffee];
           [v0][badcoffee]overlay=10:6,format=rgba,scale=s=848x480[BETAKE];" \
                     -map "[betamix]"  -map "[BETAKE]" \
-                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}".avi  &
+                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}".mp4  &
                 ff_pid=$!;
 
 
- render_display_progress "${REC_DIR}"/"${karaoke_name}".avi 
+ render_display_progress "${OUT_DIR}"/"${karaoke_name}".mp4 
 # Check if the progress dialog was canceled/completed
 if [ $? = 1 ]; then
     echo "Render canceled."
@@ -376,7 +376,7 @@ if [ $? = 1 ]; then
 else
     # Show the result using ffplay
     ffplay -af "volume=0.45" -window_title "RESULT" -loglevel quiet \
-                    -hide_banner "${OUT_DIR}/${karaoke_name}.avi";
+                    -hide_banner "${OUT_DIR}/${karaoke_name}.mp4";
 fi
 
 
