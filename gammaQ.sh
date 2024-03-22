@@ -93,7 +93,7 @@ pactl load-module module-ladspa-sink sink_name="${SINKB}" plugin="tap_pitch" lab
 #echo -e "\e[90mSC4\e[0m";
 #pactl load-module module-ladspa-sink sink_name="${SINKB}" plugin="sc4_1882" label=sc4  master="TAP_PITCH";
 
-echo -e "\e[91maAjustar vol dos headphones: USE HEADPHONES!!!!!\e[0m";
+echo -e "\e[91maAjustar vol dos headphones: USE HEADPHONES\e[0m";
 pactl set-source-volume "${SINKA}" 44%
 echo -e "\e[93maAjustar vol do microfone\e[0m";
 pactl load-module module-loopback #latency_msec=1 #source="${SINKB}" sink="$( pactl list sinks short | grep output | head -n1 | awk '{ print $2 }' )";
@@ -103,7 +103,7 @@ wmctrl -R "PulseAudio Volume Meter" -b add,above;
 
 
 ## iniciar preparo de adquirir playback e construir pipeline do gravador
-PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.mp4";
+PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.avi";
 #remover playbacks antigos para nao dar problema em baixar novos
 rm -rf "${REC_DIR}"/"${karaoke_name}"_playback.*;
 # Load the video title
@@ -128,7 +128,9 @@ filename=$(find "$REC_DIR" \( -name "${karaoke_name}_playback.mkv" -o -name "${k
 # Check if a file was found
 if [ -n "$filename" ]; then
     echo "Using file: $filename"
-   
+   #convertemos para avi, pois precisamos usar AVI por enquanto, outros codecs dão bug
+   ffmpeg -y -hide_banner -loglevel info "${filename}" "${PLAYBACK_BETA}";
+   echo -e "\e[91mPlayback convertido para AVI\e[0m";
 else
     echo "No suitable playback file found."
         reboot_pulse true;
@@ -158,7 +160,6 @@ fi
 OUTFILE="${OUT_DIR}"/"${karaoke_name}"_out.avi;
 	
 echo -e "\e[93mSING!--------------------------\e[0m";
-echo -e "\e[91m..Launch FFMpeg integrated recorder (AUDIO_VIDEO)\e[0m";
 		echo -e "\e[99mLaunch lyrics video\e[0m";
 
 	            ffplay \
@@ -168,6 +169,8 @@ echo -e "\e[91m..Launch FFMpeg integrated recorder (AUDIO_VIDEO)\e[0m";
                      epoch_ffplay=$( get_process_start_time "${ffplay_pid}" ); 	
 
 #start CAMERA   to record audio & video
+echo -e "\e[91m..Launch FFMpeg recorder (AUDIO_VIDEO)\e[0m";
+
 ffmpeg -y                                                            \
                                 -hide_banner -loglevel info                                     \
     -f v4l2 -framerate 30 -pix_fmt mjpeg                              \
@@ -180,7 +183,7 @@ ffmpeg -y                                                            \
                                         
  
 # Initialize karaoke_duration variable
-export cronos_play=2;
+export cronos_play=3;
 export LC_ALL=C;
 rm -rf "${OUT_DIR}/${karaoke_name}_dur.txt";
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LENGTH}")" ]; do
@@ -270,7 +273,7 @@ ffmpeg -y -hide_banner -loglevel info   \
             current_frame=0
         fi
         # Calculate progress percentage
-        progress=$(echo "scale=4; ${current_frame} * 100 / ${total_final_frames}" | bc)
+        progress=$(echo "scale=0; ${current_frame} * 100 / ${total_final_frames}" | bc)
 
         # Update zenity progress dialog
         echo "$progress"
