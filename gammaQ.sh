@@ -170,7 +170,7 @@ yt-dlp "${video_url}" -o "${REC_DIR}/${karaoke_name}_playback.%(ext)s" --format 
 
 # Display message to start converting
 export LC_ALL=C;
-zenity --question --text="Going to convert: \"${PLAYBACK_TITLE}\" - duration: \"$(printf "%.0f" "${PLAYBACK_LENGTH}")\", do you want this playback? " --title="BETAKe Recording Prompt" --default-cancel --width=200 --height=100
+zenity --question --text="Going to convert: \"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, do you want this playback? " --title="BETAKe Recording Prompt" --default-cancel --width=200 --height=100
 if [ $? == 1 ]; then
     echo "Recording canceled.";
     reboot_pulse true;
@@ -188,7 +188,7 @@ if [ -n "$filename" ]; then
    ffmpeg -y -hide_banner -loglevel info -i "${filename}" "${PLAYBACK_BETA}" &
 
 # Get total duration of the video
-total_duration=$(get_video_duration "${filename}")
+PLAYBACK_LEN=$( echo "scale=2; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
 
 # Create a dialog box with a progress bar
 (
@@ -238,12 +238,11 @@ if [ ! -n "${PLAYBACK_BETA}" ]; then
      
 fi
 
-PLAYBACK_LENGTH=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${PLAYBACK_BETA}")
 echo -e "\e[91mAll setup to sing!";
 aplay research.wav;
 # Display message to start recording
 export LC_ALL=C;
-zenity --question --text="Ready to record: \"${PLAYBACK_TITLE}\" - duration: \"$(printf "%.0f" "${PLAYBACK_LENGTH}")\", do you want this playback? " --title="BETAKe Recording Prompt" --default-cancel --width=200 --height=100
+zenity --question --text="Ready to record: \"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, do you want this playback? " --title="BETAKe Recording Prompt" --default-cancel --width=200 --height=100
 if [ $? == 1 ]; then
     echo "Recording canceled.";
         reboot_pulse true;
@@ -273,7 +272,7 @@ ffmpeg -y                                                  \
                                         -f pulse    -i "${SINKb}"         \
                     -ss $(( 3 + "${diff_ss}" ))     -i "${PLAYBACK_BETA}" \
                                                                                                        \
-                                        -map "0:v:0" -t "${PLAYBACK_LENGTH}" "${OUTFILE}"               \
+                                        -map "0:v:0" -t "${PLAYBACK_LEN}" "${OUTFILE}"               \
                                         -map "1:a:0" -ar 48k "${OUT_DIR}"/"${karaoke_name}"_out.flac &
                                         
                                 wmctrl -r "SING" -b add,sticky;   wmctrl -R "SING" -b add,above;
@@ -281,13 +280,13 @@ ffmpeg -y                                                  \
 export cronos_play=0;
 export LC_ALL=C;
 rm -rf "${OUT_DIR}/${karaoke_name}_dur.txt";
-while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LENGTH}")" ]; do
+while [ "$(printf "%.0f" "${cronos_play}")" -le "${PLAYBACK_LEN}" ]; do
 
     wmctrl -R "BETAKe Recording" -b add,above;
 
     sleep 3.3
     cronos_play="$(echo "scale=4;  ${cronos_play} + 3.3"| bc)";
-    percent_play="$(echo "scale=4; ${cronos_play} * 100 / ${PLAYBACK_LENGTH} "  | bc)";
+    percent_play="$(echo "scale=4; ${cronos_play} * 100 / ${PLAYBACK_LEN} "  | bc)";
     echo "${cronos_play}" > "${OUT_DIR}/${karaoke_name}_dur.txt";
     echo "${percent_play}";
 done | zenity --progress --text="Press OK to STOP recording " \
@@ -304,7 +303,7 @@ fi
 # Output the final value of karaoke_duration
 cronos_play=$( cat "${OUT_DIR}/${karaoke_name}_dur.txt" );
 echo "elapsed Karaoke duration: $cronos_play";
-echo "Total playback duration: ${PLAYBACK_LENGTH}";
+echo "Total playback duration: ${PLAYBACK_LEN}";
 
 ## when prompt window close, stop all recordings 
     # give time to buffers
@@ -350,9 +349,9 @@ ffmpeg -y -hide_banner -loglevel info   \
           [spats][video_merge]vstack=inputs=2,format=rgba,scale=s=1280x720[badcoffee];
           [v0][badcoffee]overlay=10:6,format=rgba,scale=s=1280x720[BETAKE];" \
                     -map "[betamix]"  -map "[BETAKE]" \
-                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LENGTH}"   "${OUT_DIR}"/"${karaoke_name}"_avi.mp4  &
+                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}"_avi.mp4  &
 # Get total duration of the video
-total_duration=$(get_video_duration "${PLAYBACK_BETA}")
+total_duration="${PLAYBACK_LEN}"
 
 # Create a dialog box with a progress bar
 (
