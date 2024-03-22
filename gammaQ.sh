@@ -148,10 +148,11 @@ echo -e "\e[91maAjustar vol ${SINKb}.monitor 90%\e[0m";
  pactl set-source-volume "${SINKb}".monitor 90%;
 echo -e "\e[92maAjustar vol ${SINKc} 55%..\e[0m";
  pactl set-sink-volume "${SINKc}" 55%;
-echo -e "\e[91mloopback our effects Sink: ${SINKb}\e[0m";
-pactl load-module module-loopback latency_msec=11 sink="${SINKb}";
+#echo -e "\e[91mloopback our effects Sink: ${SINKb}\e[0m";
+pactl load-module module-loopback;
+#pactl load-module module-loopback latency_msec=11 sink="${SINKb}";
 #echo -e "\e[93maHabilitar um monitor ffplay ${SINKb} no output padrão\e[0m";
-#ffplay -hide_banner -loglevel quiet -f pulse  -i loopback_sink -ar 48000 -nodisp &
+#ffplay -hide_banner -loglevel quiet -f pulse  -i ${SINKb} -ar 48k -nodisp &
 
 ## iniciar preparo de adquirir playback e construir pipeline do gravador
 PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.avi";
@@ -344,7 +345,7 @@ ffmpeg -y -hide_banner -loglevel info   \
           [spats][video_merge]vstack=inputs=2,format=rgba,scale=s=1280x720[badcoffee];
           [v0][badcoffee]overlay=10:6,format=rgba,scale=s=1280x720[BETAKE];" \
                     -map "[betamix]"  -map "[BETAKE]" \
-                    -v:b 333k -a:b 1024k -t "${PLAYBACK_LENGTH}"   "${OUT_DIR}"/"${karaoke_name}"_beta.mp4  &
+                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LENGTH}"   "${OUT_DIR}"/"${karaoke_name}"_beta.mp4  &
 # Get total duration of the video
 total_duration=$(get_video_duration "${PLAYBACK_BETA}")
 
