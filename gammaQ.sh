@@ -24,7 +24,7 @@ reboot_pulse() {
     pactl unload-module module-echo-cancel;
     echo -e "\e[91mERRORS reported above HERE ARE NORMAL. It means already unloaded\e[0m"; 
     echo -e "\e93m[[[[RESTARTING]]]]  audio server now:\e[0m";
-    killall pipewire-pulse
+    killall -HUP pipewire-pulse
     sleep 1; echo "please wait a brief moment";
 }
 
@@ -50,6 +50,49 @@ get_total_frames() {
         seconds=$(echo "$duration" | cut -d':' -f3 | cut -d'.' -f1)
         total_seconds=$((hours * 3600 + minutes * 60 + seconds))
         echo "$total_seconds"
+    }
+
+# Function to display progress using estimated file size
+    render_display_progress() {
+        local video_bitrate=2000  # Example video bitrate in kbps
+        local audio_bitrate=128   # Example audio bitrate in kbps
+        local duration_seconds=3600  # Example duration in seconds
+        local pid_ffmpeg="$1"     # PID of the ffmpeg process
+
+        # Convert bitrates to bits per second
+        local video_bitrate_bps=$((video_bitrate * 1000))
+        local audio_bitrate_bps=$((audio_bitrate * 1000))
+
+        # Estimate video size in bits
+        local video_size=$((video_bitrate_bps * duration_seconds))
+
+        # Estimate audio size in bits
+        local audio_size=$((audio_bitrate_bps * duration_seconds))
+
+        # Calculate total size in bytes
+        local total_size_bytes=$(( (video_size + audio_size) / 8 ))
+
+        # Convert bytes to megabytes
+        local total_size_mb=$(echo "scale=2; $total_size_bytes / (1024 * 1024)" | bc)
+
+        # Create a dialog box with a progress bar
+        (
+        while true; do
+            # Check if the ffmpeg process is still running
+            if ! ps -p "$ff_pid" >/dev/null 2>&1; then
+                break
+            fi
+
+            # Calculate the percentage of completion based on the file size
+            local current_file_size=$(stat -c%s "${1}" )
+            local progress=$(echo "scale=2; ($current_file_size * 100) / $total_size_bytes" | bc)
+
+            # Update the progress bar in the dialog
+            echo "$progress"
+
+            sleep 1
+        done
+        ) | zenity --progress --title="Video Rendering !" --text="Rendering in progress...please wait" --auto-close --auto-kill
     }
 
 # Function to generate MP3 from MP4
@@ -91,18 +134,11 @@ SINKa="beta_mic"
 SINKb="beta_ladspa"
 SINKc="$( pactl get-default-sink )"
 SRC_mic="$( pactl get-default-source )"
-
 echo -e "\e[93m*HOUSEKEEPING SOUND SERVERS*\e[0m";
 echo -e "\e[91mINIT MIC\"SINK A\"\e[0m";
 echo -e "\e[93mLoading module-remap-source for microphone sink\e[0m";
 pactl load-module module-remap-source source_name="${SINKa}" source_master="${SRC_mic}";
 
-#"Load the echo cancellation module to cancel echo";
-#echo -e "\e[96mLoad module-echo-cancel\e[0m";
-#pactl load-module module-echo-cancel \
-      #          sink_name="PULSE_echocan" \
-     #           master="${SINKa}" \
-    #aec_method=webrtc aec_args="analog_gain_control=1 digital_gain_control=1";
 
 #LADSPA_declip
 echo -e "\e[97mLoad module-ladspa-sink for declipper\e[0m";
@@ -111,31 +147,32 @@ pactl load-module module-ladspa-sink \
                 sink_name="LADSPA_declip" \
                 master="${SINKa}";
 
-#LADSPA_pitch
-echo -e "\e[93mLoad module-ladspa-sink for pitch\e[0m"; 
+LADSPA_rnnoise
+echo -e "\e[96mLoad module-ladspa-sink for RNNOISE\e[0m"
 pactl load-module module-ladspa-sink \
-                sink_name="LADSPA_pitch" \
-                master="LADSPA_declip" \
-    plugin="tap_pitch" label=tap_pitch control="1.001001,11,-11,5,-1"; 
+                        plugin="librnnoise_ladspa" label="noise_suppressor_mono" \
+                        sink_name="LADSPA_noise" \
+                        master="LADSPA_declip";
+
+#LADSPA_pitch
+echo -e "\e[95mLoad module-ladspa-sink for pitch\e[0m"; 
+pactl load-module module-ladspa-sink \
+                sink_name="${SINKb}" \
+                master="LADSPA_noise" \
+    plugin="tap_pitch" label=tap_pitch control="1.005696,11,-11,5,-1"; 
 
 #LADSPA AUTOTALENT TAP
-echo -e "\e[91mAltoTalent©\e[0m";
-pactl load-module module-ladspa-sink plugin="tap_autotalent" label=autotalent \
-                sink_name="LADSPA_talent" \
-                master="LADSPA_pitch" \
-        control="480,0,0.0000,0,0,0,0,0,0,0,0,0,0,0,0,0.11,1.00,0,0,0,0,1.000,1.000,0,0,000.0,0.09696";
+#echo -e "\e[94mAltoTalent©\e[0m";
+#pactl load-module module-ladspa-sink plugin="tap_autotalent" label=autotalent \
+#                sink_name="LADSPA_talent" \
+#                master="LADSPA_pitch" \
+#        control="480,0,0.0000,0,0,0,0,0,0,0,0,0,0,0,0,0.11,1.00,0,0,0,0,1.000,1.000,0,0,000.0,0.09696";
 
 #LADSPA sc4
-echo -e "\e[90mSC4\e[0m";
-pactl load-module module-ladspa-sink plugin="sc4_1882" label=sc4 \
-                sink_name="${SINKb}"   \
-                master="LADSPA_talent";
-
-
-#LADSPA_rnnoise
-#echo -e "\e[93mLoad module-ladspa-sink for RNNOISE\e[0m"
-#pactl load-module module-ladspa-sink sink_name="LADSPA_noise" plugin="librnnoise_ladspa" label="noise_suppressor_mono" control="LADSPA_declip,${SINKc},5,50,50" master="LADSPA_declip";
-
+#echo -e "\e[93mSC4\e[0m";
+#pactl load-module module-ladspa-sink plugin="sc4_1882" label=sc4 \
+ #               sink_name="${SINKb}"   \
+ #               master="LADSPA_talent";
 
 
 echo -e "\e[91maAjustar vol ${SRC_mic} em 45%";
@@ -148,16 +185,8 @@ echo -e "\e[91maAjustar vol ${SINKb}.monitor 90%\e[0m";
  pactl set-source-volume "${SINKb}".monitor 90%;
 echo -e "\e[92maAjustar vol ${SINKc} 55%..\e[0m";
  pactl set-sink-volume "${SINKc}" 55%;
+echo -e "\e[91mconnect effects LADSPA directly to mic sink via looopback\e[0m";
 
-#echo -e "\e[91mloopback our effects Sink: ${SINKb}\e[0m";
-#echo -e "\e[93maHabilitar um monitor ffplay ${SINKb} no output padrão\e[0m";
-#ffplay -hide_banner -loglevel quiet -f pulse  -i ${SINKb} -ar 48k -nodisp &
-echo -e "\e[91maCombinando ${SINKb} com ${SINKc}\e[0m";
-pactl load-module module-combine-sink sink_name=gammaQ slaves="${SINKb}";
-echo "and set default..";
-pactl set-default-sink gammaQ;
-#echo -e "\e[92maAjustar loopback\e[0m";
-#pactl load-module module-loopback source="${SINKb}".monitor sink="${SINKc}";
 
 ## iniciar preparo de adquirir playback e construir pipeline do gravador
 PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.avi";
@@ -179,31 +208,23 @@ if [ -n "$filename" ]; then
 
 # Get total duration of the video
 PLAYBACK_LEN=$( echo "scale=0; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
-echo $PLAYBACK_LEN;
+echo "${PLAYBACK_LEN}";
+
+#"Load the echo cancellation module to cancel echo";
+#echo -e "\e[98mLoad module-echo-cancel\e[0m";
+#pactl load-module module-echo-cancel \
+      #          sink_name="PULSE_echocan" \
+     #           master="${SINKa}" \
+    #aec_method=webrtc aec_args="analog_gain_control=1 digital_gain_control=1";
+#### DEBUG: hear effects, not suitable for singing because of delay
+#pactl load-module module-loopback source="${SINKa}" sink="${SINKb}" latency_msec=11;
+pactl load-module module-loopback latency_msec=6;
 
    #convertemos para avi, pois precisamos usar AVI por enquanto, outros codecs dão bug
    ffmpeg -y -hide_banner -loglevel info -i "${filename}" "${PLAYBACK_BETA}" &
+  ff_pid=$!;
 
-# Create a dialog box with a progress bar
-(
-while true; do
-    # Get elapsed time
-    elapsed_time=$(ffmpeg -i "${PLAYBACK_BETA}" 2>&1 | grep Duration | awk 'split($2, a, ":"); print a[1]*3600+a[2]*60+int(a[3])}')
-
-    # Calculate progress percentage
-    progress=$(echo "scale=0; ( $elapsed_time / $total_duration ) * 100" | bc)
-
-    # Update the progress bar in the dialog
-    echo "$progress"
-
-    # Terminate loop if rendering process has finished
-    if ! ps -p $!  2>&1  > /dev/null ; then
-        break
-    fi
-
-    sleep 10
-done
-) | zenity --progress --title="avi Video Rendering" --text="Rendering in progress...we need to work with AVI because  of bugs with other formats" --auto-close --auto-kill
+render_display_progress "${PLAYBACK_BETA}";
 
 # Check if rendering process was terminated
 if [ $? -eq 0 ]; then
@@ -236,7 +257,7 @@ echo -e "\e[91mAll setup to sing!";
 aplay research.wav;
 # Display message to start recording
 export LC_ALL=C;
-zenity --question --text="Ready to record: \"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, do you want this playback? " --title="BETAKe Recording Prompt" --default-cancel --width=200 --height=100
+zenity --question --text="Ready to record: \"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, do you want to sing this playback? " --title="BETAKe Recording Prompt" --default-cancel --width=200 --height=100
 if [ $? == 1 ]; then
     echo "Recording canceled.";
         reboot_pulse true;
@@ -244,7 +265,7 @@ if [ $? == 1 ]; then
     exit;
 fi
 
-# Recording and Post-production
+# Recording then Post-production
 OUTFILE="${OUT_DIR}"/"${karaoke_name}"_out.avi;
 	
 echo -e "\e[93mSING!--------------------------\e[0m";
@@ -260,10 +281,10 @@ echo -e "\e[91m..Launch FFMpeg recorder (AUDIO_VIDEO)\e[0m";
 diff_ss=$(( "$(time_diff_seconds "${epoch_ffplay}" "$(date +'%s')")" ));
 
 ffmpeg -y                                                  \
-                                -hide_banner -loglevel info               \
+                                -hide_banner -loglevel info              \
                                         -f v4l2     -i /dev/video0        \
-                                        -f pulse    -i "${SINKb}"         \
-                    -ss $(( 3 + "${diff_ss}" ))     -i "${PLAYBACK_BETA}" \
+                                        -f pulse    -i "${SINKb}".monitor  \
+                    -ss $(( 3 + "${diff_ss}" ))     -i "${PLAYBACK_BETA}"   \
                                                                                                        \
                                         -map "0:v:0" -t "${PLAYBACK_LEN}" "${OUTFILE}"               \
                                         -map "1:a:0" -ar 48k "${OUT_DIR}"/"${karaoke_name}"_out.flac &
@@ -300,13 +321,13 @@ echo "Total playback duration: ${PLAYBACK_LEN}";
 
 ## when prompt window close, stop all recordings 
     # give time to buffers
-    sleep 3;
+    
     echo -e "\e[93mRecording finished\e[0m";
             killall -SIGINT ffmpeg;
             killall -HUP v4l2-ctl;
             killall -SIGINT sox;
             killall -9 ffplay;
-            
+    sleep 3;        
    
 # clean up
 pactl unload-module module-loopback;
@@ -334,40 +355,19 @@ ffmpeg -y -hide_banner -loglevel info   \
 
     [playback][vocals]amix=inputs=2:weights=0.4|0.5[betamix];
 
-        [1:v]format=rgba,colorchannelmixer=aa=0.55,scale=s=320x240[v1];
+        [1:v]format=rgba,colorchannelmixer=aa=0.44,scale=s=320x240[v1];
         life=s=320x240:mold=10:r=100:ratio=0.1:death_color=blue:life_color=#00ff00,boxblur=2:2,format=rgba[spats];
          gradients=n=3:type=spiral,format=rgb0,scale=s=320x240[vscope];
-          [0:v]colorchannelmixer=aa=0.55,scale=s=1280x720[v0]; 
+          [0:v]colorchannelmixer=aa=0.55,scale=s=848x480[v0]; 
           [vscope][v1]hstack=inputs=2,scale=s=320x240[video_merge];
-          [spats][video_merge]vstack=inputs=2,format=rgba,scale=s=1280x720[badcoffee];
-          [v0][badcoffee]overlay=10:6,format=rgba,scale=s=1280x720[BETAKE];" \
+          [video_merge][spats]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.36,scale=s=848x480[badcoffee];
+          [v0][badcoffee]overlay=10:6,format=rgba,scale=s=848x480[BETAKE];" \
                     -map "[betamix]"  -map "[BETAKE]" \
-                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}".avi  &
-# Get total duration of the video
-total_duration="${PLAYBACK_LEN}"
-
-# Create a dialog box with a progress bar
-(
-while true; do
-    # Get elapsed time
-    elapsed_time=$(ffmpeg -i "${REC_DIR}"/"${karaoke_name}".avi 2>&1 | grep Duration | awk '{split($2,a,":"); print a[1]*3600+a[2]*60+int(a[3])}')
-
-    # Calculate progress percentage
-    progress=$(echo "scale=0; ( $elapsed_time / $total_duration )  * 100  " | bc)
-
-    # Update the progress bar in the dialog
-    echo "$progress"
-
-    # Terminate loop if rendering process has finished
-    if ! ps -p $!  2>&1 > /dev/null; then
-        break
-    fi
-
-    sleep 10
-done
-) | zenity --progress --title="mp4 Video Rendering" --text="Rendering in progress..." --auto-close --auto-kill
+                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}".mp4  &
+                ff_pid=$!;
 
 
+ render_display_progress "${REC_DIR}"/"${karaoke_name}".mp4 
 # Check if the progress dialog was canceled/completed
 if [ $? = 1 ]; then
     echo "Render canceled."
@@ -376,7 +376,7 @@ if [ $? = 1 ]; then
 else
     # Show the result using ffplay
     ffplay -af "volume=0.45" -window_title "RESULT" -loglevel quiet \
-                    -hide_banner "${OUT_DIR}/${karaoke_name}.avi";
+                    -hide_banner "${OUT_DIR}/${karaoke_name}.mp4";
 fi
 
 
