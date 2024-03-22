@@ -150,13 +150,14 @@ echo -e "\e[92maAjustar vol ${SINKc} 55%..\e[0m";
  pactl set-sink-volume "${SINKc}" 55%;
 
 #echo -e "\e[91mloopback our effects Sink: ${SINKb}\e[0m";
-#pactl load-module module-loopback;
-#pactl load-module module-loopback latency_msec=11 sink="${SINKb}";
 #echo -e "\e[93maHabilitar um monitor ffplay ${SINKb} no output padrão\e[0m";
 #ffplay -hide_banner -loglevel quiet -f pulse  -i ${SINKb} -ar 48k -nodisp &
-
-pactl load-module module-combine-sink sink_name=gammaQ slaves="${SINKb}","${SINKc}";
-pactl set-default-sync gammaQ;
+echo -e "\e[91maCombinando ${SINKb} com ${SINKc}\e[0m";
+pactl load-module module-combine-sink sink_name=gammaQ slaves="${SINKb}";
+echo "and set default..";
+pactl set-default-sink gammaQ;
+#echo -e "\e[92maAjustar loopback\e[0m";
+#pactl load-module module-loopback source="${SINKb}".monitor sink="${SINKc}";
 
 ## iniciar preparo de adquirir playback e construir pipeline do gravador
 PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.avi";
@@ -168,36 +169,29 @@ PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}")"
 yt-dlp "${video_url}" -o "${REC_DIR}/${karaoke_name}_playback.%(ext)s" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --console-title --embed-subs --progress --no-continue --force-overwrites --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300"; 
 
 
-# Display message to start converting
+# to start converting
 export LC_ALL=C;
-zenity --question --text="Going to convert: \"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, do you want this playback? " --title="BETAKe Recording Prompt" --default-cancel --width=200 --height=100
-if [ $? == 1 ]; then
-    echo "Recording canceled.";
-    reboot_pulse true;
-
-    wmctrl -c 'BETAKê CMD prompt';
-    exit;
-fi
-
 # Find the first file with either .mp4 or .webm extension
 filename=$(find "$REC_DIR" \( -name "${karaoke_name}_playback.mkv" -o -name "${karaoke_name}_playback.mp4" -o -name "${karaoke_name}_playback.webm" \) -print -quit)
 # Check if a file was found
 if [ -n "$filename" ]; then
     echo "Using file: $filename"
-   #convertemos para avi, pois precisamos usar AVI por enquanto, outros codecs dão bug
-   ffmpeg -y -hide_banner -loglevel info -i "${filename}" "${PLAYBACK_BETA}" &
 
 # Get total duration of the video
-PLAYBACK_LEN=$( echo "scale=2; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
+PLAYBACK_LEN=$( echo "scale=0; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
+echo $PLAYBACK_LEN;
+
+   #convertemos para avi, pois precisamos usar AVI por enquanto, outros codecs dão bug
+   ffmpeg -y -hide_banner -loglevel info -i "${filename}" "${PLAYBACK_BETA}" &
 
 # Create a dialog box with a progress bar
 (
 while true; do
     # Get elapsed time
-    elapsed_time=$(ffmpeg -i "${PLAYBACK_BETA}" 2>&1 | awk '/time=/ {split($2,a,":"); print a[1]*3600+a[2]*60+int(a[3])}')
+    elapsed_time=$(ffmpeg -i "${PLAYBACK_BETA}" 2>&1 | grep Duration | awk 'split($2, a, ":"); print a[1]*3600+a[2]*60+int(a[3])}')
 
     # Calculate progress percentage
-    progress=$(echo "scale=2; ( $elapsed_time / $total_duration ) * 100" | bc)
+    progress=$(echo "scale=0; ( $elapsed_time / $total_duration ) * 100" | bc)
 
     # Update the progress bar in the dialog
     echo "$progress"
@@ -259,7 +253,6 @@ echo -e "\e[93mSING!--------------------------\e[0m";
 	            ffplay \
 			        -window_title "SING" -loglevel info -hide_banner -af "volume=0.35" "${PLAYBACK_BETA}" &
                 ffplay_pid=$!;
-                    wmctrl -R "SING" -b add,above;
                      epoch_ffplay=$( get_process_start_time "${ffplay_pid}" ); 	
 
 #start CAMERA   to record audio & video
@@ -275,22 +268,22 @@ ffmpeg -y                                                  \
                                         -map "0:v:0" -t "${PLAYBACK_LEN}" "${OUTFILE}"               \
                                         -map "1:a:0" -ar 48k "${OUT_DIR}"/"${karaoke_name}"_out.flac &
                                         
-                                wmctrl -r "SING" -b add,sticky;   wmctrl -R "SING" -b add,above;
-# Initialize karaoke_duration variable
-export cronos_play=0;
-export LC_ALL=C;
-rm -rf "${OUT_DIR}/${karaoke_name}_dur.txt";
+                                
+#!/bin/bash
+
+# Initialize variables
+cronos_play=0
+# Main loop
 while [ "$(printf "%.0f" "${cronos_play}")" -le "${PLAYBACK_LEN}" ]; do
-
-    wmctrl -R "BETAKe Recording" -b add,above;
-
+    wmctrl -R "BETAKe Recording" -b add,above
     sleep 3.3
-    cronos_play="$(echo "scale=4;  ${cronos_play} + 3.3"| bc)";
-    percent_play="$(echo "scale=4; ${cronos_play} * 100 / ${PLAYBACK_LEN} "  | bc)";
-    echo "${cronos_play}" > "${OUT_DIR}/${karaoke_name}_dur.txt";
-    echo "${percent_play}";
-done | zenity --progress --text="Press OK to STOP recording " \
-                    --title="BETAKe Recording" --width=300 --height=200 --percentage=0
+    cronos_play=$(echo "scale=0; ${cronos_play} + 3.3" | bc)
+    percent_play=$(echo "scale=0; ${cronos_play} * 100 / ${PLAYBACK_LEN}" | bc)
+    echo "${cronos_play}" > "${OUT_DIR}/${karaoke_name}_dur.txt"
+    echo "${percent_play}"
+done | zenity --progress --text="Press OK to STOP recording" \
+              --title="BETAKe Recording" --width=300 --height=200 --percentage=0
+
 
 
 # Check if the progress dialog was canceled/completed
@@ -325,7 +318,7 @@ echo -e "\e[90mrendering final video\e[0m"
 # Start ffmpeg in the background and capture its PID
 ffmpeg -y -hide_banner -loglevel info   \
                                             -i "${OUTFILE}" \
-            -ss $(( 3 + "${diff_ss}" ))     -i "${PLAYBACK_BETA}" \
+                                            -i "${PLAYBACK_BETA}" \
                                             -i "${OUT_DIR}"/"${karaoke_name}"_out.flac \
         -filter_complex "
     [1:a]loudnorm=I=-16:LRA=11:TP=-1.5,   
@@ -349,7 +342,7 @@ ffmpeg -y -hide_banner -loglevel info   \
           [spats][video_merge]vstack=inputs=2,format=rgba,scale=s=1280x720[badcoffee];
           [v0][badcoffee]overlay=10:6,format=rgba,scale=s=1280x720[BETAKE];" \
                     -map "[betamix]"  -map "[BETAKE]" \
-                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}"_avi.mp4  &
+                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}".avi  &
 # Get total duration of the video
 total_duration="${PLAYBACK_LEN}"
 
@@ -357,10 +350,10 @@ total_duration="${PLAYBACK_LEN}"
 (
 while true; do
     # Get elapsed time
-    elapsed_time=$(ffmpeg -i "${REC_DIR}"/"${karaoke_name}"_beta.avi 2>&1 | awk '/time=/ {split($2,a,":"); print a[1]*3600+a[2]*60+int(a[3])}')
+    elapsed_time=$(ffmpeg -i "${REC_DIR}"/"${karaoke_name}".avi 2>&1 | grep Duration | awk '{split($2,a,":"); print a[1]*3600+a[2]*60+int(a[3])}')
 
     # Calculate progress percentage
-    progress=$(echo "scale=2; ( $elapsed_time / $total_duration )  * 100  " | bc)
+    progress=$(echo "scale=0; ( $elapsed_time / $total_duration )  * 100  " | bc)
 
     # Update the progress bar in the dialog
     echo "$progress"
@@ -383,7 +376,7 @@ if [ $? = 1 ]; then
 else
     # Show the result using ffplay
     ffplay -af "volume=0.45" -window_title "RESULT" -loglevel quiet \
-                    -hide_banner "${OUT_DIR}/${karaoke_name}_beta.avi";
+                    -hide_banner "${OUT_DIR}/${karaoke_name}.avi";
 fi
 
 
