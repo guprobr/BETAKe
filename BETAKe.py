@@ -58,7 +58,7 @@ class App:
         self.kill_button.place(x=790, y=690, width=350, height=120)
         # Button to fetch random karaoke video URL
         self.random_karaoke_button = tk.Button(
-            master, text="Random", command=self.fetch_random_karaoke_url)
+            master, text="Feel Lucky", command=self.fetch_random_karaoke_url)
         self.random_karaoke_button.place(x=350, y=620, width=100)
         # Get fortune button
         self.fortune_button = tk.Button(
@@ -284,7 +284,7 @@ class App:
             # Command to execute betaREC.sh with tee for logging
             command = [
                 'bash', '-c',
-                f'{betake_path}/betaNEXT.sh {karaoke_name} {video_url} {betake_path} 2>&1 | tee -a script.log'
+                f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} 2>&1 | tee -a script.log'
             ]
 
             # Launch betaREC.sh inside xterm and redirect output to script.log
@@ -309,6 +309,16 @@ class App:
     def kill_recording(self):
         # Quit the interface, try housekeeping
         self.master.quit()
+        print ("\e[93mUnload existing modules and restart PulseAudio\e[0m")
+        print ("pactl unload-module module-ladspa-sink;")
+        print ("pactl unload-module module-loopback;")
+        print ("pactl unload-module module-echo-cancel;")
+        print ("killall -HUP pipewire-pulse")
+        subprocess.run(['bash', '-c', '"', 'pactl unload-module module-loopback;', '"'    ])
+        subprocess.run(['bash', '-c', '"', 'pactl unload-module module-ladspa-sink;', '"' ])
+        subprocess.run(['bash', '-c', '"', 'pactl unload-module module-echo-cancel;', '"' ])
+        subprocess.run(['killall', '-HUP', 'pipewire-pulse'])
+        subprocess.run(["pkill", "-9", "ffmpeg", "&&", "pkill", "-9", "ffplay", "&&", "pkill", "-9", "zenity", "&&", "pkill", "-9", "betaNEXT.sh" ])
         command = ['wmctrl', '-c', 'BETAKê CMD prompt' ]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)   
                    
