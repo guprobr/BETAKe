@@ -17,7 +17,7 @@ class App:
 
         self.master = master
         master.title("BETAKe Karaoke Shell Interface")
-        master.geometry("1024x768")  # Set window size
+        master.geometry("1024x840")  # Set window size
         
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray")
@@ -50,12 +50,12 @@ class App:
         # Start recording button
         self.start_recording_button = tk.Button(
             master, text="Start Recording", command=self.start_recording)
-        self.start_recording_button.place(x=10, y=690, width=350, height=120)
+        self.start_recording_button.place(x=10, y=690, width=300, height=66)
 
         # Kill recording button
         self.kill_button = tk.Button(
             master, text="Kill BETAKê", command=self.kill_recording)
-        self.kill_button.place(x=790, y=690, width=350, height=120)
+        self.kill_button.place(x=790, y=690, width=300, height=66)
         # Button to fetch random karaoke video URL
         self.random_karaoke_button = tk.Button(
             master, text="Feel Lucky", command=self.fetch_random_karaoke_url)
@@ -302,27 +302,14 @@ class App:
             parent_pid = subprocess.check_output(["pgrep", parent_process_name]).strip().decode()
 
             # Find and terminate all children processes
-            subprocess.run(["pkill", "-TERM", "-P", parent_pid])
+            subprocess.run(["killall", "-TERM", "-P", parent_pid])
         except subprocess.CalledProcessError:
             print("Error: Failed to find or terminate parent process and its children.")
 
     def kill_recording(self):
         # Quit the interface, try housekeeping
         self.master.quit()
-        print ("\e[93mUnload existing modules and restart PulseAudio\e[0m")
-        print ("pactl unload-module module-ladspa-sink;")
-        print ("pactl unload-module module-loopback;")
-        print ("pactl unload-module module-echo-cancel;")
-        print ("killall -HUP pipewire-pulse")
-        subprocess.run(['bash', '-c', '"', 'pactl unload-module module-loopback;', '"'    ])
-        subprocess.run(['bash', '-c', '"', 'pactl unload-module module-ladspa-sink;', '"' ])
-        subprocess.run(['bash', '-c', '"', 'pactl unload-module module-echo-cancel;', '"' ])
-        subprocess.run(['killall', '-HUP', 'pipewire-pulse'])
-        subprocess.run(["pkill", "-9", "ffmpeg", "&&", "pkill", "-9", "ffplay", "&&", "pkill", "-9", "zenity", "&&", "pkill", "-9", "betaNEXT.sh" ])
-        command = ['wmctrl', '-c', 'BETAKê CMD prompt' ]
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)   
-                   
-    
+      
 
 def main():
     root = tk.Tk()
