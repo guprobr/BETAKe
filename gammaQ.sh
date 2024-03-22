@@ -97,7 +97,7 @@ echo -e "\e[91maAjustar vol dos headphones: USE HEADPHONES!!!!!\e[0m";
 pactl set-source-volume "${SINKA}" 44%
 echo -e "\e[93maAjustar vol do microfone\e[0m";
 pactl load-module module-loopback #latency_msec=1 #source="${SINKB}" sink="$( pactl list sinks short | grep output | head -n1 | awk '{ print $2 }' )";
-pavumeter ${SINKB} &
+#pavumeter ${SINKB} &
 wmctrl -R "PulseAudio Volume Meter" -b add,above;
 
 
@@ -243,7 +243,8 @@ ffmpeg -y -hide_banner -loglevel info   \
     [2:a]adeclip,anlmdn=s=55,alimiter,speechnorm,
     pan=stereo|c0=c0|c1=c0,acompressor,afftdn,
     ladspa=tap_autotalent:plugin=autotalent:c=480 0 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0 1.000 1.000 0 0 000.0 0.05,
-    stereowiden,adynamicequalizer,aexciter,treble=g=2,loudnorm=I=-16:LRA=11:TP=-1.5,   
+    stereowiden,adynamicequalizer,aexciter,aecho=0.8:0.9:99:0.3,treble=g=5,
+    loudnorm=I=-16:LRA=11:TP=-1.5,   
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[vocals];
 
