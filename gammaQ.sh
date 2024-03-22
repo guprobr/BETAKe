@@ -283,7 +283,7 @@ diff_ss=$(( "$(time_diff_seconds "${epoch_ffplay}" "$(date +'%s')")" ));
 ffmpeg -y                                                  \
                                 -hide_banner -loglevel info              \
                                         -f v4l2     -i /dev/video0        \
-                                        -f pulse    -i "${SINKb}".monitor  \
+                                        -f pulse    -i "${SINKb}"           \
                     -ss $(( 3 + "${diff_ss}" ))     -i "${PLAYBACK_BETA}"   \
                                                                                                        \
                                         -map "0:v:0" -t "${PLAYBACK_LEN}" "${OUTFILE}"               \
@@ -363,11 +363,11 @@ ffmpeg -y -hide_banner -loglevel info   \
           [video_merge][spats]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.36,scale=s=848x480[badcoffee];
           [v0][badcoffee]overlay=10:6,format=rgba,scale=s=848x480[BETAKE];" \
                     -map "[betamix]"  -map "[BETAKE]" \
-                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}".mp4  &
+                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}".avi  &
                 ff_pid=$!;
 
 
- render_display_progress "${REC_DIR}"/"${karaoke_name}".mp4 
+ render_display_progress "${REC_DIR}"/"${karaoke_name}".avi 
 # Check if the progress dialog was canceled/completed
 if [ $? = 1 ]; then
     echo "Render canceled."
@@ -376,7 +376,7 @@ if [ $? = 1 ]; then
 else
     # Show the result using ffplay
     ffplay -af "volume=0.45" -window_title "RESULT" -loglevel quiet \
-                    -hide_banner "${OUT_DIR}/${karaoke_name}.mp4";
+                    -hide_banner "${OUT_DIR}/${karaoke_name}.avi";
 fi
 
 
