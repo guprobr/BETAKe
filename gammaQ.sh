@@ -98,25 +98,25 @@ echo -e "\e[93mLoading module-remap-source for microphone sink\e[0m";
 pactl load-module module-remap-source source_name="${SINKa}" source_master="${SRC_mic}";
 
 #"Load the echo cancellation module to cancel echo";
-echo -e "\e[96mLoad module-echo-cancel\e[0m";
-pactl load-module module-echo-cancel \
-                sink_name="PULSE_echocan" \
-                master="${SINKa}" \
-    aec_method=webrtc aec_args="analog_gain_control=1 digital_gain_control=1";
+#echo -e "\e[96mLoad module-echo-cancel\e[0m";
+#pactl load-module module-echo-cancel \
+      #          sink_name="PULSE_echocan" \
+     #           master="${SINKa}" \
+    #aec_method=webrtc aec_args="analog_gain_control=1 digital_gain_control=1";
 
 #LADSPA_declip
 echo -e "\e[97mLoad module-ladspa-sink for declipper\e[0m";
 pactl load-module module-ladspa-sink \
                 plugin="declip_1195" label=declip \
                 sink_name="LADSPA_declip" \
-                master="PULSE_echocan";
+                master="${SINKa}";
 
 #LADSPA_pitch
 echo -e "\e[93mLoad module-ladspa-sink for pitch\e[0m"; 
 pactl load-module module-ladspa-sink \
                 sink_name="LADSPA_pitch" \
                 master="LADSPA_declip" \
-    plugin="tap_pitch" label=tap_pitch control="1.0101,11,-11,5,-1"; 
+    plugin="tap_pitch" label=tap_pitch control="1.001001,11,-11,5,-1"; 
 
 #LADSPA AUTOTALENT TAP
 echo -e "\e[91mAltoTalent©\e[0m";
@@ -198,7 +198,7 @@ while true; do
     echo "$progress"
 
     # Terminate loop if rendering process has finished
-    if ! ps -p $! > /dev/null; then
+    if ! ps -p $!  2>&1  > /dev/null ; then
         break
     fi
 
@@ -361,7 +361,7 @@ while true; do
     echo "$progress"
 
     # Terminate loop if rendering process has finished
-    if ! ps -p $! > /dev/null; then
+    if ! ps -p $!  2>&1 > /dev/null; then
         break
     fi
 
