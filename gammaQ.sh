@@ -105,7 +105,7 @@ get_total_frames() {
 
             # Calculate the percentage of completion based on the file size
             local current_file_size=$(stat -c%s "${1}" )
-            local progress=$(echo "scale=2; ($current_file_size * 100) / $total_size_bytes" | bc)
+            local progress=$(echo "scale=0; ($current_file_size * 100) / $total_size_bytes" | bc)
 
             # Update the progress bar in the dialog
             echo "$progress"
@@ -203,8 +203,8 @@ echo -e "\e[94maAjustar vol ${SINKb} 90%\e[0m";
  pactl set-sink-volume "${SINKb}" 90%;
 echo -e "\e[91maAjustar vol ${SINKb}.monitor 90%\e[0m";
  pactl set-source-volume "${SINKb}".monitor 90%;
-echo -e "\e[92maAjustar vol ${SINKc} 90%..\e[0m";
- pactl set-sink-volume "${SINKc}" 90%;
+echo -e "\e[92maAjustar vol ${SINKc} 50%..\e[0m";
+ pactl set-sink-volume "${SINKc}" 50%;
 echo -e "\e[91mconnect effects LADSPA directly to mic sink via looopback\e[0m";
 
 
@@ -237,7 +237,7 @@ echo "${PLAYBACK_LEN}";
      #           master="${SINKa}" \
     #aec_method=webrtc aec_args="analog_gain_control=1 digital_gain_control=1";
 #### DEBUG: hear effects, not suitable for singing because of delay
-#pactl load-module module-loopback source="${SINKa}" sink="${SINKb}" latency_msec=11;
+pactl load-module module-loopback source="${SINKa}" sink="${SINKb}" latency_msec=11;
 pactl load-module module-loopback latency_msec=6;
 
    #convertemos para avi, pois precisamos usar AVI por enquanto, outros codecs dão bug
@@ -288,7 +288,7 @@ echo -e "\e[91mAll setup to sing!";
 aplay research.wav;
 # Display message to start recording
 export LC_ALL=C;
-zenity --question --text="Ready to record: \"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, do you want to sing this playback? " --title="BETAKe Recording Prompt" --default-cancel --width=200 --height=100
+zenity --question --text="\"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, let's sing? " --title="BETAKe: ready to S I N G? " --default-cancel --width=640 --height=100
 if [ $? == 1 ]; then
     echo "Recording canceled.";
         reboot_pulse true;
@@ -300,6 +300,7 @@ if [ $? == 1 ]; then
     exit;
 fi
 
+rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
 # Recording then Post-production
 OUTFILE="${OUT_DIR}"/"${karaoke_name}"_out.avi;
 	
@@ -313,19 +314,23 @@ echo -e "\e[93mSING!--------------------------\e[0m";
 
 #start CAMERA   to record audio & video
 echo -e "\e[91m..Launch FFMpeg recorder (AUDIO_VIDEO)\e[0m";
-diff_ss=$(( "$(time_diff_seconds "${epoch_ffplay}" "$(date +'%s')")" ));
+
+
 
 ffmpeg -y                                                  \
                                 -hide_banner -loglevel info              \
                                         -f v4l2     -i /dev/video0        \
-                                        -f pulse    -i "${SINKb}"           \
-                    -ss $(( 3 + "${diff_ss}" ))     -i "${PLAYBACK_BETA}"   \
-                                                                                                       \
+                                        -f pulse    -i "${SINKb}"          \
+                                                  -i "${PLAYBACK_BETA}"   \
+                                                                             \
                                         -map "0:v:0" -t "${PLAYBACK_LEN}" "${OUTFILE}"               \
                                         -map "1:a:0" -ar 48k "${OUT_DIR}"/"${karaoke_name}"_out.flac &
-                                        
+                                        ff_pid=$!;
                                 
-#!/bin/bash
+epoch_ff=$( get_process_start_time "${ff_pid}" ); 
+
+  diff_ss="$(( 1 + "$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"))"
+
 
 # Initialize variables
 cronos_play=0
@@ -374,7 +379,7 @@ echo -e "\e[90mrendering final video\e[0m"
 # Start ffmpeg in the background and capture its PID
 ffmpeg -y -hide_banner -loglevel info   \
                                             -i "${OUTFILE}" \
-                                            -i "${PLAYBACK_BETA}" \
+            -ss $(( 1 + "${diff_ss}" )).88  -i "${PLAYBACK_BETA}" \
                                             -i "${OUT_DIR}"/"${karaoke_name}"_out.flac \
         -filter_complex "
     [1:a]loudnorm=I=-16:LRA=11:TP=-1.5,   
@@ -398,11 +403,11 @@ ffmpeg -y -hide_banner -loglevel info   \
           [video_merge][spats]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.36,scale=s=848x480[badcoffee];
           [v0][badcoffee]overlay=10:6,format=rgba,scale=s=848x480[BETAKE];" \
                     -map "[betamix]"  -map "[BETAKE]" \
-                    -b:v 333k -b:a 1024k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}".mp4  &
+                    -b:v 333k -b:a 512k -ar 48k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}"_beta.mp4  &
                 ff_pid=$!;
 
 
- render_display_progress "${OUT_DIR}"/"${karaoke_name}".mp4 
+ render_display_progress "${OUT_DIR}"/"${karaoke_name}"_beta.mp4 
 # Check if the progress dialog was canceled/completed
 if [ $? = 1 ]; then
     echo "Render canceled."
@@ -411,7 +416,7 @@ if [ $? = 1 ]; then
 else
     # Show the result using ffplay
     ffplay -af "volume=0.45" -window_title "RESULT" -loglevel quiet \
-                    -hide_banner "${OUT_DIR}/${karaoke_name}.mp4";
+                    -hide_banner "${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 fi
 
 
