@@ -167,7 +167,7 @@ pactl load-module module-ladspa-sink \
                 sink_name="LADSPA_declip" \
                 master="${SINKa}";
 
-LADSPA_rnnoise
+#LADSPA_rnnoise
 echo -e "\e[96mLoad module-ladspa-sink for RNNOISE\e[0m"
 pactl load-module module-ladspa-sink \
                         plugin="librnnoise_ladspa" label="noise_suppressor_mono" \
@@ -179,7 +179,7 @@ echo -e "\e[95mLoad module-ladspa-sink for pitch\e[0m";
 pactl load-module module-ladspa-sink \
                 sink_name="${SINKb}" \
                 master="LADSPA_noise" \
-    plugin="tap_pitch" label=tap_pitch control="1.005696,11,-11,5,-1"; 
+    plugin="tap_pitch" label=tap_pitch control="1.036696,33,-11,5,-1"; 
 
 #LADSPA AUTOTALENT TAP
 #echo -e "\e[94mAltoTalent©\e[0m";
