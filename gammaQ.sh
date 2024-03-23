@@ -236,9 +236,9 @@ echo "${PLAYBACK_LEN}";
       #          sink_name="PULSE_echocan" \
      #           master="${SINKa}" \
     #aec_method=webrtc aec_args="analog_gain_control=1 digital_gain_control=1";
-#### DEBUG: hear effects, not suitable for singing because of delay
-pactl load-module module-loopback source="${SINKa}" sink="${SINKb}" latency_msec=11;
-pactl load-module module-loopback latency_msec=6;
+#### ladspa SINK DEBUG: hear effects, not suitable for singing because of delay
+#####pactl load-module module-loopback source="${SINKa}" sink="${SINKb}" latency_msec=3;
+pactl load-module module-loopback latency_msec=5;
 
    #convertemos para avi, pois precisamos usar AVI por enquanto, outros codecs dão bug
    ffmpeg -y -hide_banner -loglevel info -i "${filename}" "${PLAYBACK_BETA}" &
@@ -379,7 +379,7 @@ echo -e "\e[90mrendering final video\e[0m"
 # Start ffmpeg in the background and capture its PID
 ffmpeg -y -hide_banner -loglevel info   \
                                             -i "${OUTFILE}" \
-            -ss $(( 1 + "${diff_ss}" )).88  -i "${PLAYBACK_BETA}" \
+            -ss $(( "${diff_ss}" ))     -i "${PLAYBACK_BETA}" \
                                             -i "${OUT_DIR}"/"${karaoke_name}"_out.flac \
         -filter_complex "
     [1:a]loudnorm=I=-16:LRA=11:TP=-1.5,   
