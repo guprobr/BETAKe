@@ -25,11 +25,31 @@ reboot_pulse() {
     echo -e "\e[91mERRORS reported above HERE ARE NORMAL. It means already unloaded\e[0m"; 
     echo -e "\e93m[[[[RESTARTING]]]]  audio server now:\e[0m";
     killall -HUP pipewire-pulse
-    sleep 1; echo "please wait a brief moment";
+    sleep 1; 
 }
 
 reboot_pulse 'done';
+# Function to kill the parent process and all its children
+    kill_parent_and_children() {
+        local parent_pid=$1
+        local child_pids=$(pgrep -P $parent_pid)
 
+        # Kill the parent process and all its children
+        echo "Killing parent process $parent_pid and its children: $child_pids"
+        kill $parent_pid $child_pids
+
+        # Optionally, wait for the processes to terminate
+        sleep 1
+
+        # Check if the processes are still running
+        for pid in $parent_pid $child_pids; do
+            if ps -p $pid > /dev/null; then
+                echo "Process $pid is still running"
+            else
+                echo "Process $pid has been terminated"
+            fi
+        done
+    }
 # Function to get total number of frames
 get_total_frames() {
     total_frames=$(ffmpeg -i "${1}" 2>&1 | grep "Duration" | awk '{print $2}' | tr -d ',')
@@ -175,16 +195,16 @@ pactl load-module module-ladspa-sink \
  #               master="LADSPA_talent";
 
 
-echo -e "\e[91maAjustar vol ${SRC_mic} em 45%";
- pactl set-source-volume "${SRC_mic}" 45%;
+echo -e "\e[91maAjustar vol ${SRC_mic} em 33%";
+ pactl set-source-volume "${SRC_mic}" 33%;
 echo -e "\e[91maAjustar vol ${SINKa} USE HEADPHONES\e[0m";
- pactl set-source-volume "${SINKa}" 95%;
+ pactl set-source-volume "${SINKa}" 90%;
 echo -e "\e[94maAjustar vol ${SINKb} 90%\e[0m";
- pactl set-sink-volume "${SINKb}" 95%;
+ pactl set-sink-volume "${SINKb}" 90%;
 echo -e "\e[91maAjustar vol ${SINKb}.monitor 90%\e[0m";
  pactl set-source-volume "${SINKb}".monitor 90%;
-echo -e "\e[92maAjustar vol ${SINKc} 55%..\e[0m";
- pactl set-sink-volume "${SINKc}" 55%;
+echo -e "\e[92maAjustar vol ${SINKc} 90%..\e[0m";
+ pactl set-sink-volume "${SINKc}" 90%;
 echo -e "\e[91mconnect effects LADSPA directly to mic sink via looopback\e[0m";
 
 
@@ -232,7 +252,10 @@ if [ $? -eq 0 ]; then
 else
     echo "Video rendering was cancelled."
     reboot_pulse "true"
-    wmctrl -c 'BETAKê CMD prompt';
+    # Get the PID of the parent process
+    parent_pid=$$
+    # Call the function to kill the parent process and all its children
+    kill_parent_and_children $parent_pid
     exit;
 fi
       
@@ -241,6 +264,10 @@ else
     echo "No suitable playback file found."
         reboot_pulse true;
         wmctrl -c 'BETAKê CMD prompt';
+        # Get the PID of the parent process
+        parent_pid=$$
+        # Call the function to kill the parent process and all its children
+        kill_parent_and_children $parent_pid
     exit;
     
 fi
@@ -249,6 +276,10 @@ if [ ! -n "${PLAYBACK_BETA}" ]; then
      echo "No suitable playback file converted to AVI.";
          reboot_pulse true;
          wmctrl -c 'BETAKê CMD prompt';
+         # Get the PID of the parent process
+        parent_pid=$$
+        # Call the function to kill the parent process and all its children
+        kill_parent_and_children $parent_pid
     exit;
      
 fi
@@ -262,6 +293,10 @@ if [ $? == 1 ]; then
     echo "Recording canceled.";
         reboot_pulse true;
     wmctrl -c 'BETAKê CMD prompt';
+    # Get the PID of the parent process
+    parent_pid=$$
+    # Call the function to kill the parent process and all its children
+    kill_parent_and_children $parent_pid
     exit;
 fi
 
@@ -382,3 +417,9 @@ fi
 
 reboot_pulse 'the_end';
 wmctrl -c 'BETAKê CMD prompt';
+# Get the PID of the parent process
+    parent_pid=$$
+    # Call the function to kill the parent process and all its children
+    kill_parent_and_children $parent_pid
+
+    #THE END
