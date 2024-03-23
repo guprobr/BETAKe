@@ -80,8 +80,8 @@ get_total_frames() {
         local pid_ffmpeg="$1"     # PID of the ffmpeg process
 
         # Convert bitrates to bits per second
-        local video_bitrate_bps=$((video_bitrate * 100))
-        local audio_bitrate_bps=$((audio_bitrate * 100))
+        local video_bitrate_bps=$((video_bitrate * 1000))
+        local audio_bitrate_bps=$((audio_bitrate * 1000))
 
         # Estimate video size in bits
         local video_size=$((video_bitrate_bps * duration_seconds))
@@ -110,7 +110,7 @@ get_total_frames() {
             # Update the progress bar in the dialog
             echo "$progress"
 
-            sleep 1
+            sleep 0.1
         done
         ) | zenity --progress --title="Video Rendering !" --text="Rendering in progress...please wait" --auto-close --auto-kill
     }
@@ -171,6 +171,7 @@ pactl load-module module-ladspa-sink \
 echo -e "\e[96mLoad module-ladspa-sink for RNNOISE\e[0m"
 pactl load-module module-ladspa-sink \
                         plugin="librnnoise_ladspa" label="noise_suppressor_mono" \
+                        control="${SINKb},${SINKc},50,500,100" \
                         sink_name="LADSPA_noise" \
                         master="LADSPA_declip";
 
@@ -179,7 +180,7 @@ echo -e "\e[95mLoad module-ladspa-sink for pitch\e[0m";
 pactl load-module module-ladspa-sink \
                 sink_name="${SINKb}" \
                 master="LADSPA_noise" \
-    plugin="tap_pitch" label=tap_pitch control="1.036696,33,-11,5,-1"; 
+    plugin="tap_pitch" label=tap_pitch control="1.436696,33,-11,5,-1"; 
 
 #LADSPA AUTOTALENT TAP
 #echo -e "\e[94mAltoTalent©\e[0m";
@@ -381,15 +382,14 @@ ffmpeg -y -hide_banner -loglevel info   \
     [1:a]loudnorm=I=-16:LRA=11:TP=-1.5,   
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
-    [2:a]anlmdn=s=15,alimiter,speechnorm,
-    pan=stereo|c0=c0|c1=c0,acompressor,
-    ladspa=tap_autotalent:plugin=autotalent:c=480 0 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0 1.000 1.000 0 0 000.0 0.11,
-    aecho=0.8:0.6:84:0.25,treble=g=5,
+    [2:a]anlmdn=s=35,speechnorm,
+    ladspa=tap_autotalent:plugin=autotalent:c=480 0 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0 1.000 1.000 0 0 000.0 1.00,
+    aecho=0.8:0.6:100:0.25,treble=g=8,
     loudnorm=I=-16:LRA=11:TP=-1.5,   
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[vocals];
 
-    [playback][vocals]amix=inputs=2:weights=0.4|0.5[betamix];
+    [playback][vocals]amix=inputs=2:weights=0.3|0.5[betamix];
 
         [1:v]format=rgba,colorchannelmixer=aa=0.84,scale=s=1024x768[v1];
         life=s=1024x768:mold=5:r=10:ratio=0.1:death_color=blue:life_color=#00ff00,boxblur=2:2,format=rgba[spats];

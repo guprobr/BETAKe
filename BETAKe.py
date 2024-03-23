@@ -309,7 +309,6 @@ class App:
 
     def kill_recording(self):
         command = [ 'wmctrl', '-c', '"BETAKê CMD prompt"' ]
-            # Launch truncation of script.log
         subprocess.Popen(command)
         # Quit the interface, try housekeeping
         self.master.quit()
