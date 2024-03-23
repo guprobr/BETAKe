@@ -21,9 +21,12 @@ if [[ $response == "yes" ]]; then
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
     cp -ra BETAq.desktop ~/.local/share/applications/;
     sudo cp -ra BETAKe.* /usr/bin/;
+    echo "instale qualquer dependencia que faltar no python3, via pip";
+    echo "acesse aqui para o plugin Noise Supressor LADSPA: https://github.com/werman/noise-suppression-for-voice "
+    echo "CANTA RAUL";
     
 escaped_path=$(printf '%q' "$(pwd)")
-sudo sed -i '7s|.*|betake_path = '"$escaped_path"'/|' /usr/bin/BETAKe.py
+sudo sed -i '13s|.*|betake_path = '"$escaped_path"'/|' /usr/bin/BETAKe.py
 elif [[ $response == "no" ]]; then
     echo "You chose to cancel.";
 else

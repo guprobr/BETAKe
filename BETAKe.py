@@ -8,54 +8,50 @@ import subprocess
 import re
 import pyaudio
 import numpy as np
-
+#
+#keep both these lines below on same line number
 betake_path = "./"  # DEFAULT: BETAKE_PATH
 logfile = "script.log"  # Path to the log file
-
+#
 class App:
     def __init__(self, master):
 
         self.master = master
         master.title("BETAKe Karaoke Shell Interface")
-        master.geometry("1024x840")  # Set window size
+        master.geometry("1024x777")  # Set window size
         
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray")
         self.output_text.place(x=0, y=0, width=1024, height=510)
 
-        # Create a button to scroll to the end of the text widget
-        self.scroll_to_end_button = tk.Button(master, text="Scroll to End", command=self.scroll_to_end)
-        self.scroll_to_end_button.place(x=550, y=740, width=150, height=30)  
-
-        # Load and display the left-aligned tux.png image
+         # Load and display the left-aligned tux.png image
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
         self.left_image_label = tk.Label(master, image=self.left_image)
-        self.left_image_label.place(x=10, y=500)
+        self.left_image_label.place(x=400, y=580)
 
-        # Load and display the right-aligned tux.png image
-        self.right_image = tk.PhotoImage(file=betake_path + "/tux.png")
-        self.right_image_label = tk.Label(master, image=self.right_image)
-        self.right_image_label.place(x=800, y=500)
+        # Create a button to scroll to the end of the text widget
+        self.scroll_to_end_button = tk.Button(master, text="Scroll to End", command=self.scroll_to_end)
+        self.scroll_to_end_button.place(x=550, y=620, width=150, height=30)  
 
         # Entry for custom karaoke name
-        tk.Label(master, text="Karaoke Name:").place(x=250, y=530)
+        tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
         self.karaoke_name_entry = tk.Entry(master)
-        self.karaoke_name_entry.place(x=350, y=530, width=440)
+        self.karaoke_name_entry.place(x=160, y=530, width=750)
 
         # Entry for custom video URL
-        tk.Label(master, text="Video URL:").place(x=250, y=570)
+        tk.Label(master, text="Playback Video URL:").place(x=1, y=570)
         self.video_url_entry = tk.Entry(master)
-        self.video_url_entry.place(x=350, y=570, width=440)
+        self.video_url_entry.place(x=160, y=570, width=750)
 
         # Start recording button
         self.start_recording_button = tk.Button(
             master, text="Start Recording", command=self.start_recording)
-        self.start_recording_button.place(x=10, y=690, width=300, height=66)
+        self.start_recording_button.place(x=10, y=600, width=280, height=166)
 
         # Kill recording button
         self.kill_button = tk.Button(
             master, text="Kill BETAKê", command=self.kill_recording)
-        self.kill_button.place(x=790, y=690, width=300, height=66)
+        self.kill_button.place(x=730, y=600, width=300, height=166)
         # Button to fetch random karaoke video URL
         self.random_karaoke_button = tk.Button(
             master, text="Feel Lucky", command=self.fetch_random_karaoke_url)
@@ -308,8 +304,6 @@ class App:
             print("Error: Failed to find or terminate parent process and its children.")
 
     def kill_recording(self):
-        command = [ 'wmctrl', '-c', '"BETAKê CMD prompt"' ]
-        subprocess.Popen(command)
         # Quit the interface, try housekeeping
         self.master.quit()
       
