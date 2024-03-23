@@ -80,8 +80,8 @@ get_total_frames() {
         local pid_ffmpeg="$1"     # PID of the ffmpeg process
 
         # Convert bitrates to bits per second
-        local video_bitrate_bps=$((video_bitrate * 1000))
-        local audio_bitrate_bps=$((audio_bitrate * 1000))
+        local video_bitrate_bps=$((video_bitrate * 100))
+        local audio_bitrate_bps=$((audio_bitrate * 100))
 
         # Estimate video size in bits
         local video_size=$((video_bitrate_bps * duration_seconds))
@@ -105,7 +105,7 @@ get_total_frames() {
 
             # Calculate the percentage of completion based on the file size
             local current_file_size=$(stat -c%s "${1}" )
-            local progress=$(echo "scale=0; ($current_file_size * 100) / $total_size_bytes" | bc)
+            local progress=$(echo "scale=3; ($current_file_size * 100) / $total_size_bytes" | bc)
 
             # Update the progress bar in the dialog
             echo "$progress"
@@ -375,7 +375,7 @@ export LC_ALL=C;
 # Start ffmpeg in the background and capture its PID
 ffmpeg -y -hide_banner -loglevel info   \
                                                             -i "${OUTFILE}" \
-    -ss "$( echo "scale=4; ${diff_ss} - 0.6996" | bc )"     -i "${PLAYBACK_BETA}" \
+    -ss 0"$( echo "scale=4; ${diff_ss} - 0.6996" | bc )"     -i "${PLAYBACK_BETA}" \
                                                             -i "${OUT_DIR}"/"${karaoke_name}"_out.flac \
         -filter_complex "
     [1:a]loudnorm=I=-16:LRA=11:TP=-1.5,   
