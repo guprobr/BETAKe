@@ -230,14 +230,10 @@ if [ -n "$filename" ]; then
 PLAYBACK_LEN=$( echo "scale=0; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
 echo "${PLAYBACK_LEN}";
 
-#"Load the echo cancellation module to cancel echo";
-#echo -e "\e[98mLoad module-echo-cancel\e[0m";
-#pactl load-module module-echo-cancel \
-      #          sink_name="PULSE_echocan" \
-     #           master="${SINKa}" \
-    #aec_method=webrtc aec_args="analog_gain_control=1 digital_gain_control=1";
 #### ladspa SINK DEBUG: hear effects, not suitable for singing because of delay
-#####pactl load-module module-loopback source="${SINKa}" sink="${SINKb}" latency_msec=3;
+#########pactl load-module module-loopback source="${SINKa}" sink="${SINKb}" latency_msec=3;
+
+# MONITOR do vocal
 pactl load-module module-loopback latency_msec=5;
 
    #convertemos para avi, pois precisamos usar AVI por enquanto, outros codecs dão bug
@@ -317,11 +313,10 @@ echo -e "\e[91m..Launch FFMpeg recorder (AUDIO_VIDEO)\e[0m";
 
 
 
-ffmpeg -y                                                  \
+            ffmpeg -y                                                  \
                                 -hide_banner -loglevel info              \
                                         -f v4l2     -i /dev/video0        \
                                         -f pulse    -i "${SINKb}"          \
-                                                  -i "${PLAYBACK_BETA}"   \
                                                                              \
                                         -map "0:v:0" -t "${PLAYBACK_LEN}" "${OUTFILE}"               \
                                         -map "1:a:0" -ar 48k "${OUT_DIR}"/"${karaoke_name}"_out.flac &
@@ -376,11 +371,12 @@ pactl unload-module module-loopback;
 echo "POST_PROCESSING____________________________________"
 echo -e "\e[90mrendering final video\e[0m"
 
+export LC_ALL=C;
 # Start ffmpeg in the background and capture its PID
 ffmpeg -y -hide_banner -loglevel info   \
-                                            -i "${OUTFILE}" \
-            -ss $(( "${diff_ss}" ))     -i "${PLAYBACK_BETA}" \
-                                            -i "${OUT_DIR}"/"${karaoke_name}"_out.flac \
+                                                            -i "${OUTFILE}" \
+    -ss "$( echo "scale=4; ${diff_ss} - 0.6996" | bc )"     -i "${PLAYBACK_BETA}" \
+                                                            -i "${OUT_DIR}"/"${karaoke_name}"_out.flac \
         -filter_complex "
     [1:a]loudnorm=I=-16:LRA=11:TP=-1.5,   
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
@@ -395,15 +391,15 @@ ffmpeg -y -hide_banner -loglevel info   \
 
     [playback][vocals]amix=inputs=2:weights=0.4|0.5[betamix];
 
-        [1:v]format=rgba,colorchannelmixer=aa=0.44,scale=s=320x240[v1];
-        life=s=320x240:mold=10:r=100:ratio=0.1:death_color=blue:life_color=#00ff00,boxblur=2:2,format=rgba[spats];
-         gradients=n=3:type=spiral,format=rgb0,scale=s=320x240[vscope];
-          [0:v]colorchannelmixer=aa=0.55,scale=s=848x480[v0]; 
-          [vscope][v1]hstack=inputs=2,scale=s=320x240[video_merge];
-          [video_merge][spats]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.36,scale=s=848x480[badcoffee];
-          [v0][badcoffee]overlay=10:6,format=rgba,scale=s=848x480[BETAKE];" \
+        [1:v]format=rgba,colorchannelmixer=aa=0.84,scale=s=1024x768[v1];
+        life=s=1024x768:mold=5:r=10:ratio=0.1:death_color=blue:life_color=#00ff00,boxblur=2:2,format=rgba[spats];
+         gradients=n=3:type=spiral,format=rgb0,scale=s=1024x768[vscope];
+          [0:v]scale=s=1270x720[v0]; 
+          [vscope][v1]hstack=inputs=2,scale=s=1024x768[video_merge];
+          [video_merge][spats]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.66,scale=s=1270x720[badcoffee];
+          [v0][badcoffee]overlay=10:6,format=rgba,scale=s=1270x720[BETAKE];" \
                     -map "[betamix]"  -map "[BETAKE]" \
-                    -b:v 333k -b:a 512k -ar 48k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}"_beta.mp4  &
+                    -ar 48k -t "${PLAYBACK_LEN}"   "${OUT_DIR}"/"${karaoke_name}"_beta.mp4  &
                 ff_pid=$!;
 
 
