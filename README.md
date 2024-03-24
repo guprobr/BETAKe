@@ -1,3 +1,8 @@
+
+# v3.0 - gammaQ
+
+Soon docs... i'm tired
+
 # V2.8
 
 # grandes avanços na interface python3
