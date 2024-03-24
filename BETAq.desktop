@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=BETAKe
+Name=gammaQ
 Exec=/usr/bin/BETAKe.sh
 Icon=audio-card.png
 Categories=AudioVideo;Recorder;

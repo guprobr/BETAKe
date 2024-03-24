@@ -17,11 +17,11 @@ class App:
     def __init__(self, master):
 
         self.master = master
-        master.title("BETAKe Karaoke Shell Interface")
+        master.title("gammaQ v3")
         master.geometry("1024x777")  # Set window size
         
         # Create scrolled text widget for displaying output
-        self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray")
+        self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="silver", foreground="black")
         self.output_text.place(x=0, y=0, width=1024, height=510)
 
          # Load and display the left-aligned tux.png image
@@ -61,10 +61,41 @@ class App:
             master, text="Get Fortune", command=self.get_fortune)
         self.fortune_button.place(x=450, y=620, width=100)
 
+        # Create the multymedia buttons
+        self.test_video_button = tk.Button(master, text="Test yer Cam", command=self.start_stop_test_video)
+        self.test_video_button.pack(pady=5)
+
+        self.audio_loopback_button = tk.Button(master, text="Hear yer Audio Loopback", command=self.start_stop_audio_loopback)
+        self.audio_loopback_button.pack(pady=5)
+
         #Display fortunes at the beginning
         self.display_fortunes()
+
         # Start updating the sound meter
         #self.update_sound_meter()
+
+    def start_stop_test_video(self):
+        global test_video_thread
+        if test_video_thread and test_video_thread.is_alive():
+            test_video_thread.kill()
+            self.test_video_button.config(text="Start Test Video")
+        else:
+            test_video_thread = threading.Thread(target=self.preview_webcam_video)
+            test_video_thread.start()
+            self.test_video_button.config(text="Stop Test Video")
+
+    def start_stop_audio_loopback(self):
+        global audio_loopback_enabled
+        if audio_loopback_enabled:
+            subprocess.run(["pactl", "unload-module", "module-loopback"])
+            self.audio_loopback_button.config(text="Start Audio Loopback")
+        else:
+            subprocess.run(["pactl", "load-module", "module-loopback"])
+            self.audio_loopback_button.config(text="Stop Audio Loopback")
+        audio_loopback_enabled = not audio_loopback_enabled
+
+    def preview_webcam_video(self):
+        preview_process = subprocess.Popen(["ffplay", "-f", "v4l2", "/dev/video0"])
 
     def update_sound_meter(self):
         try:
@@ -85,7 +116,6 @@ class App:
             print("Error:", e)
         # Schedule the next update
         self.master.after(100, self.update_sound_meter)
-
 
     # Function to process audio data
     def process_audio(data):
@@ -216,7 +246,6 @@ class App:
             "https://music.youtube.com/watch?v=oLggPLDvCoc",
             "https://music.youtube.com/watch?v=1R2abdk_JJk",
             "https://music.youtube.com/watch?v=08SGDHJ2fLY",
-            "https://music.youtube.com/watch?v=3WLy3Ablvm",
             "https://music.youtube.com/watch?v=IM8pV2wedpc",
             "https://music.youtube.com/watch?v=m8CEEkqQiiY",
             "https://music.youtube.com/watch?v=FKGwe5tf_H4",
@@ -288,6 +317,14 @@ class App:
             subprocess.Popen(command)
             #feed with the log our nice window
             self.start_tailf()
+             # Poll the process until it finishes
+            while process.poll() is None:
+                # Optionally, you can add a delay to reduce CPU usage
+                time.sleep(1)
+
+            
+            print("Recording thread has ended")
+            self.start_recording_button.config(state=tk.NORMAL)
 
         # Create a new thread and start it
         recording_thread = threading.Thread(target=start_recording_thread)
@@ -303,10 +340,9 @@ class App:
         except subprocess.CalledProcessError:
             print("Error: Failed to find or terminate parent process and its children.")
 
-    def kill_recording(self):
+    def kill_recording(self):     
         # Quit the interface, try housekeeping
         self.master.quit()
-      
 
 def main():
     root = tk.Tk()

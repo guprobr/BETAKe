@@ -26,6 +26,24 @@ reboot_pulse() {
     sleep 1; 
 }
 
+colorecho() {
+    color=$1;
+    message=$2;
+    # echo with colored escape codes
+    case $color in
+        "black") coding="\e[30m" ;;
+        "red") coding="\e[31m" ;;
+        "green") coding="\e[32m" ;;
+        "yellow") coding="\e[33m" ;;
+        "blue") coding="\e[34m" ;;
+        "magenta") coding="\e[35m" ;;
+        "cyan") coding="\e[36m" ;;
+        "white") coding="\e[37m" ;;
+        *) echo "Unsupported color: $color"; exit 1 ;;
+    esac
+    echo -e "${coding}${message}\e[0m";
+}
+
 reboot_pulse 'done';
 # Function to kill the parent process and all its children
     kill_parent_and_children() {
@@ -48,33 +66,12 @@ reboot_pulse 'done';
             fi
         done
     }
-# Function to get total number of frames
-get_total_frames() {
-    total_frames=$(ffmpeg -i "${1}" 2>&1 | grep "Duration" | awk '{print $2}' | tr -d ',')
-    hours=$(echo "$total_frames" | cut -d':' -f1)
-    minutes=$(echo "$total_frames" | cut -d':' -f2)
-    seconds=$(echo "$total_frames" | cut -d':' -f3 | cut -d'.' -f1)
-    total_seconds=$((hours * 3600 + minutes * 60 + seconds))
-    framerate=$(ffmpeg -i "${1}" 2>&1 | grep -oP ', \K[0-9]+ fps' | awk '{print $1}')
-    total_frames=$(echo "$total_seconds * $framerate" | bc)
-    echo "$total_frames"
-}
-
- # Function to get the duration of the video
-    get_video_duration() {
-        duration=$(ffmpeg -i "${1}" 2>&1 | grep "Duration" | awk '{print $2}' | tr -d ',')
-        hours=$(echo "$duration" | cut -d':' -f1)
-        minutes=$(echo "$duration" | cut -d':' -f2)
-        seconds=$(echo "$duration" | cut -d':' -f3 | cut -d'.' -f1)
-        total_seconds=$((hours * 3600 + minutes * 60 + seconds))
-        echo "$total_seconds"
-    }
 
 # Function to display progress using estimated file size
     render_display_progress() {
-        local video_bitrate=2000  # Example video bitrate in kbps
+        local video_bitrate=512  # Example video bitrate in kbps
         local audio_bitrate=128   # Example audio bitrate in kbps
-        local duration_seconds=3600  # Example duration in seconds
+        local duration_seconds="${PLAYBACK_LEN}"  # Example duration in seconds
         local pid_ffmpeg="$1"     # PID of the ffmpeg process
 
         # Convert bitrates to bits per second
@@ -91,7 +88,7 @@ get_total_frames() {
         local total_size_bytes=$(( (video_size + audio_size) / 8 ))
 
         # Convert bytes to megabytes
-        local total_size_mb=$(echo "scale=2; $total_size_bytes / (1024 * 1024)" | bc)
+        local total_size_mb=$(echo "scale=1; $total_size_bytes / (1024 * 1024)" | bc)
 
         # Create a dialog box with a progress bar
         (
@@ -100,17 +97,23 @@ get_total_frames() {
             if ! ps -p "$ff_pid" >/dev/null 2>&1; then
                 break
             fi
-
+            wmctrl -r "Rendering" -b add,above
+            #wlrctl -R "Rendering"
+            #wlrctl -r "Rendering" -b add,above
             # Calculate the percentage of completion based on the file size
             local current_file_size=$(stat -c%s "${1}" )
-            local progress=$(echo "scale=3; ($current_file_size * 100) / $total_size_bytes" | bc)
+            local progress=$(echo "scale=1; ($current_file_size * 100) / $total_size_bytes" | bc)
 
             # Update the progress bar in the dialog
+            # this is a foo bar okeyyy
+            if [ "$(echo "scale=0; "progress/1 | bc)" -ge 95 ]; then
+                progress=95;
+            fi
             echo "$progress"
 
-            sleep 0.1
+            sleep 0.5
         done
-        ) | zenity --progress --title="Video Rendering !" --text="Rendering in progress...please wait" --auto-close --auto-kill
+        ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --auto-close --auto-kill
     }
 
 # Function to generate MP3 from MP4
@@ -148,61 +151,18 @@ LOG_FILE="$betake_path/script.log"
 
 
 # Load configuration variables
-SINKa="beta_mic"
-SINKb="beta_ladspa"
-SINKc="$( pactl get-default-sink )"
+SINK="$( pactl get-default-sink )"
 SRC_mic="$( pactl get-default-source )"
-echo -e "\e[93m*HOUSEKEEPING SOUND SERVERS*\e[0m";
-echo -e "\e[91mINIT MIC\"SINK A\"\e[0m";
-echo -e "\e[93mLoading module-remap-source for microphone sink\e[0m";
-pactl load-module module-remap-source source_name="${SINKa}" source_master="${SRC_mic}";
 
-echo -e "\e[91maAjustar vol ${SRC_mic} em 33%";
- pactl set-source-volume "${SRC_mic}" 33%;
-echo -e "\e[91maAjustar vol ${SINKa} USE HEADPHONES\e[0m";
- pactl set-source-volume "${SINKa}" 90%;
-echo -e "\e[94maAjustar vol ${SINKb} 90%\e[0m";
- pactl set-sink-volume "${SINKb}" 90%;
-echo -e "\e[91maAjustar vol ${SINKb}.monitor 90%\e[0m";
- pactl set-source-volume "${SINKb}".monitor 90%;
-echo -e "\e[92maAjustar vol ${SINKc} 50%..\e[0m";
- pactl set-sink-volume "${SINKc}" 50%;
-echo -e "\e[91mconnect effects LADSPA directly to mic sink via looopback\e[0m";
+echo -e "\e[91maAjustar vol ${SRC_mic} em 55%";
+ pactl set-source-volume "${SRC_mic}" 55%;
+echo -e "\e[91maAjustar vol default sink 69% USE HEADPHONES\e[0m";
+ pactl set-source-volume "${SINK}"  69%;
 
-#LADSPA_rnnoise
-echo -e "\e[96mLoad module-ladspa-sink for RNNOISE\e[0m"
-pactl load-module module-ladspa-sink \
-                        plugin="librnnoise_ladspa" label="noise_suppressor_mono" \
-                        control="0,1,25,100,25,0,0" \
-                        sink_name="LADSPA_noise" \
-                        master="${SINKa}";
+pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}";
 
-#LADSPA_pitch
-echo -e "\e[95mLoad module-ladspa-sink for pitch\e[0m"; 
-pactl load-module module-ladspa-sink \
-                sink_name="${SINKb}" \
-                master="LADSPA_noise" \
-    plugin="tap_pitch" label=tap_pitch control="1.3693,33,-11,11,1"; 
-
-#### ladspa SINK DEBUG: hear effects, not suitable for singing because of delay
-# solution: apply with ffmpeg during recording
-# Connect ALSA input to first LADSPA sink ??
-# maybe in handy for debug:
-#pactl set-default-source alsa_input.my_input_source
-#pactl set-default-sink ${SINKa}
-# Route audio through chain ???
-#pactl move-sink-input input_stream_id ${SINKa} ???
-
-pactl list sources short;
-echo -e "\e[94Turn capture/unmute ${SINKb}.monitor\e[0m";
-pactl set-source-mute ${SINKb}.monitor 0
-echo -e "\e[99ALSO set a recording volume level of 44% for ${SINKb}.monitor\e[0m";
-pactl set-source-volume ${SINKb}.monitor 44%
-
-pactl load-module module-loopback sink=${SINKb} latency_msec=111;
-
-
-#### yt-dlp
+##DOWNLOAD DO PLAYBACK
+#### yt-dlp time!
 ##
 ##
 ## iniciar preparo de adquirir playback e construir pipeline do gravador
@@ -250,7 +210,10 @@ fi
 else
     echo "No suitable playback file found."
         reboot_pulse true;
-        wmctrl -c 'BETAKê CMD prompt';
+        wmctrl -R "gammaQ CMD prompt";
+        wmctrl -c "gammaQ CMD prompt";
+        #wlrctl -R "gammaQ CMD prompt";
+        #wlrctl -c "gammaQ CMD prompt";
         # Get the PID of the parent process
         parent_pid=$$
         # Call the function to kill the parent process and all its children
@@ -262,7 +225,10 @@ fi
 if [ ! -n "${PLAYBACK_BETA}" ]; then  
      echo "No suitable playback file converted to AVI.";
          reboot_pulse true;
-         wmctrl -c 'BETAKê CMD prompt';
+          wmctrl -R "gammaQ CMD prompt";
+          wmctrl -c "gammaQ CMD prompt";
+          #wlrctl -R "gammaQ CMD prompt";
+          #wlrctl -c "gammaQ CMD prompt";
          # Get the PID of the parent process
         parent_pid=$$
         # Call the function to kill the parent process and all its children
@@ -275,11 +241,14 @@ echo -e "\e[91mAll setup to sing!";
 aplay research.wav;
 # Display message to start recording
 export LC_ALL=C;
-zenity --question --text="\"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, let's sing? " --title="BETAKe: ready to S I N G? " --default-cancel --width=640 --height=100
+zenity --question --text="\"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, let's sing? " --title="Ready to S I N G?" --default-cancel --width=640 --height=100
 if [ $? == 1 ]; then
     echo "Recording canceled.";
         reboot_pulse true;
-    wmctrl -c 'BETAKê CMD prompt';
+    wmctrl -R "gammaQ CMD prompt";
+    wmctrl -c "gammaQ CMD prompt";
+    #wlrctl -R "gammaQ CMD prompt";
+    #wlrctl -c "gammaQ CMD prompt";
     # Get the PID of the parent process
     parent_pid=$$
     # Call the function to kill the parent process and all its children
@@ -290,7 +259,7 @@ fi
 rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
 # Recording then Post-production
 OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out.mp4;
-OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.flac;
+OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 	
 echo -e "\e[93mSING!--------------------------\e[0m";
 		echo -e "\e[99mLaunch lyrics video\e[0m";
@@ -300,7 +269,6 @@ echo -e "\e[93mSING!--------------------------\e[0m";
                 ffplay_pid=$!;
                      epoch_ffplay=$( get_process_start_time "${ffplay_pid}" ); 	
 
-pactl unload-module module-loopback;
 
 #start CAMERA   to record audio & video
 echo -e "\e[91m..Launch FFMpeg recorder (AUDIO_VIDEO)\e[0m";
@@ -308,30 +276,30 @@ echo -e "\e[91m..Launch FFMpeg recorder (AUDIO_VIDEO)\e[0m";
        ffmpeg -y \
   -hide_banner -loglevel info \
         -f v4l2 -i /dev/video0 \
-        -f pulse -i "${SINKb}" \
+        -f pulse -i "${SRC_mic}".monitor \
   -t "${PLAYBACK_LEN}" -map "0:v:0" "${OUT_VIDEO}" \
-  -map "1:a:0" -ar 48k "${OUT_VOCAL}" \
-  -f pulse "${SINKb}" &
+  -map "1:a:0" -ar 48k "${OUT_VOCAL}" &
 ff_pid=$!;
   
     epoch_ff=$( get_process_start_time "${ff_pid}" ); 
-    diff_ss="$(( 2 + "$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"))"
+    diff_ss="$(( 1 + "$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"))"
 
-## echo-cancel fix
-ffplay -f lavfi -i "sine=frequency=200:duration=5" -f pulse "${SINKa}" &
+
 
 # Initialize variables
 cronos_play=1
 # Main loop
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
-    wmctrl -R "BETAKe Recording" -b add,above
+    wmctrl -r "Recording" -b add,above
+    #wlrctl -R "Recording"
+    #wlrctl -r "Recording" -b add,above
     sleep 1.1
     cronos_play=$(echo "scale=6; ${cronos_play} + 1.1" | bc)
     percent_play=$(echo "scale=6; ${cronos_play} * 100 / ${PLAYBACK_LEN}" | bc)
     echo "${cronos_play}" > "${OUT_DIR}/${karaoke_name}_dur.txt"
     echo "$(printf "%.0f" "${percent_play}")"
 done | zenity --progress --text="Press OK to STOP recording" \
-              --title="BETAKe Recording" --width=300 --height=200 --percentage=0
+              --title="Recording" --width=300 --height=200 --percentage=0
 
 
 
@@ -342,25 +310,22 @@ if [ $? = 1 ]; then
 else
     echo "Progress completed.";
 fi
-
-killall -9 aplay;
+pactl unload-module module-loopback;
 # Output the final value of karaoke_duration
 cronos_play=$( cat "${OUT_DIR}/${karaoke_name}_dur.txt" );
 echo "elapsed Karaoke duration: $cronos_play";
 echo "Total playback duration: ${PLAYBACK_LEN}";
 
 ## when prompt window close, stop all recordings 
-    # give time to buffers
+    # give some time to ffmpeg graceful finish
     
     echo -e "\e[93mRecording finished\e[0m";
             killall -SIGINT ffmpeg;
             killall -HUP v4l2-ctl;
             killall -SIGINT sox;
             killall -9 ffplay;
-    sleep 3;        
+    sleep 5;        
    
-# clean up
-pactl unload-module module-loopback;
 
 ##POSTprod
 echo "POST_PROCESSING____________________________________"
@@ -369,13 +334,15 @@ echo -e "\e[90mrendering final video\e[0m"
 export LC_ALL=C;  OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 # Start ffmpeg in the background and capture its PID
 ffmpeg -y -hide_banner -loglevel info   \
-                                                            -i "${OUT_VIDEO}" \
-    -ss 0"$( echo "scale=4; ${diff_ss} - 0.9669" | bc )"     -i "${PLAYBACK_BETA}" \
-                                                            -i "${OUT_VOCAL}" \
+                                                                                -i "${OUT_VIDEO}" \
+    -ss "$( echo "scale=4; ${diff_ss} + 0.9695" | bc | sed 's/-\./-0\./g')"     -i "${PLAYBACK_BETA}" \
+                                                                                -i "${OUT_VOCAL}" \
         -filter_complex "
     [2:a]
-    ladspa=tap_autotalent:plugin=autotalent:c=441 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.11 1.00 0 0 0 0 1.000 1.000 0 0 000.0 0.09,
-   stereowiden,adynamicequalizer,aexciter,aecho=0.6:0.7:76:0.25,treble=g=8,
+    adeclip,alimiter,speechnorm,
+    pan=stereo|c0=c0|c1=c0,acompressor,rubberband=pitch=1.0296:tempo=1,
+    ladspa=tap_autotalent:plugin=autotalent:c=441 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.84 0.98 0 0 0 0 1.000 1.000 0 0 000.0 1.00,
+   stereowiden,adynamicequalizer,aexciter,aecho=0.6:0.7:56:0.36,treble=g=3,
     loudnorm=I=-16:LRA=11:TP=-1.5,   
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[vocals];
@@ -384,40 +351,27 @@ ffmpeg -y -hide_banner -loglevel info   \
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
-    [playback][vocals]amix=inputs=2:weights=0.3|0.5[betamix];
+    [playback][vocals]amix=inputs=2:weights=0.6|0.4[gammaQ];
 
-        [1:v]format=rgba,colorchannelmixer=aa=0.84,scale=s=640x480[v1];
-        life=s=640x480:mold=5:r=10:ratio=0.1:death_color=blue:life_color=#00ff00,boxblur=2:2,format=rgba[spats];
-         gradients=n=3:type=spiral,format=rgb0,scale=s=640x480[vscope];
-          [0:v]scale=s=1270x720[v0]; 
-          [vscope][v1]hstack=inputs=2,scale=s=640x480[video_merge];
-          [video_merge][spats]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.66,scale=s=1270x720[badcoffee];
-          [v0][badcoffee]overlay=10:6,format=rgba,scale=s=1270x720[BETAKE];" \
-                    -map "[betamix]"  -map "[BETAKE]" \
+        [1:v]format=rgba,colorchannelmixer=aa=0.84,scale=s=424x240[v1];
+        life=s=424x240:mold=5:r=10:ratio=0.1:death_color=blue:life_color=#00ff00,boxblur=2:2,format=rgba[spats];
+         gradients=n=3:type=spiral,format=rgb0,scale=s=424x240[vscope];
+          [0:v]scale=s=848x408[v0]; 
+          [vscope][v1]hstack=inputs=2,scale=s=424x240[video_merge];
+          [video_merge][spats]vstack=inputs=2,format=rgba,colorchannelmixer=aa=0.66,scale=s=848x408[badcoffee];
+          [v0][badcoffee]overlay=10:10,format=rgba,scale=s=848x408[BETAKE];" \
+                    -map "[gammaQ]"  -map "[BETAKE]" \
                     -ar 48k -t "${PLAYBACK_LEN}"   "${OUT_FILE}"  &
                 ff_pid=$!;
 
 
- render_display_progress "${OUT_DIR}"/"${karaoke_name}"_beta.mp4 
-# Check if the progress dialog was canceled/completed
-if [ $? -eq 1 ]; then
-    echo "Render canceled."
-    # Kill ffmpeg process
-    killall -9 ffmpeg
-else    
-    echo "Render FINISHED."
-
-    # Show the result using ffplay
-    ffplay -af "volume=0.45" -window_title "RESULT" -loglevel quiet \
-                    -hide_banner "${OUT_FILE}" ;
-fi
-
-
+ render_display_progress "${OUT_FILE}";
+    
+    
+ffplay -window_title "Obrigado pela participação!" "${OUT_FILE}";
+wmctrl -R "gammaQ CMD prompt";
+wmctrl -c "gammaQ CMD prompt";
+#wlrctl -R "gammaQ CMD prompt";
+#wlrctl -c "gammaQ CMD prompt";
 reboot_pulse 'the_end';
-wmctrl -c 'BETAKê CMD prompt';
-# Get the PID of the parent process
-    parent_pid=$$
-    # Call the function to kill the parent process and all its children
-    kill_parent_and_children $parent_pid
-
-    #THE END
+exit;

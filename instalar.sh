@@ -17,7 +17,7 @@ read -p "Do you want to continue? (yes/no): " response
 if [[ $response == "yes" ]]; then
     echo "You chose to continue.";
     sudo apt -y install fortunes* ffmpeg swh-plugins lsp-plugins alsa-utils yt-dlp \
-	autotalent python3-pexpect pulseaudio-utils pavumeter ;
+	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl wlrctl ;
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
     cp -ra BETAq.desktop ~/.local/share/applications/;
     sudo cp -ra BETAKe.* /usr/bin/;
@@ -27,6 +27,7 @@ if [[ $response == "yes" ]]; then
     
 escaped_path=$(printf '%q' "$(pwd)")
 sudo sed -i '13s|.*|betake_path = '"$escaped_path"'/|' /usr/bin/BETAKe.py
+sudo sed -i '2s|.*|betake_path='"$escaped_path"'/|' /usr/bin/BETAKe.sh
 elif [[ $response == "no" ]]; then
     echo "You chose to cancel.";
 else
