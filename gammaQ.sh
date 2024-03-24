@@ -340,7 +340,7 @@ export LC_ALL=C;  OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 # Start ffmpeg in the background and capture its PID
 ffmpeg -y -hide_banner -loglevel info   \
                                                                                 -i "${OUT_VIDEO}" \
-    -ss "$( echo "scale=4; ${diff_ss} + 0.9695" | bc | sed 's/-\./-0\./g')"     -i "${PLAYBACK_BETA}" \
+    -ss "$( echo "scale=4; ${diff_ss} + 0.9695" | bc | sed 's/-\./-0\./g')"0    -i "${PLAYBACK_BETA}" \
                                                                                 -i "${OUT_VOCAL}" \
         -filter_complex "
     [2:a]

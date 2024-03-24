@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import threading 
 import tkinter as tk
 from tkinter import scrolledtext
@@ -8,23 +7,27 @@ import subprocess
 import re
 import pyaudio
 import numpy as np
-#
-#keep both these lines below on same line number
+
+
+
 betake_path = "./"  # DEFAULT: BETAKE_PATH
 logfile = "script.log"  # Path to the log file
-#
+
 class App:
     def __init__(self, master):
-
         self.master = master
         master.title("gammaQ v3")
         master.geometry("1024x777")  # Set window size
-        
+
+        # Define instance variables for buttons
+        self.test_video_button = None
+        self.audio_loopback_button = None
+
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="silver", foreground="black")
         self.output_text.place(x=0, y=0, width=1024, height=510)
 
-         # Load and display the left-aligned tux.png image
+        # Load and display the left-aligned tux.png image
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
         self.left_image_label = tk.Label(master, image=self.left_image)
         self.left_image_label.place(x=400, y=580)
@@ -52,20 +55,20 @@ class App:
         self.kill_button = tk.Button(
             master, text="Kill BETAKê", command=self.kill_recording)
         self.kill_button.place(x=730, y=600, width=300, height=166)
-        # Button to fetch random karaoke video URL
-        self.random_karaoke_button = tk.Button(
-            master, text="Feel Lucky", command=self.fetch_random_karaoke_url)
-        self.random_karaoke_button.place(x=350, y=620, width=100)
-        # Get fortune button
-        self.fortune_button = tk.Button(
-            master, text="Get Fortune", command=self.get_fortune)
-        self.fortune_button.place(x=450, y=620, width=100)
-
+        
         # Create the multymedia buttons
-        self.test_video_button = tk.Button(master, text="Test yer Cam", command=self.start_stop_test_video)
+        self.create_multimedia_buttons()
+
+        #Display fortunes at the beginning
+        self.display_fortunes()
+
+    def create_multimedia_buttons(self):
+        # Create test video button
+        self.test_video_button = tk.Button(self.master, text="Test yer Cam", command=self.start_stop_test_video)
         self.test_video_button.pack(pady=5)
 
-        self.audio_loopback_button = tk.Button(master, text="Hear yer Audio Loopback", command=self.start_stop_audio_loopback)
+        # Create audio loopback button
+        self.audio_loopback_button = tk.Button(self.master, text="Hear yer Audio Loopback", command=self.start_stop_audio_loopback)
         self.audio_loopback_button.pack(pady=5)
 
         #Display fortunes at the beginning
@@ -76,57 +79,26 @@ class App:
 
     def start_stop_test_video(self):
         global test_video_thread
-        if test_video_thread and test_video_thread.is_alive():
-            test_video_thread.kill()
+        if self.test_video_thread and self.test_video_thread.is_alive():
+            self.test_video_thread.kill()
             self.test_video_button.config(text="Start Test Video")
         else:
-            test_video_thread = threading.Thread(target=self.preview_webcam_video)
-            test_video_thread.start()
+            self.test_video_thread = threading.Thread(target=self.preview_webcam_video)
+            self.test_video_thread.start()
             self.test_video_button.config(text="Stop Test Video")
 
     def start_stop_audio_loopback(self):
         global audio_loopback_enabled
-        if audio_loopback_enabled:
+        if self.audio_loopback_enabled:
             subprocess.run(["pactl", "unload-module", "module-loopback"])
             self.audio_loopback_button.config(text="Start Audio Loopback")
         else:
             subprocess.run(["pactl", "load-module", "module-loopback"])
             self.audio_loopback_button.config(text="Stop Audio Loopback")
-        audio_loopback_enabled = not audio_loopback_enabled
+        self.audio_loopback_enabled = not self.audio_loopback_enabled
 
     def preview_webcam_video(self):
-        preview_process = subprocess.Popen(["ffplay", "-f", "v4l2", "/dev/video0"])
-
-    def update_sound_meter(self):
-        try:
-            # Read audio data from the stream
-            audio_data = np.frombuffer(self.stream.read(self.chunk_size), dtype=np.int16)
-            # Calculate the sound level (RMS value)
-            rms = np.sqrt(np.mean(np.square(audio_data)))
-            # Check for NaN value
-            if np.isnan(rms):
-                print("Error: NaN value detected in RMS calculation")
-                # Stop updating the sound meter
-                return
-            # Normalize the sound level to a value between 0 and 100
-            sound_level = int(100 * rms / 32768)
-            # Update the progress bar with the sound level
-            self.sound_meter['value'] = sound_level
-        except Exception as e:
-            print("Error:", e)
-        # Schedule the next update
-        self.master.after(100, self.update_sound_meter)
-
-    # Function to process audio data
-    def process_audio(data):
-        # Convert audio data to numpy array
-        audio_array = np.frombuffer(data, dtype=np.int16)
-
-        # Example: Calculate RMS (Root Mean Square) amplitude
-        rms = np.sqrt(np.mean(np.square(audio_array)))
-
-        # Example: Print RMS value
-        print("RMS Amplitude:", rms)
+        self.preview_process = subprocess.Popen(["ffplay", "-f", "v4l2", "/dev/video0"])
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)

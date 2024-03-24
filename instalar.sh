@@ -26,7 +26,7 @@ if [[ $response == "yes" ]]; then
     echo "CANTA RAUL";
     
 escaped_path=$(printf '%q' "$(pwd)")
-sudo sed -i '13s|.*|betake_path = '"$escaped_path"'/|' /usr/bin/BETAKe.py
+sudo sed -i '13s|.*|betake_path = '\"$escaped_path'/\"|' /usr/bin/BETAKe.py
 sudo sed -i '2s|.*|betake_path='"$escaped_path"'/|' /usr/bin/BETAKe.sh
 elif [[ $response == "no" ]]; then
     echo "You chose to cancel.";
