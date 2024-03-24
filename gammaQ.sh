@@ -16,12 +16,12 @@ OUT_DIR="$betake_path/outputs"      # Directory to store output files
     mkdir -p "$OUT_DIR"; # a very recent fact indeed, those directories being erased
                         # goddam!
 reboot_pulse() {
-    echo -e "\e[93mUnload existing modules and restart PulseAudio\e[0m";
+    colorecho "Unload existing modules and restart PulseAudio";
     pactl unload-module module-ladspa-sink;
     pactl unload-module module-loopback;
     pactl unload-module module-echo-cancel;
-    echo -e "\e[91mERRORS reported above HERE ARE NORMAL. It means already unloaded\e[0m"; 
-    echo -e "\e93m[[[[RESTARTING]]]]  audio server now:\e[0m";
+    colorecho "ERRORS reported above HERE ARE NORMAL. It means already unloaded"; 
+    colorecho "\e93m[[[[RESTARTING]]]]  audio server now:";
     killall -HUP pipewire-pulse
     sleep 1; 
 }
@@ -39,9 +39,9 @@ colorecho() {
         "magenta") coding="\e[35m" ;;
         "cyan") coding="\e[36m" ;;
         "white") coding="\e[37m" ;;
-        *) echo "Unsupported color: $color"; exit 1 ;;
+        *) coding="\e[32m" ;;
     esac
-    echo -e "${coding}${message}\e[0m";
+    echo -e "${coding}${message}";
 }
 
 reboot_pulse 'done';
@@ -106,14 +106,14 @@ reboot_pulse 'done';
 
             # Update the progress bar in the dialog
             # this is a foo bar okeyyy
-            if [ "$(echo "scale=0; "progress/1 | bc)" -ge 95 ]; then
-                progress=95;
+            if [ "$(echo "scale=0; "progress/1 | bc)" -ge 70 ]; then
+                progress=65;
             fi
             echo "$progress"
 
             sleep 0.5
         done
-        ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --auto-close --auto-kill
+        ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" 
     }
 
 # Function to generate MP3 from MP4
@@ -127,36 +127,41 @@ generate_mp3() {
 get_process_start_time() {
     local pid="$1"
     # Get the start time of the process in Unix epoch seconds
-    local start_epoch_seconds=$(ps -o lstart= -D "%s" -p "$pid")
+    local start_epoch_seconds;
+    start_epoch_seconds=$(ps -o lstart= -D "%s" -p "$pid")
     echo "$start_epoch_seconds"
 }
 
 # Function to get the modification time of a file and convert it to Unix epoch seconds
 get_file_modification_time() {
-    local file="$1"
+    local file;
+    file="$1"
     # Get the modification time of the file
-    local mod_time=$(stat -c %Y "$file")
-    echo "$mod_times"
+    local mod_time;
+    mod_time=$(stat -c %Y "$file")
+    echo "$mod_time"
 }
 
 # Function to calculate time difference in seconds
 time_diff_seconds() {
-    local start_secs="$1"
-    local end_secs="$2"
-    echo -e "$(( (end_seconds - start_seconds) ))"
+    local start_secs;
+    start_secs="$1"
+    local end_secs;
+    end_secs="$2"
+    colorecho "$(( (end_seconds - start_seconds) ))"
 }
 
 # Define log file path
-LOG_FILE="$betake_path/script.log"
+#LOG_FILE="$betake_path/script.log"
 
 
 # Load configuration variables
 SINK="$( pactl get-default-sink )"
 SRC_mic="$( pactl get-default-source )"
 
-echo -e "\e[91maAjustar vol ${SRC_mic} em 55%";
+colorecho "aAjustar vol ${SRC_mic} em 55%";
  pactl set-source-volume "${SRC_mic}" 55%;
-echo -e "\e[91maAjustar vol default sink 69% USE HEADPHONES\e[0m";
+colorecho "aAjustar vol default sink 69% USE HEADPHONES";
  pactl set-source-volume "${SINK}"  69%;
 
 pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}";
@@ -197,7 +202,7 @@ render_display_progress "${PLAYBACK_BETA}";
 if [ $? -eq 0 ]; then
     echo "Video rendering completed successfully."
 else
-    echo "Video rendering was cancelled."
+    colorecho "red" "Video rendering was cancelled."
     reboot_pulse "true"
     # Get the PID of the parent process
     parent_pid=$$
@@ -206,9 +211,9 @@ else
     exit;
 fi
       
-   echo -e "\e[91mPlayback convertido para AVI\e[0m";
+   colorecho "Playback convertido para AVI";
 else
-    echo "No suitable playback file found."
+    colorecho "red" "No suitable playback file found."
         reboot_pulse true;
         wmctrl -R "gammaQ CMD prompt";
         wmctrl -c "gammaQ CMD prompt";
@@ -223,7 +228,7 @@ else
 fi
 
 if [ ! -n "${PLAYBACK_BETA}" ]; then  
-     echo "No suitable playback file converted to AVI.";
+     colorecho "red" "No suitable playback file converted to AVI.";
          reboot_pulse true;
           wmctrl -R "gammaQ CMD prompt";
           wmctrl -c "gammaQ CMD prompt";
@@ -237,13 +242,13 @@ if [ ! -n "${PLAYBACK_BETA}" ]; then
      
 fi
 
-echo -e "\e[91mAll setup to sing!";
+colorecho "yellow" "All setup to sing!";
 aplay research.wav;
 # Display message to start recording
 export LC_ALL=C;
 zenity --question --text="\"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, let's sing? " --title="Ready to S I N G?" --default-cancel --width=640 --height=100
 if [ $? == 1 ]; then
-    echo "Recording canceled.";
+    colorecho "red" "Recording canceled.";
         reboot_pulse true;
     wmctrl -R "gammaQ CMD prompt";
     wmctrl -c "gammaQ CMD prompt";
@@ -261,8 +266,8 @@ rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
 OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out.mp4;
 OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 	
-echo -e "\e[93mSING!--------------------------\e[0m";
-		echo -e "\e[99mLaunch lyrics video\e[0m";
+colorecho "SING!--------------------------";
+		colorecho "yellow" "Launch lyrics video";
 
 	            ffplay \
 			        -window_title "SING" -loglevel info -hide_banner -af "volume=0.35" "${PLAYBACK_BETA}" &
@@ -271,7 +276,7 @@ echo -e "\e[93mSING!--------------------------\e[0m";
 
 
 #start CAMERA   to record audio & video
-echo -e "\e[91m..Launch FFMpeg recorder (AUDIO_VIDEO)\e[0m";
+colorecho "blue" "..Launch FFMpeg recorder (AUDIO_VIDEO)";
  
        ffmpeg -y \
   -hide_banner -loglevel info \
@@ -305,10 +310,10 @@ done | zenity --progress --text="Press OK to STOP recording" \
 
 # Check if the progress dialog was canceled/completed
 if [ $? = 1 ]; then
-    echo "Recording canceled.";
+    colorecho "red" "Recording canceled.";
     
 else
-    echo "Progress completed.";
+    colorecho "cyan" "Progress completed.";
 fi
 pactl unload-module module-loopback;
 # Output the final value of karaoke_duration
@@ -319,7 +324,7 @@ echo "Total playback duration: ${PLAYBACK_LEN}";
 ## when prompt window close, stop all recordings 
     # give some time to ffmpeg graceful finish
     
-    echo -e "\e[93mRecording finished\e[0m";
+    colorecho "Recording finished";
             killall -SIGINT ffmpeg;
             killall -HUP v4l2-ctl;
             killall -SIGINT sox;
@@ -329,7 +334,7 @@ echo "Total playback duration: ${PLAYBACK_LEN}";
 
 ##POSTprod
 echo "POST_PROCESSING____________________________________"
-echo -e "\e[90mrendering final video\e[0m"
+colorecho "blue" "rendering final video"
 
 export LC_ALL=C;  OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 # Start ffmpeg in the background and capture its PID
@@ -364,9 +369,8 @@ ffmpeg -y -hide_banner -loglevel info   \
                     -ar 48k -t "${PLAYBACK_LEN}"   "${OUT_FILE}"  &
                 ff_pid=$!;
 
-
- render_display_progress "${OUT_FILE}";
-    
+render_display_progress "${OUT_FILE}";
+generate_mp3 "${OUT_FILE}" "${OUT_FILE%.*}".mp3;
     
 ffplay -window_title "Obrigado pela participação!" "${OUT_FILE}";
 wmctrl -R "gammaQ CMD prompt";
