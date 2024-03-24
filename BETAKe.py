@@ -30,11 +30,7 @@ class App:
         # Load and display the left-aligned tux.png image
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
         self.left_image_label = tk.Label(master, image=self.left_image)
-        self.left_image_label.place(x=400, y=580)
-
-        # Create a button to scroll to the end of the text widget
-        self.scroll_to_end_button = tk.Button(master, text="Scroll to End", command=self.scroll_to_end)
-        self.scroll_to_end_button.place(x=550, y=620, width=150, height=30)  
+        self.left_image_label.place(x=400, y=580) 
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -55,50 +51,10 @@ class App:
         self.kill_button = tk.Button(
             master, text="Kill BETAKê", command=self.kill_recording)
         self.kill_button.place(x=730, y=600, width=300, height=166)
-        
-        # Create the multymedia buttons
-        self.create_multimedia_buttons()
 
         #Display fortunes at the beginning
         self.display_fortunes()
 
-    def create_multimedia_buttons(self):
-        # Create test video button
-        self.test_video_button = tk.Button(self.master, text="Test yer Cam", command=self.start_stop_test_video)
-        self.test_video_button.pack(pady=5)
-
-        # Create audio loopback button
-        self.audio_loopback_button = tk.Button(self.master, text="Hear yer Audio Loopback", command=self.start_stop_audio_loopback)
-        self.audio_loopback_button.pack(pady=5)
-
-        #Display fortunes at the beginning
-        self.display_fortunes()
-
-        # Start updating the sound meter
-        #self.update_sound_meter()
-
-    def start_stop_test_video(self):
-        global test_video_thread
-        if self.test_video_thread and self.test_video_thread.is_alive():
-            self.test_video_thread.kill()
-            self.test_video_button.config(text="Start Test Video")
-        else:
-            self.test_video_thread = threading.Thread(target=self.preview_webcam_video)
-            self.test_video_thread.start()
-            self.test_video_button.config(text="Stop Test Video")
-
-    def start_stop_audio_loopback(self):
-        global audio_loopback_enabled
-        if self.audio_loopback_enabled:
-            subprocess.run(["pactl", "unload-module", "module-loopback"])
-            self.audio_loopback_button.config(text="Start Audio Loopback")
-        else:
-            subprocess.run(["pactl", "load-module", "module-loopback"])
-            self.audio_loopback_button.config(text="Stop Audio Loopback")
-        self.audio_loopback_enabled = not self.audio_loopback_enabled
-
-    def preview_webcam_video(self):
-        self.preview_process = subprocess.Popen(["ffplay", "-f", "v4l2", "/dev/video0"])
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)
@@ -198,7 +154,6 @@ class App:
             "https://music.youtube.com/watch?v=eby0bVEIWcs",
             "https://music.youtube.com/watch?v=s8kcyeTd2OQ",
             "https://music.youtube.com/watch?v=t2iIEETOtGk",
-            "https://music.youtube.com/watch?v=ksk74Itay8E",
             "https://music.youtube.com/watch?v=9BCQqo1XMVw",
             "https://music.youtube.com/watch?v=WYNgRNCi6ZE",
             "https://music.youtube.com/watch?v=3BDn16q_pvM",
@@ -245,7 +200,9 @@ class App:
             "https://music.youtube.com/watch?v=Z6Zr01BfjBM",
             "https://music.youtube.com/watch?v=zk_jFyM7MtM",
             "https://music.youtube.com/watch?v=byhOlv1UvBQ",
-            "https://music.youtube.com/watch?v=d_sQIBh01GQ"
+            "https://music.youtube.com/watch?v=d_sQIBh01GQ",
+            "https://music.youtube.com/watch?v=ccmfH8Pjtk4",
+            "https://music.youtube.com/watch?v=aZW1c3XlDwA"
         ]
 
         fortune_char_count = len(self.get_random_fortune())
@@ -290,9 +247,9 @@ class App:
             #feed with the log our nice window
             self.start_tailf()
              # Poll the process until it finishes
-            while process.poll() is None:
+            while self.process.poll() is None:
                 # Optionally, you can add a delay to reduce CPU usage
-                time.sleep(1)
+                self.time.sleep(1)
 
             
             print("Recording thread has ended")

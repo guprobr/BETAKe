@@ -11,7 +11,7 @@ echo "Tambem usamos todos os pacotes do fortunes e eles serão instalados.";
 
 
 # Prompt the user for input
-read -p "Do you want to continue? (yes/no): " response
+read -rp "Do you want to continue? (yes/no): " response
 
 # Check the response
 if [[ $response == "yes" ]]; then
@@ -25,7 +25,7 @@ if [[ $response == "yes" ]]; then
     echo "acesse aqui para o plugin Noise Supressor LADSPA: https://github.com/werman/noise-suppression-for-voice "
     echo "CANTA RAUL";
     
-escaped_path=$(printf '%q' "$(pwd)")
+escaped_path=$(printf '%q' "${BETA_PATH}")
 sudo sed -i '13s|.*|betake_path = '\"$escaped_path'/\"|' /usr/bin/BETAKe.py
 sudo sed -i '2s|.*|betake_path='"$escaped_path"'/|' /usr/bin/BETAKe.sh
 elif [[ $response == "no" ]]; then
