@@ -321,14 +321,14 @@ ffmpeg -y -hide_banner -loglevel info   \
       [2:a] 
       ladspa=tap_pitch:plugin=tap_pitch:c=0.98669 33 -15 1, 
      ladspa=tap_autotalent:plugin=autotalent:c=440 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0 1.000 1.000 0 0 000.0 1.00,
-     aecho=0.8:0.84:98:0.3,volume=volume=4dB,dynaudnorm,treble=g=5
+     aecho=0.8:0.84:98:0.3,volume=volume=5dB,alimiter,dynaudnorm,treble=g=5
     [vocals];
 
-    [1:a]volume=volume=3dB,
+    [1:a]volume=volume=1dB,
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
-    [playback][vocals]amix=inputs=2:weights=0.5|0.6,
+    [playback][vocals]amix=inputs=2:weights=0.4|0.6,
     aresample=resampler=soxr:precision=28;
 
         [1:v]scale=s=640x360[v1];

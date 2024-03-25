@@ -15,7 +15,7 @@ ffmpeg -y -hide_banner -loglevel info -hwaccel auto  \
     [2:a] 
       ladspa=tap_pitch:plugin=tap_pitch:c=0.98669 33 -15 1, 
      ladspa=tap_autotalent:plugin=autotalent:c=440 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0 1.000 1.000 0 0 000.0 1.00,
-     aecho=0.8:0.84:98:0.3,volume=volume=4dB,dynaudnorm,treble=g=5
+     aecho=0.8:0.84:98:0.3,volume=volume=4dB,alimiter,dynaudnorm,treble=g=5
     [vocals];
 
     [1:a]volume=volume=3dB,
