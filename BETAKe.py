@@ -151,7 +151,7 @@ class App:
     def get_default_video_url(self):
         # List of YouTube URLs
         youtube_urls = [
-            "https://music.youtube.com/watch?v=eby0bVEIWcs",
+             "https://music.youtube.com/watch?v=eby0bVEIWcs",
             "https://music.youtube.com/watch?v=s8kcyeTd2OQ",
             "https://music.youtube.com/watch?v=t2iIEETOtGk",
             "https://music.youtube.com/watch?v=9BCQqo1XMVw",
@@ -178,7 +178,6 @@ class App:
             "https://music.youtube.com/watch?v=FKGwe5tf_H4",
             "https://music.youtube.com/watch?v=EVNFbhrJC-o",
             "https://music.youtube.com/watch?v=5zGdD6CGPhs",
-            "https://music.youtube.com/watch?v=9pnmzgzx8Y",
             "https://music.youtube.com/watch?v=JtiocB8PYPs",
             "https://music.youtube.com/watch?v=o59aaEyoe_4",
             "https://music.youtube.com/watch?v=ANbCnAwBw1U",
@@ -203,7 +202,17 @@ class App:
             "https://music.youtube.com/watch?v=d_sQIBh01GQ",
             "https://music.youtube.com/watch?v=ccmfH8Pjtk4",
             "https://music.youtube.com/watch?v=aZW1c3XlDwA",
-            "https://music.youtube.com/watch?v=wxJ4meJkt7A"
+            "https://music.youtube.com/watch?v=wxJ4meJkt7A",
+            "https://music.youtube.com/watch?v=l27xaGlvV_0",
+            "https://music.youtube.com/watch?v=z4oxh0ZZX8M",
+            "https://music.youtube.com/watch?v=GMexo55tieg",
+            "https://music.youtube.com/watch?v=h-C7U3EVNEE",
+            "https://music.youtube.com/watch?v=3M8IPpeIwVc",
+            "https://music.youtube.com/watch?v=Z1MLaexgBtc",
+            "https://music.youtube.com/watch?v=zWO5BOalVpQ",
+            "https://music.youtube.com/watch?v=8GQwtYd0tfw",
+            "https://music.youtube.com/watch?v=X0COGw91wzk",
+            "https://music.youtube.com/watch?v=UPFCB1Lzawo"
         ]
 
         fortune_char_count = len(self.get_random_fortune())
