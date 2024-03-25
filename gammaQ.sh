@@ -103,7 +103,7 @@ colorecho() {
             local current_file_size;
             current_file_size=$(stat -c%s "${1}" )
             local progress;
-            progress=$(echo "scale=0; ($current_file_size * 50) / $total_size_bytes " | bc)
+            progress=$(echo "scale=0; ($current_file_size * 25) / $total_size_bytes " | bc)
 
             
             echo "$progress"
