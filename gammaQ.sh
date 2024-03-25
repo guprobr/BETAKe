@@ -317,10 +317,11 @@ ffmpeg -y -hide_banner -loglevel info  \
     -ss "$( printf "%0.4f" "$( echo "scale=4; 0.4444 + ${diff_ss}  " | bc )" )" -i "${PLAYBACK_BETA}" \
                                                                                  -i "${OUT_VOCAL}" \
          -filter_complex "
-    [2:a]adeclip,afftdn,alimiter,speechnorm,acompressor, 
-      ladspa=tap_pitch:plugin=tap_pitch:c=1.00669 21 -20 15,
-      lv2=p='urn\\:jeremy.salwen\\:plugins\\:talentedhack':c=mix=1.0|voiced_threshold=0.99|pitchpull_amount=0.0|pitchsmooth_amount=1.00|mpm_k=1.0|da=0.000|daa=0.000|db=0.000|dc=0.000|dcc=0.000|dd=0.000|ddd=0.000|de=0.000|df=0.000|dff=0.000|dg=0.000|dgg=0.000|oa=0.000|oaa=0.000|ob=0.000|oc=0.000|occ=0.000|od=0.000|odd=0.000|oe=0.000|of=0.000|off=0.000|og=0.000|ogg=0.000|lfo_quant=0.0|lfo_amp=0.0,
-     aecho=0.98:0.84:69:0.45,adynamicequalizer,treble=g=5,
+    [2:a]adeclip,highpass=f=80,anlmdn=s=50,afftdn,alimiter,speechnorm,
+    ladspa=tap_pitch:plugin=tap_pitch:c=1.00669 21 -20 11,
+      lv2=p='urn\\:jeremy.salwen\\:plugins\\:talentedhack':c=mix=1.0|voiced_threshold=0.69|pitchpull_amount=0.0|pitchsmooth_amount=1.00|mpm_k=1.0|da=0.000|daa=0.000|db=0.000|dc=0.000|dcc=0.000|dd=0.000|ddd=0.000|de=0.000|df=0.000|dff=0.000|dg=0.000|dgg=0.000|oa=0.000|oaa=0.000|ob=0.000|oc=0.000|occ=0.000|od=0.000|odd=0.000|oe=0.000|of=0.000|off=0.000|og=0.000|ogg=0.000|lfo_quant=0.0|lfo_amp=0.0,
+     aecho=0.7:0.77:60:0.45,
+     loudnorm=I=-16:LRA=11:TP=-1.5,aresample=resampler=soxr,
        aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16
     [vocals];
@@ -329,7 +330,7 @@ ffmpeg -y -hide_banner -loglevel info  \
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
-    [playback][vocals]amix=inputs=2,stereowiden,
+    [playback][vocals]amix=inputs=2:weights=0.3|0.6,
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:precision=28;
 
@@ -349,7 +350,7 @@ ffmpeg -y -hide_banner -loglevel info  \
              -ar 48000 -t "${PLAYBACK_LEN}" \
      -c:v libx264 -movflags faststart -preset ultrafast  \
        -c:a aac \
-       -s 1920x1080 "${OUT_FILE}"  &
+       -s 1920x1080 "${OUT_FILE}"   &
                 ff_pid=$!;
 
 FINAL_FILE="${OUT_FILE}";
