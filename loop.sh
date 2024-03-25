@@ -13,12 +13,12 @@ ffmpeg -y -hide_banner -loglevel info -hwaccel auto  \
                                                                                 -i "${OUT_VOCAL}" \
           -filter_complex "
     [2:a] 
-      ladspa=tap_pitch:plugin=tap_pitch:c=0.98669 33 -15 1, 
-     ladspa=tap_autotalent:plugin=autotalent:c=440 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0 1.000 1.000 0 0 000.0 1.00,
-     aecho=0.8:0.84:98:0.3,volume=volume=4dB,alimiter,dynaudnorm,treble=g=5
+      ladspa=tap_pitch:plugin=tap_pitch:c=0.98669 33 -20 1, 
+     ladspa=tap_autotalent:plugin=autotalent:c=440 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.00 0 0 0 0 1.000 1.000 0 0 000.0 0,
+     aecho=0.8:0.84:98:0.3,volume=volume=2dB,alimiter,dynaudnorm,treble=g=5
     [vocals];
 
-    [1:a]volume=volume=3dB,
+    [1:a]volume=volume=0dB,
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
@@ -28,7 +28,7 @@ ffmpeg -y -hide_banner -loglevel info -hwaccel auto  \
         [1:v]scale=s=640x360[v1];
        gradients=n=4:type=circular:s=640x360[spats];
         gradients=n=3:type=spiral:s=640x360[vscope];
-          [0:v]scale=s=1280x720,colorize[v0]; 
+          [0:v]tile=layout=2x2,scale=s=1280x720,colorize[v0]; 
           [vscope][v1]xstack=inputs=2[video_merge];
           [video_merge][spats]xstack=inputs=2,colorchannelmixer=aa=0.77,tile=layout=2x1,scale=s=1280x720[badcoffee];
           [v0][badcoffee]overlay;" \
