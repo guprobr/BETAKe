@@ -344,13 +344,15 @@ ffmpeg -y -hide_banner -loglevel info   \
        -s 1920x1080 "${OUT_FILE}"  &
                 ff_pid=$!;
 
+FINAL_FILE="${OUT_FILE}";
+
 render_display_progress "${OUT_FILE}" $ff_pid;
 ##### in case corruption, you may try the final pass
    # colorecho "red" "FINAL pass";
    # FINAL_FILE="${OUT_DIR}"/"${karaoke_name}".mp4;
    # ffmpeg -i "${OUT_FILE}" "${FINAL_FILE}" -y &
    #     ff_pid=$!;
-    #render_display_progress "${OUT_DIR}"/"${karaoke_name}".mp4 $ff_pid;
+    #render_display_progress "${FINAL_FILE}" $ff_pid;
 
     colorecho "green" "Done. Generating MP3 too";
 
