@@ -311,7 +311,7 @@ ffmpeg -y -hide_banner -loglevel info  \
     firequalizer=gain_entry='entry(-10,0);entry(10,2)',
     aecho=0.9:0.88:84:0.21,
     extrastereo=m=2.5,aecho=0.8:0.7:69:0.21,treble=g=5,deesser=i=0.64,
-    volume=volume=8dB,
+    volume=volume=6dB,
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16
     [vocals];
