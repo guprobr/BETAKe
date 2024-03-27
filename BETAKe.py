@@ -212,7 +212,8 @@ class App:
             "https://music.youtube.com/watch?v=zWO5BOalVpQ",
             "https://music.youtube.com/watch?v=8GQwtYd0tfw",
             "https://music.youtube.com/watch?v=X0COGw91wzk",
-            "https://music.youtube.com/watch?v=UPFCB1Lzawo"
+            "https://music.youtube.com/watch?v=UPFCB1Lzawo",
+            "https://www.youtube.com/watch?v=avnVW9frwLE"
         ]
 
         fortune_char_count = len(self.get_random_fortune())

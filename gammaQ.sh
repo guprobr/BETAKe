@@ -228,7 +228,7 @@ colorecho "SING!--------------------------";
 		colorecho "yellow" "Launch lyrics video";
 
 	            ffplay \
-			        -window_title "SING" -loglevel info -hide_banner -af "volume=0.35" "${PLAYBACK_BETA}" &
+			        -window_title "SING" -loglevel info -hide_banner -af "volume=0.15" "${PLAYBACK_BETA}" &
                 ffplay_pid=$!;
                      epoch_ffplay=$( get_process_start_time "${ffplay_pid}" ); 	
 
@@ -309,14 +309,13 @@ ffmpeg -y -hide_banner -loglevel info  \
     ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.000 1.00 0 0 0 0.33825 0.000 0.000 0 0 000.0 1.000,
     firequalizer=gain_entry='entry(250,-5);entry(4000,3)',
     firequalizer=gain_entry='entry(-10,0);entry(10,2)',
-    aecho=0.9:0.88:84:0.21,
-    extrastereo=m=2.5,aecho=0.8:0.7:69:0.21,treble=g=5,deesser=i=0.64,
-    volume=volume=6dB,
+    aecho=0.8:0.88:84:0.21,
+    treble=g=5,deesser=i=0.64,
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16
     [vocals];
 
-   [1:a]volume=volume=4dB,
+   [1:a]volume=volume=-1dB,
     aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
