@@ -236,7 +236,7 @@ colorecho "blue" "..Launch FFMpeg recorder (AUDIO_VIDEO)";
 -f pulse    -i "${SRC_mic}".monitor \
 -t "${PLAYBACK_LEN}"                \
    -an  -c:v libx264 -preset:v faster -crf:v 23 -g 60 -pix_fmt yuv420p -movflags +faststart         "${OUT_VIDEO}" \
-        -c:a pcm_s16le  -ar 44100 -ac 1 "${OUT_VOCAL}" &
+        -c:a pcm_s16le  -ar 44100 "${OUT_VOCAL}" &
     ff_pid=$!;
   
     epoch_ff=$( get_process_start_time )

@@ -192,7 +192,6 @@ class App:
             "https://music.youtube.com/watch?v=uzHT-qq6qi4",
             "https://music.youtube.com/watch?v=p7qA45Bh8-Q",
             "https://music.youtube.com/watch?v=uj4-_JL7-Tk",
-            "https://music.youtube.com/watch?v=UVDyFA0HYPw",
             "https://music.youtube.com/watch?v=cMXGjNsXNAw",
             "https://music.youtube.com/watch?v=dh0gLJCvmcI",
             "https://music.youtube.com/watch?v=Z6Zr01BfjBM",
