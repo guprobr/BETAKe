@@ -135,7 +135,8 @@ time_diff_seconds() {
     start_secs="$1";
     local end_secs;
     end_secs="$2";
-    "$(echo "scale=6; ${end_secs} - ${start_secs}" | bc)"
+    # shellcheck disable=SC2005
+    echo "$(echo "scale=6; ${end_secs} - ${start_secs}" | bc)"
 }
 
 # Define log file path
@@ -158,16 +159,12 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}";
 
 ##DOWNLOAD DO PLAYBACK
 #### yt-dlp time!
-##
-##
-## iniciar preparo de adquirir playback e construir pipeline do gravador
 PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.mp4";
-#remover playbacks antigos para nao dar problema em baixar novos
+#remove old playbacks
 rm -rf "${REC_DIR}"/"${karaoke_name}"_playback.*;
-# Load the video title
+# fetch the video title
 PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}")"
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
-
 # Download the video
 yt-dlp "${video_url}" -o "${REC_DIR}/${karaoke_name}_playback.%(ext)s" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --console-title --embed-subs --progress --no-continue --force-overwrites --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300"; 
 
@@ -179,10 +176,9 @@ filename=$(find "$REC_DIR" \( -name "${karaoke_name}_playback.mkv" -o -name "${k
 # Check if a file was found
 if [ -n "$filename" ]; then
     echo "Using file: $filename"
-
 # Get total duration of the video
 PLAYBACK_LEN=$( echo "scale=0; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
-echo "${PLAYBACK_LEN}";
+colorecho "yello" "Playback length: ${PLAYBACK_LEN}";
 
 else
     colorecho "red" "No suitable playback file found."
@@ -199,8 +195,7 @@ else
     
 fi
 
-colorecho "yellow" "All setup to sing!";
-aplay research.wav;
+colorecho "cyan" "All setup to sing!";
 # Display message to start recording
 export LC_ALL=C;
 zenity --question --text="\"${PLAYBACK_TITLE}\" - duration: ${PLAYBACK_LEN}, let's sing? " --title="Ready to S I N G?" --default-cancel --width=640 --height=100
@@ -229,8 +224,8 @@ colorecho "SING!--------------------------";
 	            ffplay \
 			        -window_title "SING" -loglevel info -hide_banner -af "volume=0.15" "${PLAYBACK_BETA}" &
                 #ffplay_pid=$!;
-                     epoch_ffplay=$( get_process_start_time  ); 	
-
+            epoch_ffplay=$( get_process_start_time  ); 	
+                colorecho "red" "ffplay start: $epoch_ffplay";
 
 #start CAMERA   to record audio & video
 colorecho "blue" "..Launch FFMpeg recorder (AUDIO_VIDEO)";
@@ -244,9 +239,11 @@ colorecho "blue" "..Launch FFMpeg recorder (AUDIO_VIDEO)";
         -c:a pcm_s16le  -ar 44100 -ac 1 "${OUT_VOCAL}" &
     ff_pid=$!;
   
-    epoch_ff=$( get_process_start_time ); 
-    diff_ss="$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"
+    epoch_ff=$( get_process_start_time )
+        colorecho "red" "ffmpeg start: $epoch_ff";
 
+    diff_ss="$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"
+        colorecho "yellow" "diff_ss: $diff_ss";
 
 
 # Initialize variables
@@ -259,10 +256,9 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
     sleep 1.1
     cronos_play=$(echo "scale=6; ${cronos_play} + 1.1" | bc)
     percent_play=$(echo "scale=6; ${cronos_play} * 100 / ${PLAYBACK_LEN}" | bc)
-    echo "${cronos_play}" > "${OUT_DIR}/${karaoke_name}_dur.txt"
     # shellcheck disable=SC2005
     echo "$(printf "%.0f" "${percent_play}")"
-done | zenity --progress --text="Press OK to STOP recording" \
+done | zenity --progress --text="Press to STOP recording" \
               --title="Recording" --width=300 --height=200 --percentage=0
 
 
@@ -275,9 +271,7 @@ else
     colorecho "cyan" "Progress completed.";
 fi
 pactl unload-module module-loopback;
-# Output the final value of karaoke_duration
-cronos_play=$( cat "${OUT_DIR}/${karaoke_name}_dur.txt" );
-echo "elapsed Karaoke duration: $cronos_play";
+
 echo "Total playback duration: ${PLAYBACK_LEN}";
 colorecho "red" "diff sync: $diff_ss";
 
@@ -290,15 +284,15 @@ colorecho "red" "diff sync: $diff_ss";
             #killall -SIGINT sox;
             killall -9 ffplay;
     
-    sleep 8;        
+    sleep 5;        
    
 
 ##POSTprod
-echo "POST_PROCESSING____________________________________"
 colorecho "blue" "rendering final video"
 
-export LC_ALL=C;  OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
-# Start ffmpeg in the background and capture its PID
+export LC_ALL=C;  
+OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
+
 ffmpeg -y -hide_banner -loglevel info  \
     -ss "$( printf "%0.4f" "$( echo "scale=4; ${diff_ss}  " | bc )" )" -i "${OUT_VIDEO}" \
     -ss "$( printf "%0.4f" "$( echo "scale=4; ${diff_ss}  " | bc )" )" -i "${PLAYBACK_BETA}" \
@@ -339,20 +333,12 @@ ffmpeg -y -hide_banner -loglevel info  \
 FINAL_FILE="${OUT_FILE}";
 
 render_display_progress "${OUT_FILE}" $ff_pid;
-##### in case corruption, you may try the final pass
-   # colorecho "red" "FINAL pass";
-   # FINAL_FILE="${OUT_DIR}"/"${karaoke_name}".mp4;
-   # ffmpeg -i "${OUT_FILE}" "${FINAL_FILE}" -y &
-   #     ff_pid=$!;
-    #render_display_progress "${FINAL_FILE}" $ff_pid;
 
     colorecho "green" "Done. Generating MP3 too";
 
 generate_mp3 "${OUT_VOCAL}" "${OUT_FILE%.*}".mp3;
     
-    echo  "sync diff value: ${diff_ss}";
-
-ffplay -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}" ;
+ffplay -window_title "Obrigado pela participação! sync diff: ${diff_ss} ${FINAL_FILE}";
 wmctrl -R "gammaQ CMD prompt";
 wmctrl -c "gammaQ CMD prompt";
 #wlrctl -R "gammaQ CMD prompt";
