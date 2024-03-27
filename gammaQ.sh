@@ -310,7 +310,7 @@ ffmpeg -y -hide_banner -loglevel info  \
     [1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16[playback];
 
-    [playback][vocals]amix=inputs=2:weights=0.3|0.6;
+    [playback][vocals]amix=inputs=2:weights=0.25|0.33;
 
       [1:v]scale=s=640x360[v1];
         gradients=n=7:type=circular:s=640x360,scale=s=640x360[spats];
