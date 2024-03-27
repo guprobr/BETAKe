@@ -299,10 +299,10 @@ ffmpeg -y -hide_banner -loglevel info  \
                                                                        -i "${OUT_VOCAL}" \
                                                                                 -filter_complex "
     [2:a]
-    afftdn=nr=15,compensationdelay,alimiter,speechnorm,acompressor,
-    ladspa=tap_pitch:plugin=tap_pitch:c=0.5 90 -20 20,
-    ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.33825 0.000 0.000 0 0 000.0 0.33,
-    aecho=0.8:0.7:99:0.13,
+    afftdn=nr=10,compensationdelay,alimiter,speechnorm,acompressor,
+    ladspa=tap_pitch:plugin=tap_pitch:c=0.5 90 -20 16,
+    ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.33825 0.000 0.000 0 0 000.0 0.21,
+    aecho=0.8:0.7:99:0.21,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16
     [vocals];
@@ -310,7 +310,7 @@ ffmpeg -y -hide_banner -loglevel info  \
     [1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16[playback];
 
-    [playback][vocals]amix=inputs=2:weights=0.25|0.33;
+    [playback][vocals]amix=inputs=2;
 
       [1:v]scale=s=640x360[v1];
         gradients=n=7:type=circular:s=640x360,scale=s=640x360[spats];
