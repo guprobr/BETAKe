@@ -122,21 +122,20 @@ generate_mp3() {
 
 # Function to get the start time of a process in Unix epoch seconds with %s format
 get_process_start_time() {
-    local pid="$1"
     # Get the start time of the process in Unix epoch seconds
-    local start_epoch_seconds;
-    start_epoch_seconds=$(ps -o lstart= -D "%s" -p "$pid")
-    echo "$start_epoch_seconds"
+    local start_epoch_sec_ns;
+    start_epoch_sec_ns=$(date +%s.%N)
+    echo "$start_epoch_sec_ns"
 }
 
 
 # Function to calculate time difference in seconds
 time_diff_seconds() {
     local start_secs;
-    start_secs="$1"
+    start_secs="$1";
     local end_secs;
-    end_secs="$2"
-    echo "$(( end_secs - start_secs ))"
+    end_secs="$2";
+    "$(echo "scale=6; ${end_secs} - ${start_secs}" | bc)"
 }
 
 # Define log file path
@@ -229,8 +228,8 @@ colorecho "SING!--------------------------";
 
 	            ffplay \
 			        -window_title "SING" -loglevel info -hide_banner -af "volume=0.15" "${PLAYBACK_BETA}" &
-                ffplay_pid=$!;
-                     epoch_ffplay=$( get_process_start_time "${ffplay_pid}" ); 	
+                #ffplay_pid=$!;
+                     epoch_ffplay=$( get_process_start_time  ); 	
 
 
 #start CAMERA   to record audio & video
@@ -242,11 +241,11 @@ colorecho "blue" "..Launch FFMpeg recorder (AUDIO_VIDEO)";
 -f pulse    -i "${SRC_mic}".monitor \
 -t "${PLAYBACK_LEN}"                \
    -an  -c:v libx264 -preset:v faster -crf:v 23 -g 60 -pix_fmt yuv420p -movflags +faststart         "${OUT_VIDEO}" \
-        -c:a pcm_s16le                                                                                  "${OUT_VOCAL}" &
-                                                                                                                ff_pid=$!;
+        -c:a pcm_s16le  -ar 44100 -ac 1 "${OUT_VOCAL}" &
+    ff_pid=$!;
   
-    epoch_ff=$( get_process_start_time "${ff_pid}" ); 
-    diff_ss="$(( "$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"))"
+    epoch_ff=$( get_process_start_time ); 
+    diff_ss="$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"
 
 
 
@@ -301,9 +300,9 @@ colorecho "blue" "rendering final video"
 export LC_ALL=C;  OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 # Start ffmpeg in the background and capture its PID
 ffmpeg -y -hide_banner -loglevel info  \
-    -ss "$( printf "%0.4f" "$( echo "scale=4; 1.8444 + ${diff_ss}  " | bc )" )" -i "${OUT_VIDEO}" \
-    -ss "$( printf "%0.4f" "$( echo "scale=4; 1.8444 + ${diff_ss}  " | bc )" )" -i "${PLAYBACK_BETA}" \
-                                                                                -i "${OUT_VOCAL}" \
+    -ss "$( printf "%0.4f" "$( echo "scale=4; ${diff_ss}  " | bc )" )" -i "${OUT_VIDEO}" \
+    -ss "$( printf "%0.4f" "$( echo "scale=4; ${diff_ss}  " | bc )" )" -i "${PLAYBACK_BETA}" \
+                                                                       -i "${OUT_VOCAL}" \
                                                                                 -filter_complex "
     [2:a]
     afftdn=nr=15,compensationdelay,alimiter,speechnorm,acompressor,
