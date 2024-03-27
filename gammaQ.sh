@@ -338,7 +338,7 @@ render_display_progress "${OUT_FILE}" $ff_pid;
 
 generate_mp3 "${OUT_VOCAL}" "${OUT_FILE%.*}".mp3;
     
-ffplay -window_title "Obrigado pela participação! sync diff: ${diff_ss} ${FINAL_FILE}";
+ffplay -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";
 wmctrl -R "gammaQ CMD prompt";
 wmctrl -c "gammaQ CMD prompt";
 #wlrctl -R "gammaQ CMD prompt";
