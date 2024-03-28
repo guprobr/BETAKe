@@ -17,7 +17,7 @@ ffmpeg -y -hide_banner -loglevel info  \
 [2:a]
     afftdn=nr=10,compensationdelay,alimiter,speechnorm,acompressor,
     ladspa=tap_pitch:plugin=tap_pitch:c=0.5 90 -20 16,
-    ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.33825 0.000 0.000 0 0 000.0 0.21,
+    ladspa=tap_autotalent:plugin=autotalent:c=440 0.00 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.000 0.000 0.000 0 0 000.0 1.00,
     aecho=0.8:0.7:99:0.21,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16
@@ -42,47 +42,3 @@ ffmpeg -y -hide_banner -loglevel info  \
 
 
 exit
-pactl unload-module module-loopback;
-#########
-	pactl load-module module-loopback \
-		source="${SINKb}"  \
-		latency_msec=200;
-
-
-exit
-#LADSPA_declip
-echo -e "\e[97mLoad module-ladspa-sink for declipper\e[0m";
-pactl load-module module-ladspa-sink \
-				control="-1,1" \
-                plugin="declip_1195" label=declip \
-                sink_name="LADSPA_declip" \
-                master="${SINKa}";
-
-#LADSPA_rnnoise
-echo -e "\e[96mLoad module-ladspa-sink for RNNOISE\e[0m"
-pactl load-module module-ladspa-sink \
-                        plugin="librnnoise_ladspa" label="noise_suppressor_mono" \
-                        control="1,5,50,500,50,0,0" \
-                        sink_name="LADSPA_noise" \
-                        master="${SINKa}";
-
-#LADSPA_pitch
-echo -e "\e[95mLoad module-ladspa-sink for pitch\e[0m"; 
-pactl load-module module-ladspa-sink \
-                sink_name="${SINKb}" \
-                master="LADSPA_noise" \
-    plugin="tap_pitch" label=tap_pitch control="2.066996,44,-11,11,-1"; 
-
-#LADSPA AUTOTALENT TAP
-#echo -e "\e[94mAltoTalent©\e[0m";
-#pactl load-module module-ladspa-sink plugin="tap_autotalent" label=autotalent \
-#                sink_name="LADSPA_talent" \
-#                master="LADSPA_pitch" \
-#        control="480,0,0.0000,0,0,0,0,0,0,0,0,0,0,0,0,0.11,1.00,0,0,0,0,1.000,1.000,0,0,000.0,0.09696";
-
-#LADSPA sc4
-#echo -e "\e[93mSC4\e[0m";
-#pactl load-module module-ladspa-sink plugin="sc4_1882" label=sc4 \
- #               sink_name="${SINKb}"   \
- #               master="LADSPA_talent";
-

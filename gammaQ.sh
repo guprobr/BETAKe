@@ -301,7 +301,7 @@ ffmpeg -y -hide_banner -loglevel info  \
     [2:a]
     afftdn=nr=10,compensationdelay,alimiter,speechnorm,acompressor,
     ladspa=tap_pitch:plugin=tap_pitch:c=0.5 90 -20 16,
-    ladspa=tap_autotalent:plugin=autotalent:c=440 1.6726875 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.33825 0.000 0.000 0 0 000.0 0.21,
+    ladspa=tap_autotalent:plugin=autotalent:c=440 0.00 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.000 0.000 0.000 0 0 000.0 1.00,
     aecho=0.8:0.7:99:0.21,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16
