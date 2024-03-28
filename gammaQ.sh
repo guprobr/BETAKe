@@ -297,7 +297,7 @@ ffmpeg -y -hide_banner -loglevel info  \
     -ss "$( printf "%0.4f" "$( echo "scale=4; ${diff_ss}  " | bc )" )" -i "${OUT_VIDEO}" \
     -ss "$( printf "%0.4f" "$( echo "scale=4; ${diff_ss}  " | bc )" )" -i "${PLAYBACK_BETA}" \
                                                                        -i "${OUT_VOCAL}" \
-                                                                                -filter_complex "
+    -filter_complex "
     [2:a]
     afftdn=nr=10,compensationdelay,alimiter,speechnorm,acompressor,
     ladspa=tap_pitch:plugin=tap_pitch:c=0.5 90 -20 16,
@@ -307,27 +307,21 @@ ffmpeg -y -hide_banner -loglevel info  \
     aresample=resampler=soxr:osf=s16
     [vocals];
 
-    [1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
-        aresample=resampler=soxr:osf=s16[playback];
+    [1:a]dynaudnorm,volume=volume=0.55,
+    aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
+    aresample=resampler=soxr:osf=s16[playback];
 
     [playback][vocals]amix=inputs=2;
 
       [1:v]scale=s=640x360[v1];
-        gradients=n=7:type=circular:s=640x360,scale=s=640x360[spats];
-        gradients=n=6:type=spiral:s=640x360[vscope];
-        [spats][vscope]overlay=alpha=0.6[spatscope];
-        [1:a]avectorscope=s=640x360[frodo];
-        [0:v]colorize=hue=$((RANDOM%361)):saturation=$(bc <<< "scale=2; $RANDOM/32767"):lightness=$(bc <<< "scale=2; $RANDOM/32767"),
-        scale=s=640x360[v0]; 
-        [spatscope]scale=s=640x360[scopy];
-        [v1][frodo]hstack,scale=s=640x360[video_merge];
-        [scopy][video_merge]hstack,scale=s=640x360[badcoffee];
-          
-        [v0][badcoffee]vstack,scale=s=1280x720;" \
-             -ar 44100 -t "${PLAYBACK_LEN}" \
-     -c:v libx264 -movflags faststart  \
-       -c:a aac \
-         "${OUT_FILE}"  &
+        gradients=n=8:type=spiral:s=640x360,format=rgba[vscope];
+        [0:v]scale=s=640x360[v0]; 
+        [v1][vscope]xstack,scale=s=640x360[badcoffee];
+        [v0][badcoffee]vstack;" \
+            -t "${PLAYBACK_LEN}" \
+     -c:v libx264 -movflags faststart -s 1280x720 \
+       -c:a aac  -ar 44100  \
+         "${OUT_FILE}"   &
            ff_pid=$!;
 
 FINAL_FILE="${OUT_FILE}";

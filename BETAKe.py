@@ -211,6 +211,16 @@ class App:
             "https://music.youtube.com/watch?v=8GQwtYd0tfw",
             "https://music.youtube.com/watch?v=X0COGw91wzk",
             "https://music.youtube.com/watch?v=UPFCB1Lzawo",
+            "https://music.youtube.com/watch?v=X0jcTY5lp0M",
+            "https://music.youtube.com/watch?v=mby-A4lz1-s",
+            "https://music.youtube.com/watch?v=CZl1ZSr9yb4",
+            "https://music.youtube.com/watch?v=5Y60rPLUNJQ",
+            "https://music.youtube.com/watch?v=9w3eg4lVjv4",
+            "https://music.youtube.com/watch?v=dPtDT4lI0P0",
+            "https://music.youtube.com/watch?v=jx7WliEB5_A",
+            "https://music.youtube.com/watch?v=xgNfHIfcUi0",
+            "https://music.youtube.com/watch?v=QDD_zhqG7VI",
+            "https://music.youtube.com/watch?v=2ST6RIplEJg",
             "https://www.youtube.com/watch?v=avnVW9frwLE"
         ]
 
