@@ -1,7 +1,11 @@
 
 # v3.0 - gammaQ
 
-Soon docs... i'm tired
+A versão que está aqui deve funcionar sem requisitos macabros.
+Mas esse projeto foi descontinuado publicamente, uma vez que para atingir um patamar maior de qualidade
+são necessárias as instalações de mais de 500 pacotes referentes a kernel de baixa latência e Ubuntu Studio
+portanto continuarei a pesquisar de forma privada até que eu tenha maturidade para criar um binário multiplataforma
+que contemple os requisitos de baixa latencia necessarios para a qualidade que creio que as pessoas desejam. VLW
 
 # V2.8
 
