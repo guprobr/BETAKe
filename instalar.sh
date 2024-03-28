@@ -17,12 +17,11 @@ read -rp "Do you want to continue? (yes/no): " response
 if [[ $response == "yes" ]]; then
     echo "You chose to continue.";
     sudo apt -y install fortunes* ffmpeg swh-plugins lsp-plugins alsa-utils yt-dlp \
-	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl wlrctl ;
+	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview;
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
     cp -ra BETAq.desktop ~/.local/share/applications/;
     sudo cp -ra BETAKe.* /usr/bin/;
     echo "instale qualquer dependencia que faltar no python3, via pip";
-    echo "acesse aqui para o plugin Noise Supressor LADSPA: https://github.com/werman/noise-suppression-for-voice "
     echo "CANTA RAUL";
     
 escaped_path=$(printf '%q' "${BETA_PATH}")

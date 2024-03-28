@@ -2,6 +2,7 @@
 import threading 
 import tkinter as tk
 from tkinter import scrolledtext
+from tkinter.font import Font
 from tkinter.ttk import Progressbar
 import subprocess
 import re
@@ -22,9 +23,10 @@ class App:
         # Define instance variables for buttons
         self.test_video_button = None
         self.audio_loopback_button = None
-
+        
+        custom_font = Font(family="Terminus", size=12, weight="bold")
         # Create scrolled text widget for displaying output
-        self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="silver", foreground="black")
+        self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray", font=custom_font)
         self.output_text.place(x=0, y=0, width=1024, height=510)
 
         # Load and display the left-aligned tux.png image
@@ -52,38 +54,21 @@ class App:
             master, text="Kill BETAKê", command=self.kill_recording)
         self.kill_button.place(x=730, y=600, width=300, height=166)
 
+        
+        #First, truncate last log
+        command = [ 'truncate', '-s0', f'{betake_path}/script.log'  ]
+        # Launch truncation of script.log
+        subprocess.Popen(command)
         #Display fortunes at the beginning
         self.display_fortunes()
+        # Start tailf in a separate thread
+        threading.Thread(target=self.start_tailf, daemon=True).start()
 
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)
 
-        # Define a dictionary to map color codes to hexadecimal color values
-        self.color_map = {
-            '90': '♪',  # Music note
-            '91': '☹',  # Frowning face
-            '92': '☺',  # Smiling face
-            '93': '♥',  # Heart
-            '94': '♦',  # Diamond
-            '95': '♪',  # Eighth note (just repeating for variety)
-            '96': '☻',  # Black smiling face
-            '97': '☼',   # Sun
-        }
-        # Configure tags for different colors
-        for color_code, color_hex in self.color_map.items():
-            self.output_text.tag_config(f"color_{color_code}", foreground='#' + color_code + '0000')
-
-    def colorize_and_display(self, line):
-        # Replace color escape sequences with corresponding tags
-        for color_code, color_hex in self.color_map.items():
-            line = re.sub(r'\[' + color_code + r'm', f'{color_hex}>', line)
-        line = re.sub(r'\[0m', "<<", line)  # Reset to default color
-        
-        # Insert colorized text into the text widget
-        self.output_text.insert(tk.END, line + '\n')
-        self.scroll_to_end()
-
+     
     def start_tailf(self):
         logfile = betake_path + "/script.log"
         command = ['tail', '-f', logfile]
@@ -92,7 +77,65 @@ class App:
         while True:
             line = process.stdout.readline().decode('utf-8').rstrip()
             if line:
-                self.colorize_and_display(line)
+                self.colorize_line(line)
+                self.output_text.insert(tk.END, line + '\n')
+                self.scroll_to_end()
+
+    def colorize_line(self, line):
+        # Define a regular expression to match escape codes for foreground colors
+        escape_code_pattern = re.compile(r'\033\[(\d{1,2})m')
+
+        # Remove escape codes from the line
+        line_without_escapes = escape_code_pattern.sub('', line)
+
+        # Find all escape codes in the line
+        escape_codes = escape_code_pattern.findall(line)
+
+        # Define a mapping of escape codes to tag names and corresponding colors
+        tag_color_map = {
+            '30': ('color_0', '#000000'),  # Black
+            '31': ('color_1', '#FF0000'),  # Red
+            '32': ('color_2', '#00FF00'),  # Green
+            '33': ('color_3', '#FFFF00'),  # Yellow
+            '34': ('color_4', '#0000FF'),  # Blue
+            '35': ('color_5', '#FF00FF'),  # Magenta
+            '36': ('color_6', '#00FFFF'),  # Cyan
+            '37': ('color_7', '#FFFFFF')   # White
+        }
+
+        # Apply tags to the entire line
+        for escape_code in escape_codes:
+            if escape_code in tag_color_map:
+                tag_name, hex_color = tag_color_map[escape_code]
+                if tag_name not in self.output_text.tag_names():
+                    self.output_text.tag_config(tag_name, foreground=hex_color)
+
+        # Insert the line without escape codes into the widget and apply tags
+        self.output_text.insert(tk.END, line_without_escapes + '\n')
+        for escape_code in escape_codes:
+            if escape_code in tag_color_map:
+                tag_name, _ = tag_color_map[escape_code]
+                self.output_text.tag_add(tag_name, 'end - %dc' % len(line_without_escapes), 'end')
+
+        # Scroll to the end of the widget
+        self.scroll_to_end()
+
+        # Reset to default foreground color after termination escape code (39)
+        if '39' in escape_codes:
+            default_color = '#FFFFFF'  # White color
+            self.output_text.tag_config('default_color', foreground=default_color)
+            self.output_text.insert(tk.END, line_without_escapes + '\n', 'default_color')
+            self.scroll_to_end()
+
+
+        # Reset to default foreground color after termination escape code (39)
+        if '39' in escape_codes:
+            self.output_text.tag_config('default_color', foreground='black')
+            self.output_text.insert(tk.END, line_without_escapes + '\n', 'default_color')
+            self.scroll_to_end()
+
+
+
 
 
     def fetch_random_karaoke_url(self):
@@ -251,10 +294,6 @@ class App:
                 default_video_url = self.get_default_video_url()
                 video_url = default_video_url
             
-            #First, truncate last log
-            command = [ 'truncate', '-s0', f'{betake_path}/script.log'  ]
-            # Launch truncation of script.log
-            subprocess.Popen(command)
             # Command to execute betaREC.sh with tee for logging
             command = [
                 'bash', '-c',
@@ -263,8 +302,6 @@ class App:
 
             # Launch betaREC.sh inside xterm and redirect output to script.log
             subprocess.Popen(command)
-            #feed with the log our nice window
-            self.start_tailf()
              # Poll the process until it finishes
             while self.process.poll() is None:
                 # Optionally, you can add a delay to reduce CPU usage
@@ -290,6 +327,7 @@ class App:
 
     def kill_recording(self):     
         # Quit the interface, try housekeeping
+        self.kill_parent_and_children("gammaQ.sh")
         self.master.quit()
 
 def main():
