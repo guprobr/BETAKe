@@ -299,7 +299,7 @@ ffmpeg -y -hide_banner -loglevel info  \
                                                                        -i "${OUT_VOCAL}" \
     -filter_complex "
     [2:a]
-    afftdn=nr=10,compensationdelay,alimiter,speechnorm,acompressor,
+    compensationdelay,alimiter,speechnorm,acompressor,
     ladspa=tap_pitch:plugin=tap_pitch:c=0.5 90 -20 16,
     ladspa=tap_autotalent:plugin=autotalent:c=440 0.00 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.000 0.000 0.000 0 0 000.0 1.00,
     aecho=0.8:0.7:99:0.21,
