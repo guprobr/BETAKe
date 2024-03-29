@@ -17,7 +17,8 @@ read -rp "Do you want to continue? (yes/no): " response
 if [[ $response == "yes" ]]; then
     echo "You chose to continue.";
     sudo apt -y install fortunes* ffmpeg swh-plugins lsp-plugins alsa-utils yt-dlp \
-	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview;
+	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview python3-tk \
+    python3-pyaudio python3-numpy sox ladspalist vocproc lv2file;
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
     cp -ra BETAq.desktop ~/.local/share/applications/;
     sudo cp -ra BETAKe.* /usr/bin/;

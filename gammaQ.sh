@@ -142,12 +142,13 @@ colorecho "aAjustar vol ${SRC_mic} em 45%";
 colorecho "aAjustar vol default sink 69% USE HEADPHONES";
  pactl set-source-volume "${SINK}"  69%;
 
-gst-launch-1.0 -e pulsesrc device="${SRC_mic}" ! audioconvert ! \
-    audioresample ! autoaudiosink & 
+pactl load-module module-loopback & 
 
 
 ##DOWNLOAD DO PLAYBACK
 #### yt-dlp time!
+colorecho "yellow" "Try upd yt-dlp";
+yt-dlp -U;
 PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.mp4";
 #remove old playbacks
 rm -rf "${REC_DIR}"/"${karaoke_name}"_playback.*;
@@ -221,7 +222,7 @@ vidresolut=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size |
 
 guvcview --video="${OUT_VIDEO}" -e --gui=none --render=sdl --video_timer="${PLAYBACK_LEN}" --video_codec=h264 \
     --audio="pulse" --audio_device="${SRC_mic}" --audio_codec=aac \
-        -x "${vidresolut}" -F60 -m 640x400 \
+        -x "${vidresolut}" -F60 -m 1280x720 \
             --format="${vidformat}" &
         gvc_pid=$!;
 
@@ -280,9 +281,16 @@ sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof;
 sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
     noisered "$OUT_DIR"/"$karaoke_name".prof 0.3 \
                             dither -s -f shibata;
+colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm...";
+lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+ -p pitch_factor:4.0 \
+ -p effect:0 -p fc_voc_switch:0 -p fc_voc:1 \
+ -p pitch_correction:1 -p threshold:2.9 -p attack:0.1 \
+ -p transpose:0 -p c:0 -p cc:0 -p d:0 -p dd:0 -p e:0 -p f:0 -p ff:0 -p g:0 -p gg:0 -p a:0 -p aa:0 -p b:0 \
+ -m -c 1:voice  http://hyperglitch.com/dev/VocProc;
 
-#trim "${diff_ss}"
-        killall -9 gst-launch-1.0;
+#trim "${diff_ss}" ladspa=autotalent:plugin=autotalent:c=440 0.00 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.000 0.000 0.000 0 0 000.0 1.00,
+        pactl unload-module module-loopback;
 
 colorecho "red" "rendering final video"
 
@@ -297,7 +305,6 @@ ffmpeg -y -hide_banner -loglevel error -stats  \
     [2:a]
     adeclip,compensationdelay,alimiter,speechnorm,acompressor,
     ladspa=tap_pitch:plugin=tap_pitch:c=0.5 90 -20 16,
-    ladspa=tap_autotalent:plugin=autotalent:c=440 0.00 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.000 0.000 0.000 0 0 000.0 1.00,
     aecho=0.8:0.7:90:0.21,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
@@ -309,7 +316,7 @@ ffmpeg -y -hide_banner -loglevel error -stats  \
     [playback][vocals]amix=inputs=2;
 
       [1:v]scale=s=640x360[v1];
-        gradients=n=4:type=spiral:s=640x360,format=rgba[vscope];
+        gradients=n=4:s=640x360,format=rgba[vscope];
         [0:v]tile=layout=2x2,colorize=hue=$((RANDOM%361)):saturation=$(bc <<< "scale=2; $RANDOM/32767"):lightness=$(bc <<< "scale=2; $RANDOM/32767"),
         scale=s=640x360[v0];
         [v1][vscope]xstack,scale=s=640x360[badcoffee];

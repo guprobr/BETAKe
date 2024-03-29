@@ -121,16 +121,9 @@ class App:
         self.scroll_to_end()
 
         # Reset to default foreground color after termination escape code (39)
-        if '39' in escape_codes:
+        if '0' in escape_codes:
             default_color = '#FFFFFF'  # White color
             self.output_text.tag_config('default_color', foreground=default_color)
-            self.output_text.insert(tk.END, line_without_escapes + '\n', 'default_color')
-            self.scroll_to_end()
-
-
-        # Reset to default foreground color after termination escape code (39)
-        if '39' in escape_codes:
-            self.output_text.tag_config('default_color', foreground='black')
             self.output_text.insert(tk.END, line_without_escapes + '\n', 'default_color')
             self.scroll_to_end()
 
