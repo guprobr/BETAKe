@@ -193,13 +193,14 @@ if [ $? == 1 ]; then
     parent_pid=$$
     # Call the function to kill the parent process and all its children
     kill_parent_and_children $parent_pid
-            killall -9 gst-launch-1.0;
+            pactl unload-module module-loopback;
     exit;
 fi
 
 rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
 # Recording then Post-production
-OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out.mp4;
+ext_recz="mp4"
+OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out."${ext_recz}";
 OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 	
 colorecho "SING!--------------------------";
@@ -216,32 +217,27 @@ colorecho "SING!--------------------------";
             epoch_ffplay=$( get_process_start_time  ); 	
                 colorecho "red" "ffplay start: $epoch_ffplay";
 
-vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | head -n1 | awk '{ print $2 }');
+#vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | tail -n1 | awk '{ print $2 }');
 vidresolut=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
 
+ffmpeg  -f v4l2 -s "${vidresolut}" -ss 1 -i /dev/video0 \
+        -f pulse -i default -ar 44100 "${OUT_VIDEO}" &
+                ff_pid=$!;
 
-guvcview --video="${OUT_VIDEO}" -e --gui=none --render=sdl --video_timer="${PLAYBACK_LEN}" --video_codec=h264 \
-    --audio="pulse" --audio_device="${SRC_mic}" --audio_codec=aac \
-        -x "${vidresolut}" -F60 -m 1280x720 \
-            --format="${vidformat}" &
-        gvc_pid=$!;
-
- epoch_gvc=$( get_process_start_time )
-    colorecho "green" "guvcview start: $epoch_gvc";
-    diff_ss="$(time_diff_seconds "${epoch_ffplay}" "${epoch_gvc}")"
-        colorecho "magenta" "diff_ss: $diff_ss";
+ epoch_ff=$( get_process_start_time )
+    colorecho "green" "FFmpeg start: $epoch_ff";
+    diff_ss="$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"
+        colorecho "magenta" "diff_ss: $diff_ss"; # try to compensante if out of sync brutally
    
 
 cronos_play=1
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
-    xdotool search --name "Recording" windowactivate
-    xdotool search --name  "Guvcview*" windowactivate
     sleep 1
     cronos_play=$(( "$cronos_play" + 1 ));
     # shellcheck disable=SC2005
     echo $(( ("$cronos_play"*100) / "$PLAYBACK_LEN" ))
             # Check if the webcam process is still running
-            if ! ps -p "$gvc_pid" >/dev/null 2>&1; then
+            if ! ps -p "$ff_pid" >/dev/null 2>&1; then
                 break
             fi
             # Check if the player process is still running
@@ -264,7 +260,7 @@ colorecho "red" "Calculated diff sync: $diff_ss";
 # give 5sec for recorder graceful finish
     
     colorecho "Recording finished";
-            killall -SIGINT guvcview;
+            killall -SIGTERM ffmpeg;
             killall -9 ffplay;
     
     sleep 5;        
@@ -274,14 +270,13 @@ colorecho "red" "Calculated diff sync: $diff_ss";
 VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"_sox.wav;
 
 colorecho "yellow" "[AuDIO] Apply shibata dithering with SoX, also noise reduction...";
-mv -v "${OUT_DIR}"/"${karaoke_name}"_out-1.mp4 "${OUT_VIDEO}"; 
-
 ffmpeg -hide_banner -loglevel error -i "${OUT_VIDEO}" "${VOCAL_FILE}";
 sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof;
 sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
     noisered "$OUT_DIR"/"$karaoke_name".prof 0.3 \
                             dither -s -f shibata;
-colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm...";
+                            
+colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm VocProc...";
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
  -p pitch_factor:4.0 \
  -p effect:0 -p fc_voc_switch:0 -p fc_voc:1 \
@@ -289,11 +284,11 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
  -p transpose:0 -p c:0 -p cc:0 -p d:0 -p dd:0 -p e:0 -p f:0 -p ff:0 -p g:0 -p gg:0 -p a:0 -p aa:0 -p b:0 \
  -m -c 1:voice  http://hyperglitch.com/dev/VocProc;
 
-#trim "${diff_ss}" ladspa=autotalent:plugin=autotalent:c=440 0.00 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.000 0.000 0.000 0 0 000.0 1.00,
+#ladspa=autotalent:plugin=autotalent:c=440 0.00 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.000 0.000 0.000 0 0 000.0 1.00,
+ 
         pactl unload-module module-loopback;
 
 colorecho "red" "rendering final video"
-
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
@@ -317,13 +312,13 @@ ffmpeg -y -hide_banner -loglevel error -stats  \
 
       [1:v]scale=s=640x360[v1];
         gradients=n=4:s=640x360,format=rgba[vscope];
-        [0:v]tile=layout=2x2,colorize=hue=$((RANDOM%361)):saturation=$(bc <<< "scale=2; $RANDOM/32767"):lightness=$(bc <<< "scale=2; $RANDOM/32767"),
+        [0:v]colorize=hue=$((RANDOM%361)):saturation=$(bc <<< "scale=2; $RANDOM/32767"):lightness=$(bc <<< "scale=2; $RANDOM/32767"),
         scale=s=640x360[v0];
         [v1][vscope]xstack,scale=s=640x360[badcoffee];
         [v0][badcoffee]vstack;" \
             -t "${PLAYBACK_LEN}" \
-     -c:v libx264 -movflags faststart \
-       -c:a aac  -ar 44100  -s "$vidresolut" \
+     -c:v libx264 -b:v 5000k -movflags faststart \
+       -c:a aac  -ar 44100  \
          "${OUT_FILE}"   &
            ff_pid=$!;
 

@@ -18,7 +18,7 @@ if [[ $response == "yes" ]]; then
     echo "You chose to continue.";
     sudo apt -y install fortunes* ffmpeg swh-plugins lsp-plugins alsa-utils yt-dlp \
 	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview python3-tk \
-    python3-pyaudio python3-numpy sox ladspalist vocproc lv2file;
+    python3-pyaudio python3-numpy sox ladspalist vocproc lv2file v4l-utils;
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
     cp -ra BETAq.desktop ~/.local/share/applications/;
     sudo cp -ra BETAKe.* /usr/bin/;
@@ -26,7 +26,7 @@ if [[ $response == "yes" ]]; then
     echo "CANTA RAUL";
     
 escaped_path=$(printf '%q' "${BETA_PATH}")
-sudo sed -i '13s|.*|betake_path = '\"$escaped_path'/\"|' /usr/bin/BETAKe.py
+sudo sed -i '13s|.*|betake_path = '\""$escaped_path"'/\"|' /usr/bin/BETAKe.py
 sudo sed -i '2s|.*|betake_path='"$escaped_path"'/|' /usr/bin/BETAKe.sh
 elif [[ $response == "no" ]]; then
     echo "You chose to cancel.";
