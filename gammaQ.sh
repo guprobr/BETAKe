@@ -204,9 +204,28 @@ OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out."${ext_recz}";
 OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 	
 colorecho "SING!--------------------------";
-		colorecho "yellow" "Launch lyrics video";
+		
+#vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | tail -n1 | awk '{ print $2 }');
+vidresolut=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
 
-	            ffplay -left +0 \
+chrt --fifo 99 ffmpeg  -f v4l2 -s "${vidresolut}" -i /dev/video0 \
+        -f pulse -i default -ar 44100 "${OUT_VIDEO}" &
+                ff_pid=$!;
+        renice -n -19 "$ff_pid";
+ epoch_ff=$( get_process_start_time )
+    colorecho "green" "FFmpeg start: $epoch_ff";
+    diff_ss="$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"
+        colorecho "magenta" "diff_ss: $diff_ss"; # try to compensante if out of sync brutally
+   
+# Wait for the output file to be created
+while [ ! -s "${OUT_VIDEO}" ]; do
+    sleep 0.001;  # Adjust sleep time as needed
+done | zenity --progress --text="GET READY TO SING" \
+              --title="Starting to tape!" --width=440 --height=400 --percentage=50 --pulsate --auto-close --auto-kill
+
+colorecho "yellow" "Launch lyrics video";
+
+	        chrt --fifo 84 ffplay -left +0 \
                         -top -0 \
 			        -window_title "SING" -loglevel quiet -hide_banner \
                     -af "volume=0.15" \
@@ -217,20 +236,8 @@ colorecho "SING!--------------------------";
             epoch_ffplay=$( get_process_start_time  ); 	
                 colorecho "red" "ffplay start: $epoch_ffplay";
 
-#vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | tail -n1 | awk '{ print $2 }');
-vidresolut=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
 
-ffmpeg  -f v4l2 -s "${vidresolut}" -i /dev/video0 \
-        -f pulse -i default -ar 44100 "${OUT_VIDEO}" &
-                ff_pid=$!;
-
- epoch_ff=$( get_process_start_time )
-    colorecho "green" "FFmpeg start: $epoch_ff";
-    diff_ss="$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"
-        colorecho "magenta" "diff_ss: $diff_ss"; # try to compensante if out of sync brutally
-   
-
-cronos_play=1
+cronos_play=1 ### RECORDING PROGRESS! If FFmpeg or playback quits, or clicking cancel, recording stops
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
     sleep 1
       xdotool search --name "Recording" windowactivate
@@ -259,16 +266,13 @@ fi
 colorecho "blue" "Actual playback duration: ${PLAYBACK_LEN}";
 colorecho "red" "Calculated diff sync: $diff_ss";
 
-# give 5sec for recorder graceful finish
-    
+# give 5sec for recorder graceful finish, just in case :P
     colorecho "Recording finished";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
-    
     sleep 5;        
    
-
-##POSTprod
+##POSTprod filtering
 VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"_sox.wav;
 
 colorecho "yellow" "[AuDIO] Apply shibata dithering with SoX, also noise reduction...";
@@ -280,13 +284,11 @@ sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
 
 colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm VocProc...";
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
- -p pitch_factor:4.0 \
+ -p pitch_factor:4.444 \
  -p effect:0 -p fc_voc_switch:0 -p fc_voc:1 \
  -p pitch_correction:1 -p threshold:2.9 -p attack:0.1 \
  -p transpose:0 -p c:0 -p cc:0 -p d:0 -p dd:0 -p e:0 -p f:0 -p ff:0 -p g:0 -p gg:0 -p a:0 -p aa:0 -p b:0 \
  -m -c 1:voice  http://hyperglitch.com/dev/VocProc;
-
-#ladspa=autotalent:plugin=autotalent:c=440 0.00 0.0000 0 0 0 0 0 0 0 0 0 0 0 0 1.00 1.00 0 0 0 0.000 0.000 0.000 0 0 000.0 1.00,
  
         pactl unload-module module-loopback;
 
@@ -296,19 +298,16 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
 ffmpeg -y -hide_banner -loglevel info -stats  \
-    -ss "$( printf "%0.8f" "$( echo "scale=8;  ${diff_ss}  " | bc )" )" -i "${PLAYBACK_BETA}" \
-                                                                            -i "${OUT_VOCAL}" \
+   -i "${PLAYBACK_BETA}" \
+   -i "${OUT_VOCAL}" \
     -filter_complex "
-      [0:a]dynaudnorm,volume=volume=0.45,
+      [0:a]volume=volume=0.35,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
       [1:a]
     adeclip,compensationdelay,alimiter,speechnorm,acompressor,
-    
-    rubberband=tempo=1.0:pitch=1.00444:transients=smooth:detector=percussive:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
-    aecho=0.8:0.7:90:0.21,
-
+    aecho=0.8:0.8:70:0.33,treble=g=5,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
 

@@ -26,7 +26,10 @@ if [[ $response == "yes" ]]; then
     echo "CANTA RAUL -- vou instalar o yt-dlp do github pois os das distros sempre são podres!";
 
     git clone  https://github.com/yt-dlp/yt-dlp/ && cd yt-dlp && make && sudo make install;
-    
+    YOU=$( whoami );
+    echo "Vou adicionar o usuario ${YOU} ao grupo de execução em tempo real, considere instalar kernel low-latency.";
+    sudo usermod -aG rtkit,audio "${YOU}";
+
 escaped_path=$(printf '%q' "${BETA_PATH}")
 sudo sed -i '13s|.*|betake_path = '\""$escaped_path"'/\"|' /usr/bin/BETAKe.py
 sudo sed -i '2s|.*|betake_path='"$escaped_path"'/|' /usr/bin/BETAKe.sh
