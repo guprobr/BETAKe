@@ -206,41 +206,46 @@ OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 colorecho "SING!--------------------------";
 		
 #vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | tail -n1 | awk '{ print $2 }');
-vidresolut=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
-
-chrt --fifo 99 ffmpeg  -f v4l2 -s "${vidresolut}" -i /dev/video0 \
-        -f pulse -i default -ar 44100 "${OUT_VIDEO}" &
-                ff_pid=$!;
+#vidresolut=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
+ epoch_ff=$( get_process_start_time );
+ffmpeg  -f v4l2 -video_size 640x480 -i /dev/video0 \
+        -f pulse -i default -ar 44100 \
+        -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart         \
+                                                    "${OUT_VIDEO}"  &
+                                            ff_pid=$!;
         renice -n -19 "$ff_pid";
- epoch_ff=$( get_process_start_time )
+
     colorecho "green" "FFmpeg start: $epoch_ff";
-    diff_ss="$(time_diff_seconds "${epoch_ffplay}" "${epoch_ff}")"
-        colorecho "magenta" "diff_ss: $diff_ss"; # try to compensante if out of sync brutally
+ 
    
 # Wait for the output file to be created
 while [ ! -s "${OUT_VIDEO}" ]; do
-    sleep 0.001;  # Adjust sleep time as needed
+   echo -n ".";  # Adjust sleep time as needed
 done | zenity --progress --text="GET READY TO SING" \
               --title="Starting to tape!" --width=440 --height=400 --percentage=50 --pulsate --auto-close --auto-kill
 
 colorecho "yellow" "Launch lyrics video";
-
-	        chrt --fifo 84 ffplay -left +0 \
+             epoch_ffplay=$( get_process_start_time  );
+	        ffplay -left +0 \
                         -top -0 \
 			        -window_title "SING" -loglevel quiet -hide_banner \
                     -af "volume=0.15" \
                     -noborder -exitonkeydown  \
                     -vf "scale=1280:720" "${PLAYBACK_BETA}" &
-                ffplay_pid=$!;
-            
-            epoch_ffplay=$( get_process_start_time  ); 	
-                colorecho "red" "ffplay start: $epoch_ffplay";
-
+            ffplay_pid=$!;
+           
+            colorecho "red" "ffplay start: $epoch_ffplay";
+                
+                diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
+                colorecho "magenta" "diff_ss: $diff_ss"; # try to compensate if out of sync brutally
 
 cronos_play=1 ### RECORDING PROGRESS! If FFmpeg or playback quits, or clicking cancel, recording stops
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
     sleep 1
-      xdotool search --name "Recording" windowactivate
+        if [ "$cronos_play" -le 3 ]; then
+            wmctrl -r "Recording" -e 0,-1,-1,-1,-1
+            xdotool search --name "Recording" windowactivate
+        fi
     cronos_play=$(( "$cronos_play" + 1 ));
     # shellcheck disable=SC2005
     echo $(( ("$cronos_play"*100) / "$PLAYBACK_LEN" ))
@@ -253,7 +258,7 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
                 break
             fi
 done | zenity --progress --text="Pressing will STOP recorder and start render post-production MP4" \
-              --title="Recording" --width=640 --height=400 --percentage=0 
+              --title="Recording" --width=640 --height=200 --percentage=0 
 
 
 # Check if the progress dialog was canceled OR completed
@@ -279,14 +284,14 @@ colorecho "yellow" "[AuDIO] Apply shibata dithering with SoX, also noise reducti
 ffmpeg -hide_banner -loglevel error -i "${OUT_VIDEO}" "${VOCAL_FILE}";
 sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof;
 sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
-    noisered "$OUT_DIR"/"$karaoke_name".prof 0.3 \
+    noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
                             dither -s -f shibata;
 
 colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm VocProc...";
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
  -p pitch_factor:4.444 \
  -p effect:0 -p fc_voc_switch:0 -p fc_voc:1 \
- -p pitch_correction:1 -p threshold:2.9 -p attack:0.1 \
+ -p pitch_correction:1 -p threshold:1.5 -p attack:0.1 \
  -p transpose:0 -p c:0 -p cc:0 -p d:0 -p dd:0 -p e:0 -p f:0 -p ff:0 -p g:0 -p gg:0 -p a:0 -p aa:0 -p b:0 \
  -m -c 1:voice  http://hyperglitch.com/dev/VocProc;
  
@@ -299,7 +304,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
 ffmpeg -y -hide_banner -loglevel info -stats  \
    -i "${PLAYBACK_BETA}" \
-   -i "${OUT_VOCAL}" \
+   -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}" | bc )" )"  -i "${OUT_VOCAL}" \
     -filter_complex "
       [0:a]volume=volume=0.35,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
@@ -307,20 +312,20 @@ ffmpeg -y -hide_banner -loglevel info -stats  \
 
       [1:a]
     adeclip,compensationdelay,alimiter,speechnorm,acompressor,
-    aecho=0.8:0.8:70:0.33,treble=g=5,
+    aecho=0.8:0.8:56:0.33,treble=g=4,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
 
-    [playback][vocals]amix=inputs=2;
+    [playback][vocals]amix=inputs=2:weights=0.45|0.56;
 
     waveform,scale=s=640x360[v1];
     gradients=n=7:s=640x360,format=rgba[vscope];
         [0:v]scale=s=640x360[v0];
         [v1][vscope]xstack=inputs=2,scale=s=640x360[badcoffee];
-        [v0][badcoffee]vstack=inputs=2,scale=s=1280x720;" \
+        [v0][badcoffee]vstack=inputs=2,scale=s=640x480;" \
             -t "${PLAYBACK_LEN}" \
-     -c:v libx264 -b:v 5000k -movflags faststart \
-       -c:a aac -b:a 500k -ar 44100  \
+     -c:v libx264 -b:v 10000k -movflags faststart \
+       -c:a aac -b:a 1000k -ar 44100  \
          "${OUT_FILE}"   &
            ff_pid=$!;
 
@@ -330,7 +335,9 @@ colorecho "green" "Done. now the final overlay!"
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
-        ffmpeg -hide_banner -loglevel info -stats -i "${OUT_FILE}" -i "${OUT_VIDEO}" \
+        ffmpeg -hide_banner -loglevel info -stats \
+                                                                         -i "${OUT_FILE}" \
+        -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}" | bc )" )" -i "${OUT_VIDEO}" \
             -filter_complex "[0:v][1:v]xstack=inputs=2;" -s 1920x1080 "${FINAL_FILE}" &
                 ff_pid=$!;
 
