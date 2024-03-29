@@ -16,14 +16,16 @@ read -rp "Do you want to continue? (yes/no): " response
 # Check the response
 if [[ $response == "yes" ]]; then
     echo "You chose to continue.";
-    sudo apt -y install fortunes* ffmpeg swh-plugins lsp-plugins alsa-utils yt-dlp \
+    sudo apt -y install fortunes*  swh-plugins lsp-plugins alsa-utils yt-dlp \
 	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview python3-tk \
-    python3-pyaudio python3-numpy sox ladspalist vocproc lv2file v4l-utils;
+    python3-pyaudio python3-numpy sox ladspalist vocproc lv2file v4l-utils pandoc git;
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
     cp -ra BETAq.desktop ~/.local/share/applications/;
     sudo cp -ra BETAKe.* /usr/bin/;
     echo "instale qualquer dependencia que faltar no python3, via pip";
-    echo "CANTA RAUL";
+    echo "CANTA RAUL -- vou instalar o yt-dlp do github pois os das distros sempre são podres!";
+
+    git clone  https://github.com/yt-dlp/yt-dlp/ && cd yt-dlp && make && sudo make install;
     
 escaped_path=$(printf '%q' "${BETA_PATH}")
 sudo sed -i '13s|.*|betake_path = '\""$escaped_path"'/\"|' /usr/bin/BETAKe.py

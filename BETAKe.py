@@ -78,7 +78,6 @@ class App:
             line = process.stdout.readline().decode('utf-8').rstrip()
             if line:
                 self.colorize_line(line)
-                self.output_text.insert(tk.END, line + '\n')
                 self.scroll_to_end()
 
     def colorize_line(self, line):
@@ -117,17 +116,17 @@ class App:
                 tag_name, _ = tag_color_map[escape_code]
                 self.output_text.tag_add(tag_name, 'end - %dc' % len(line_without_escapes), 'end')
 
-        # Scroll to the end of the widget
-        self.scroll_to_end()
+        
 
         # Reset to default foreground color after termination escape code (39)
         if '0' in escape_codes:
-            default_color = '#FFFFFF'  # White color
+            default_color = '#FFAA0E'  # White color
             self.output_text.tag_config('default_color', foreground=default_color)
             self.output_text.insert(tk.END, line_without_escapes + '\n', 'default_color')
-            self.scroll_to_end()
 
 
+        # Scroll to the end of the widget
+        self.scroll_to_end()
 
 
 
@@ -257,7 +256,8 @@ class App:
             "https://music.youtube.com/watch?v=xgNfHIfcUi0",
             "https://music.youtube.com/watch?v=QDD_zhqG7VI",
             "https://music.youtube.com/watch?v=2ST6RIplEJg",
-            "https://www.youtube.com/watch?v=avnVW9frwLE"
+            "https://www.youtube.com/watch?v=avnVW9frwLE",
+            "https://music.youtube.com/watch?v=3yCecD_23tA"
         ]
 
         fortune_char_count = len(self.get_random_fortune())

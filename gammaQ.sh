@@ -98,7 +98,7 @@ colorecho() {
 
             sleep 1;
         done
-        ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --auto-close --auto-kill
+        ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --pulsate --auto-close --auto-kill
     }
 
 # Function to generate MP3 from MP4
@@ -157,7 +157,7 @@ PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}")"
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
 # Download the video, it will cache the original and copy the playback
 filename=$(yt-dlp "${video_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300")
-yt-dlp "${video_url}" -o "${REC_DIR}/$filename" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --console-title --quiet --embed-subs --no-continue --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300"
+yt-dlp "${video_url}" -o "${REC_DIR}/$filename" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --console-title --quiet --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300"
 cp "${REC_DIR}/$filename" "${PLAYBACK_BETA}";
 
 # perphaps convert
@@ -169,7 +169,7 @@ if [ -n "$filename" ]; then
     echo "Using file: $filename"
 # Get total duration of the video and cast to integer
 PLAYBACK_LEN=$( echo "scale=0; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
-colorecho "yello" "Playback length: ${PLAYBACK_LEN}";
+colorecho "yellow" "Playback length: ${PLAYBACK_LEN}";
 ffmpeg -y -hide_banner -loglevel error "$filename" "$PLAYBACK_BETA";
 
 else
@@ -220,7 +220,7 @@ colorecho "SING!--------------------------";
 #vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | tail -n1 | awk '{ print $2 }');
 vidresolut=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
 
-ffmpeg  -f v4l2 -s "${vidresolut}" -ss 1 -i /dev/video0 \
+ffmpeg  -f v4l2 -s "${vidresolut}" -i /dev/video0 \
         -f pulse -i default -ar 44100 "${OUT_VIDEO}" &
                 ff_pid=$!;
 
@@ -233,6 +233,7 @@ ffmpeg  -f v4l2 -s "${vidresolut}" -ss 1 -i /dev/video0 \
 cronos_play=1
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
     sleep 1
+      xdotool search --name "Recording" windowactivate
     cronos_play=$(( "$cronos_play" + 1 ));
     # shellcheck disable=SC2005
     echo $(( ("$cronos_play"*100) / "$PLAYBACK_LEN" ))
@@ -245,7 +246,8 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
                 break
             fi
 done | zenity --progress --text="Pressing will STOP recorder and start render post-production MP4" \
-              --title="Recording" --width=300 --height=200 --percentage=0
+              --title="Recording" --width=640 --height=400 --percentage=0 
+
 
 # Check if the progress dialog was canceled OR completed
 if [ $? = 1 ]; then
@@ -275,7 +277,7 @@ sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof;
 sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
     noisered "$OUT_DIR"/"$karaoke_name".prof 0.3 \
                             dither -s -f shibata;
-                            
+
 colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm VocProc...";
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
  -p pitch_factor:4.0 \
@@ -291,46 +293,54 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
 colorecho "red" "rendering final video"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
+#-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
-ffmpeg -y -hide_banner -loglevel error -stats  \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -10 " | bc )" )"  -i "${PLAYBACK_BETA}" \
-                                                                       -i "${OUT_VOCAL}" \
+ffmpeg -y -hide_banner -loglevel info -stats  \
+    -ss "$( printf "%0.8f" "$( echo "scale=8;  ${diff_ss}  " | bc )" )" -i "${PLAYBACK_BETA}" \
+                                                                            -i "${OUT_VOCAL}" \
     -filter_complex "
-    [2:a]
-    adeclip,compensationdelay,alimiter,speechnorm,acompressor,
-    ladspa=tap_pitch:plugin=tap_pitch:c=0.5 90 -20 16,
-    aecho=0.8:0.7:90:0.21,
-        aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
-        aresample=resampler=soxr:osf=s16:precision=33[vocals];
-
-    [1:a]dynaudnorm,volume=volume=0.45,
+      [0:a]dynaudnorm,volume=volume=0.45,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
+      [1:a]
+    adeclip,compensationdelay,alimiter,speechnorm,acompressor,
+    
+    rubberband=tempo=1.0:pitch=1.00444:transients=smooth:detector=percussive:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+    aecho=0.8:0.7:90:0.21,
+
+        aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
+        aresample=resampler=soxr:osf=s16:precision=33[vocals];
+
     [playback][vocals]amix=inputs=2;
 
-      [1:v]scale=s=640x360[v1];
-        gradients=n=4:s=640x360,format=rgba[vscope];
-        [0:v]colorize=hue=$((RANDOM%361)):saturation=$(bc <<< "scale=2; $RANDOM/32767"):lightness=$(bc <<< "scale=2; $RANDOM/32767"),
-        scale=s=640x360[v0];
-        [v1][vscope]xstack,scale=s=640x360[badcoffee];
-        [v0][badcoffee]vstack;" \
+    waveform,scale=s=640x360[v1];
+    gradients=n=7:s=640x360,format=rgba[vscope];
+        [0:v]scale=s=640x360[v0];
+        [v1][vscope]xstack=inputs=2,scale=s=640x360[badcoffee];
+        [v0][badcoffee]vstack=inputs=2,scale=s=1280x720;" \
             -t "${PLAYBACK_LEN}" \
      -c:v libx264 -b:v 5000k -movflags faststart \
-       -c:a aac  -ar 44100  \
+       -c:a aac -b:a 500k -ar 44100  \
          "${OUT_FILE}"   &
            ff_pid=$!;
 
-FINAL_FILE="${OUT_FILE}";
+    render_display_progress "${OUT_FILE}" $ff_pid;
 
+colorecho "green" "Done. now the final overlay!" 
+    
+    FINAL_FILE="${OUT_FILE%.*}"ke.mp4
+    
+        ffmpeg -hide_banner -loglevel info -stats -i "${OUT_FILE}" -i "${OUT_VIDEO}" \
+            -filter_complex "[0:v][1:v]xstack=inputs=2;" -s 1920x1080 "${FINAL_FILE}" &
+                ff_pid=$!;
 
+        render_display_progress "${FINAL_FILE}" $ff_pid;
 
-render_display_progress "${OUT_FILE}" $ff_pid;
-
-    colorecho "green" "Done. Generating MP3 too";
+colorecho "yellow" "Generating MP3 too ou outputs dir..";
 
 generate_mp3 "${FINAL_FILE}" "${OUT_FILE%.*}".mp3;
     
 ffplay -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";
+
 exit;
