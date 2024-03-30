@@ -152,6 +152,10 @@ Essas configurações combinam processamento de áudio e vídeo para produzir um
 * BETAKe.py é a interface em si, são poucos requisitos de biblioteca python.
 * a maioria dos requisitos já devo ter colocado no instalador.
 
+# DEMOs fuleiros by Guzpido
+
+https://Xiclet.com.br
+
 # V2.8
 
 # grandes avanços na interface python3
