@@ -213,7 +213,7 @@ colorecho "blue" "Using video device $vid_dev";
 colorecho "yellow" "Using pulse source: ${SRC_mic}";
 
  epoch_ff=$( get_process_start_time );
-ffmpeg  -f v4l2 -video_size="$vid_res" -i "$vid_dev" \
+ffmpeg  -f v4l2 -video_size "$vid_res" -i "$vid_dev" \
         -f pulse -i "${SRC_mic}" -ar 44100 \
         -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart         \
                                                     "${OUT_VIDEO}"  &
@@ -304,7 +304,7 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
 colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Auburn Sound's Graillon...";
 lv2file -o "${OUT_VOCAL}" -i "${VOCAL_FILE}" \
     -P Younger\ Speech \
-    -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 \
+    -p p9:1.00 -p p20:2.00 -p p15:0.515 -p p17:1.000 -p p18:1.00 \
     -c 1:input_38 -c 2:input_39  \
     https://www.auburnsounds.com/products/Graillon.html40733132#stereo
 
