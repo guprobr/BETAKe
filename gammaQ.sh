@@ -40,6 +40,8 @@ colorecho() {
         local child_pids;
         child_pids=$(pgrep -P "$parent_pid")
 
+                    pactl unload-module module-loopback;
+
         # Kill the parent process and all its children
         echo "Killing parent process $parent_pid and its children: $child_pids"
         kill "$parent_pid" "$child_pids"
@@ -178,7 +180,6 @@ else
         parent_pid=$$
         # Call the function to kill the parent process and all its children
         kill_parent_and_children $parent_pid
-        killall -9 gst-launch-1.0;
     exit;
     
 fi
@@ -193,7 +194,6 @@ if [ $? == 1 ]; then
     parent_pid=$$
     # Call the function to kill the parent process and all its children
     kill_parent_and_children $parent_pid
-            pactl unload-module module-loopback;
     exit;
 fi
 
@@ -219,7 +219,7 @@ ffmpeg  -f v4l2 -video_size 640x480 -i /dev/video0 \
  
    
 # Wait for the output file to be created
-while [ ! -s "${OUT_VIDEO}" ]; do
+while [ ! -f "${OUT_VIDEO}" ]; do
    echo -n ".";  # Adjust sleep time as needed
 done | zenity --progress --text="GET READY TO SING" \
               --title="Starting to tape!" --width=440 --height=400 --percentage=50 --pulsate --auto-close --auto-kill
@@ -287,13 +287,18 @@ sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
     noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
                             dither -s -f shibata;
 
-colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm VocProc...";
+colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Graillon...";
+
+v2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+    -P Live \
+    http://gareus.org/oss/lv2/fat1
+
+cp -ra "${VOCAL_FILE}" "${OUT_VOCAL}";
+
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
- -p pitch_factor:4.444 \
- -p effect:0 -p fc_voc_switch:0 -p fc_voc:1 \
- -p pitch_correction:1 -p threshold:1.5 -p attack:0.1 \
- -p transpose:0 -p c:0 -p cc:0 -p d:0 -p dd:0 -p e:0 -p f:0 -p ff:0 -p g:0 -p gg:0 -p a:0 -p aa:0 -p b:0 \
- -m -c 1:voice  http://hyperglitch.com/dev/VocProc;
+    -P Younger\ Speech \
+    -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 \
+    https://www.auburnsounds.com/products/Graillon.html40733132#stereo
  
         pactl unload-module module-loopback;
 
@@ -303,8 +308,8 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
 ffmpeg -y -hide_banner -loglevel info -stats  \
-   -i "${PLAYBACK_BETA}" \
-   -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}" | bc )" )"  -i "${OUT_VOCAL}" \
+                                                                    -i "${PLAYBACK_BETA}" \
+   -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}" | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "
       [0:a]volume=volume=0.35,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
@@ -337,7 +342,7 @@ colorecho "green" "Done. now the final overlay!"
     
         ffmpeg -hide_banner -loglevel info -stats \
                                                                          -i "${OUT_FILE}" \
-        -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}" | bc )" )" -i "${OUT_VIDEO}" \
+        -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
             -filter_complex "[0:v][1:v]xstack=inputs=2;" -s 1920x1080 "${FINAL_FILE}" &
                 ff_pid=$!;
 
