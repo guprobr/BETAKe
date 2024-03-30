@@ -1,11 +1,107 @@
 
-# v3.0 - gammaQ
 
 A versão que está aqui deve funcionar sem requisitos macabros.
 Mas esse projeto foi descontinuado publicamente, uma vez que para atingir um patamar maior de qualidade
 são necessárias as instalações de mais de 500 pacotes referentes a kernel de baixa latência e Ubuntu Studio
 portanto continuarei a pesquisar de forma privada até que eu tenha maturidade para criar um binário multiplataforma
 que contemple os requisitos de baixa latencia necessarios para a qualidade que creio que as pessoas desejam. VLW
+
+
+# v3.0 - gammaQ
+
+Esse script em shell realiza uma série de tarefas relacionadas à produção de karaokê. Aqui está uma descrição das principais funcionalidades e ações realizadas:
+
+* Recebendo Parâmetros: O script recebe três parâmetros: o nome do karaokê, a URL do vídeo e o caminho do diretório beta.
+
+* Configuração de Diretórios: Define diretórios para armazenar gravações e arquivos de saída, criando-os se não existirem.
+
+* Função colorecho: Define uma função para imprimir mensagens coloridas no terminal.
+
+* Função kill_parent_and_children: Define uma função para encerrar o processo pai e todos os seus filhos.
+
+* Função render_display_progress: Define uma função para exibir o progresso usando o tamanho estimado do arquivo.
+
+* Função generate_mp3: Define uma função para gerar um arquivo MP3 a partir de um arquivo MP4.
+
+* Obtendo Informações de Áudio: Obtém informações padrão de áudio e microfone do sistema.
+
+* Atualizando e Baixando Vídeo do YouTube: Atualiza o programa de download de vídeos do YouTube (yt-dlp) e baixa o vídeo do YouTube especificado, salvando-o no diretório de gravações.
+
+* Verificação e Conversão de Formato do Vídeo: Verifica e converte o formato do vídeo baixado para garantir compatibilidade.
+
+* Mensagem de Confirmação de Gravação: Exibe uma mensagem para confirmar a gravação do karaokê.
+
+* Gravação de Vídeo e Áudio: Inicia a gravação de vídeo e áudio a partir do dispositivo padrão do sistema.
+
+* Exibição do Progresso da Gravação: Exibe uma barra de progresso indicando o progresso da gravação.
+
+* Pós-Produção de Áudio: Aplica filtros e ajustes de áudio, como dithering, redução de ruído e ajuste vocal.
+
+* Renderização do Vídeo Final: Combina o áudio pós-produzido com o vídeo original, aplicando filtros e ajustes necessários.
+
+* Gerando Arquivo MP3: Gera um arquivo MP3 a partir do vídeo final renderizado.
+
+* Exibição do Vídeo Final: Exibe o vídeo finalizado no player de mídia.
+
+O script realiza várias etapas para processar e produzir um karaokê completo a partir de um vídeo do YouTube, incluindo download, gravação, pós-produção de áudio e renderização do vídeo final.
+
+## masterização com SoX, LV2 e FFMpeg complex filter
+
+### Shibata Dithering com SoX e Redução de Ruído:
+
+O Shibata Dithering é um método de dithering usado para melhorar a qualidade de áudio digital. No contexto do script, é aplicado usando o SoX (Sound eXchange), uma poderosa ferramenta de processamento de áudio.
+A linha sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof cria um perfil de ruído a partir dos primeiros 5 segundos do arquivo de áudio gerado anteriormente.
+Em seguida, sox "${VOCAL_FILE}" "${OUT_VOCAL}" noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 dither -s -f shibata aplica a redução de ruído usando o perfil de ruído criado e aplica o Shibata Dithering para melhorar a qualidade do áudio.
+
+### Algoritmo de Ajuste Vocal Gareus XC42:
+
+O Gareus XC42 é um algoritmo de ajuste vocal desenvolvido por Robin Gareus. Ele é usado para ajustar e aprimorar a qualidade das vozes nas gravações de áudio.
+A linha lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Live http://gareus.org/oss/lv2/fat1 aplica esse algoritmo ao arquivo de áudio vocal, gerando um novo arquivo de áudio aprimorado.
+
+### Algoritmo de Ajuste Vocal Auburn Sound's Graillon:
+
+O Graillon é um plugin de processamento de áudio desenvolvido pela Auburn Sounds, usado para ajustar e modificar vozes.
+A linha lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Younger\ Speech -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 -c 1:input_38 -c 2:input_39 https://www.auburnsounds.com/products/Graillon.html40733132#stereo aplica o plugin Graillon ao arquivo de áudio vocal, com diferentes parâmetros de ajuste especificados.
+Esses algoritmos são aplicados para melhorar a qualidade do áudio vocal, reduzir o ruído e ajustar características específicas da voz para produzir um resultado final mais agradável e profissional. Cada algoritmo tem sua própria função e configurações que podem ser ajustadas para atender às necessidades específicas de uma gravação de karaokê.
+
+## pós produção com FFMpeg e mixagem
+
+### Configuração do Áudio:
+
+[0:a]volume=volume=0.35, aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, aresample=resampler=soxr:osf=s16[playback];: Esta parte do código é responsável por configurar o áudio proveniente da primeira entrada (índice [0:a]).
+volume=0.35: Define o volume do áudio para 35% do volume original.
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo: Define o formato de amostragem (fltp), a taxa de amostragem (44100 Hz) e o layout de canal (estéreo).
+aresample=resampler=soxr:osf=s16: Aplica um redimensionamento de amostra usando o resampler SoX Resampler (soxr) para converter o áudio para um formato de amostra de 16 bits.
+
+### Processamento do Áudio Vocal:
+
+[1:a] adeclip, compensationdelay, alimiter, speechnorm, acompressor, aecho=0.8:0.8:56:0.33, treble=g=4, aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, aresample=resampler=soxr:osf=s16:precision=33[vocals];: Esta parte processa o áudio proveniente da segunda entrada (índice [1:a]), que é o áudio vocal.
+adeclip, compensationdelay, alimiter, speechnorm, acompressor: Aplicam uma série de filtros e efeitos de áudio, como remoção de distorção, atraso de compensação, limitação, normalização de volume e compressão.
+aecho=0.8:0.8:56:0.33: Adiciona um eco ao áudio com os parâmetros especificados.
+treble=g=4: Ajusta o nível de agudos do áudio.
+aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo: Define o formato de amostragem, taxa de amostragem e layout de canal do áudio vocal.
+aresample=resampler=soxr:osf=s16:precision=33: Aplica um redimensionamento de amostra ao áudio vocal usando o SoX Resampler.
+
+### Mesclagem de Áudio:
+
+[playback][vocals] amix=inputs=2:weights=0.45|0.56;: Mescla os áudios processados do playback e dos vocais (definidos anteriormente) usando a função amix, onde inputs=2 indica que há duas entradas a serem mescladas e weights=0.45|0.56 especifica os pesos de cada entrada na mesclagem final.
+
+### Geração de Vídeo:
+
+waveform, scale=s=640x360[v1]; gradients=n=7:s=640x360, format=rgba[vscope]; [0:v] scale=s=640x360[v0]; [v1][vscope] xstack=inputs=2, scale=s=640x360[badcoffee]; [v0][badcoffee] vstack=inputs=2, scale=s=640x480;: Esta parte configura o vídeo.
+waveform: Gera uma forma de onda do áudio.
+gradients: Cria gradientes visuais.
+[0:v] scale=s=640x360[v0]: Redimensiona o vídeo original para uma resolução de 640x360.
+[v1][vscope] xstack=inputs=2: Empilha os vídeos da forma de onda e dos gradientes horizontalmente.
+[v0][badcoffee] vstack=inputs=2: Empilha o vídeo original redimensionado e o resultado do xstack verticalmente.
+scale=s=640x480: Redimensiona o vídeo final para uma resolução de 640x480.
+Essas configurações combinam processamento de áudio e vídeo para produzir um resultado final que inclui ajustes de áudio, mesclagem de diferentes fontes de áudio e efeitos visuais aplicados ao vídeo.
+
+
+* após tudo isso, novamente se invoca o FFMpeg para criar um overlay ou xstack do usuário filmado com os vídeos com efeitos e o playback. O programa então se tudo deu certo, toca o arquivo final para preview;
+
+tudo é gravado no diretório ./outputs
+os playbacks baixados ficam em cache em ./recordings
 
 # V2.8
 
