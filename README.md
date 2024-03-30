@@ -139,11 +139,14 @@ Essas configurações combinam processamento de áudio e vídeo para produzir um
 
 ### preview e mp3
 
-* por cortesia geramos uma MP3 da performance!
 * após tudo isso, novamente se invoca o FFMpeg para criar um overlay ou xstack do usuário filmado com os vídeos com efeitos e o playback. O programa então se tudo deu certo, toca o arquivo final para preview;
+
+* por cortesia geramos uma MP3 da performance!
 
 tudo é gravado no diretório ./outputs
 os playbacks baixados ficam em cache em ./recordings
+
+# instalação parcialmente implementada
 
 * para rodar recomendo olhar o *instalar.sh*
 * BETAKe.py é a interface em si, são poucos requisitos de biblioteca python.
