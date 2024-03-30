@@ -298,12 +298,11 @@ colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Gareus XC42...";
 
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     -P Live \
+    -p mode:Auto -p \
     http://gareus.org/oss/lv2/fat1
 
-cp -ra "${VOCAL_FILE}" "${OUT_VOCAL}";
-
 colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Auburn Sound's Graillon...";
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+lv2file -o "${OUT_VOCAL}" -i "${VOCAL_FILE}" \
     -P Younger\ Speech \
     -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 \
     -c 1:input_38 -c 2:input_39  \
