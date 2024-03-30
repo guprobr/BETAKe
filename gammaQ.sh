@@ -206,10 +206,15 @@ OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 colorecho "SING!--------------------------";
 		
 #vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | tail -n1 | awk '{ print $2 }');
-#vidresolut=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
+vid_res=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
+vid_dev=$( v4l2-ctl --list-devices | grep video | awk '{ print $1 }' | head -n1 )
+
+colorecho "blue" "Using video device $vid_dev";
+colorecho "yellow" "Using pulse source: ${SRC_mic}";
+
  epoch_ff=$( get_process_start_time );
-ffmpeg  -f v4l2 -video_size 640x480 -i /dev/video0 \
-        -f pulse -i default -ar 44100 \
+ffmpeg  -f v4l2 -video_size="$vid_res" -i "$vid_dev" \
+        -f pulse -i "${SRC_mic}" -ar 44100 \
         -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart         \
                                                     "${OUT_VIDEO}"  &
                                             ff_pid=$!;
@@ -311,7 +316,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
 ffmpeg -y -hide_banner -loglevel info -stats  \
                                                                     -i "${PLAYBACK_BETA}" \
-   -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}"/2 | bc )" )" -i "${OUT_VOCAL}" \
+   -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}" | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "
       [0:a]volume=volume=0.35,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
@@ -345,7 +350,8 @@ colorecho "green" "Done. now the final overlay!"
         ffmpeg -hide_banner -loglevel info -stats \
                                                                          -i "${OUT_FILE}" \
         -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VIDEO}" \
-            -filter_complex "[0:v][1:v]xstack=inputs=2;" -s 1920x1080 "${FINAL_FILE}" &
+            -filter_complex "[0:v]scale=s=${vid_res}[vidres];
+                             [vidres][1:v]xstack=inputs=2;" -s 1920x1080 "${FINAL_FILE}" &
                 ff_pid=$!;
 
         render_display_progress "${FINAL_FILE}" $ff_pid;
