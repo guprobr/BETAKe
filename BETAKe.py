@@ -313,6 +313,8 @@ class App:
             # Find the PID of the parent process
             parent_pid = subprocess.check_output(["pgrep", parent_process_name]).strip().decode()
 
+            # disable loopback
+            subprocess.run(["pactl", "unload-module", "module-loopback"])
             # Find and terminate all children processes
             subprocess.run(["killall", "-TERM", "-P", parent_pid])
         except subprocess.CalledProcessError:

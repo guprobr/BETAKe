@@ -272,9 +272,11 @@ colorecho "blue" "Actual playback duration: ${PLAYBACK_LEN}";
 colorecho "red" "Calculated diff sync: $diff_ss";
 
 # give 5sec for recorder graceful finish, just in case :P
-    colorecho "Recording finished";
+    colorecho "magenta" "Recording finished";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
+             # disable loopback monitor
+            pactl unload-module module-loopback;
     sleep 5;        
    
 ##POSTprod filtering
@@ -287,29 +289,29 @@ sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
     noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
                             dither -s -f shibata;
 
-colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Graillon...";
+colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Gareus XC42...";
 
-v2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     -P Live \
     http://gareus.org/oss/lv2/fat1
 
 cp -ra "${VOCAL_FILE}" "${OUT_VOCAL}";
 
+colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Auburn Sound's Graillon...";
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     -P Younger\ Speech \
     -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 \
+    -c 1:input_38 -c 2:input_39  \
     https://www.auburnsounds.com/products/Graillon.html40733132#stereo
- 
-        pactl unload-module module-loopback;
 
-colorecho "red" "rendering final video"
+colorecho "red" "rendering final mix and video"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
 ffmpeg -y -hide_banner -loglevel info -stats  \
                                                                     -i "${PLAYBACK_BETA}" \
-   -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}" | bc )" )" -i "${OUT_VOCAL}" \
+   -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}"/2 | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "
       [0:a]volume=volume=0.35,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
@@ -342,7 +344,7 @@ colorecho "green" "Done. now the final overlay!"
     
         ffmpeg -hide_banner -loglevel info -stats \
                                                                          -i "${OUT_FILE}" \
-        -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
+        -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VIDEO}" \
             -filter_complex "[0:v][1:v]xstack=inputs=2;" -s 1920x1080 "${FINAL_FILE}" &
                 ff_pid=$!;
 
