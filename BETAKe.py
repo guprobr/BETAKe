@@ -38,6 +38,8 @@ class App:
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
         self.karaoke_name_entry = tk.Entry(master)
         self.karaoke_name_entry.place(x=160, y=530, width=750)
+        self.karaoke_name_entry.bind('<KeyRelease>', self.sanitize_input)
+
 
         # Entry for custom video URL
         tk.Label(master, text="Playback Video URL:").place(x=1, y=570)
@@ -68,6 +70,19 @@ class App:
     def scroll_to_end(self):
         self.output_text.see(tk.END)
 
+    def sanitize_input(self, event):
+        # Get the current text from the entry widget
+        current_text = self.karaoke_name_entry.get()
+        
+        # Define a list of characters to be replaced
+        invalid_chars = [' ', '"', "'", ',', '.', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '-', '=', '+', '\\', '/', '[', ']', '{', '}', '|', '<', '>', '?']
+        
+        # Replace invalid characters with underscores
+        sanitized_text = ''.join(['_' if char in invalid_chars else char for char in current_text])
+        
+        # Update the entry widget with the sanitized text
+        self.karaoke_name_entry.delete(0, tk.END)
+        self.karaoke_name_entry.insert(0, sanitized_text)
      
     def start_tailf(self):
         logfile = betake_path + "/script.log"
