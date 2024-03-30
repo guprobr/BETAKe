@@ -1,10 +1,7 @@
 
 
 A versão que está aqui deve funcionar sem requisitos macabros.
-Mas esse projeto foi descontinuado publicamente, uma vez que para atingir um patamar maior de qualidade
-são necessárias as instalações de mais de 500 pacotes referentes a kernel de baixa latência e Ubuntu Studio
-portanto continuarei a pesquisar de forma privada até que eu tenha maturidade para criar um binário multiplataforma
-que contemple os requisitos de baixa latencia necessarios para a qualidade que creio que as pessoas desejam. VLW
+Mas esse projeto estou descontinuado publicamente, quero entender como construir um binário de código multiplataforma, que atenda os requisitos de funcionalidade e latencia em qualquer sistema de Desktop, inicialmente. portanto continuarei a pesquisar de forma privada até que eu tenha maturidade para criar esses binários pelo mesmo código multiplataforma, eu sou um programador C então Cê vai ver no futuro... algo que contemple os requisitos de baixa latencia necessarios para a qualidade que creio que as pessoas desejam. Foi realmente muito difícil só com o shell script sincronizar e rodar de modo eficaz os filtros, pesados, e nem consegui rodar LIVE, eles rodam em pós-produção. Aguardem.
 
 
 # v3.0 - gammaQ
