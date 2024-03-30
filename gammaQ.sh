@@ -30,7 +30,7 @@ colorecho() {
         "white") coding="\e[37m" ;;
         *) coding="\e[32m" ;;
     esac
-    echo -e "${coding}${message}\e[0m";
+    echo -e "${coding}${message} 🎵 𝄞\e[0m";
 }
 
 
