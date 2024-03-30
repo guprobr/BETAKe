@@ -51,32 +51,30 @@ O script realiza várias etapas para processar e produzir um karaokê completo a
 
 O Shibata Dithering é um método de dithering usado para melhorar a qualidade de áudio digital. No contexto do script, é aplicado usando o SoX (Sound eXchange), uma poderosa ferramenta de processamento de áudio.
 A linha 
-'''
-sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof
-''' 
+```sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof``` 
 cria um perfil de ruído a partir dos primeiros 5 segundos do arquivo de áudio gerado anteriormente.
 Em seguida, 
-'''
+```
 sox "${VOCAL_FILE}" "${OUT_VOCAL}" noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 dither -s -f shibata 
-'''
+```
 aplica a redução de ruído usando o perfil de ruído criado e aplica o Shibata Dithering para melhorar a qualidade do áudio.
 
 ### Algoritmo de Ajuste Vocal Gareus XC42:
 
 O Gareus XC42 é um algoritmo de ajuste vocal desenvolvido por Robin Gareus. Ele é usado para ajustar e aprimorar a qualidade das vozes nas gravações de áudio.
 A linha 
-'''
+```
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Live http://gareus.org/oss/lv2/fat1 
-'''
+```
 aplica esse algoritmo ao arquivo de áudio vocal, gerando um novo arquivo de áudio aprimorado.
 
 ### Algoritmo de Ajuste Vocal Auburn Sound's Graillon:
 
 O Graillon é um plugin de processamento de áudio desenvolvido pela Auburn Sounds, usado para ajustar e modificar vozes.
 A linha 
-'''
+```
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Younger\ Speech -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 -c 1:input_38 -c 2:input_39 https://www.auburnsounds.com/products/Graillon.html40733132#stereo 
-'''
+```
 aplica o plugin Graillon ao arquivo de áudio vocal, com diferentes parâmetros de ajuste especificados.
 
 * Esses algoritmos são aplicados para melhorar a qualidade do áudio vocal, reduzir o ruído e ajustar características específicas da voz para produzir um resultado final mais agradável e profissional.
@@ -86,51 +84,51 @@ aplica o plugin Graillon ao arquivo de áudio vocal, com diferentes parâmetros 
 
 ### Configuração do Áudio:
 
-'''
+```
 [0:a]volume=volume=0.35, aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, aresample=resampler=soxr:osf=s16[playback];
-'''
+```
 Esta parte do código é responsável por configurar o áudio proveniente da primeira entrada (índice [0:a]).
-'''
+```
 volume=0.35
-'''
+```
 Define o volume do áudio para 35% do volume original.
-'''
+```
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo
-'''
+```
 Define o formato de amostragem (fltp), a taxa de amostragem (44100 Hz) e o layout de canal (estéreo).
-'''
+```
 aresample=resampler=soxr:osf=s16 
-'''
+```
 
 Aplica um redimensionamento de amostra usando o resampler SoX Resampler (soxr) para converter o áudio para um formato de amostra de 16 bits.
 
 ### Processamento do Áudio Vocal:
-'''
+```
 [1:a] adeclip, compensationdelay, alimiter, speechnorm, acompressor, aecho=0.8:0.8:56:0.33, treble=g=4, aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, aresample=resampler=soxr:osf=s16:precision=33[vocals];
-'''
+```
 Esta parte processa o áudio proveniente da segunda entrada (índice [1:a]), que é o áudio vocal.
 adeclip, compensationdelay, alimiter, speechnorm, acompressor: Aplicam uma série de filtros e efeitos de áudio, como remoção de distorção, atraso de compensação, limitação, normalização de volume e compressão.
 aecho=0.8:0.8:56:0.33: Adiciona um eco ao áudio com os parâmetros especificados.
 treble=g=4: Ajusta o nível de agudos do áudio.
-'''
+```
 aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo
-'''
+```
 Define o formato de amostragem, taxa de amostragem e layout de canal do áudio vocal.
-'''
+```
 aresample=resampler=soxr:osf=s16:precision=33
-'''
+```
 Aplica um redimensionamento de amostra ao áudio vocal usando o SoX Resampler.
 
 ### Mesclagem de Áudio:
-'''
+```
 [playback][vocals] amix=inputs=2:weights=0.45|0.56;
-'''
+```
 Mescla os áudios processados do playback e dos vocais (definidos anteriormente) usando a função amix, onde inputs=2 indica que há duas entradas a serem mescladas e weights=0.45|0.56 especifica os pesos de cada entrada na mesclagem final.
 
 ### Geração de Vídeo:
-'''
+```
 waveform, scale=s=640x360[v1]; gradients=n=7:s=640x360, format=rgba[vscope]; [0:v] scale=s=640x360[v0]; [v1][vscope] xstack=inputs=2, scale=s=640x360[badcoffee]; [v0][badcoffee] vstack=inputs=2, scale=s=640x480;
-'''
+```
 Esta parte configura o vídeo.
 
 * waveform: Gera uma forma de onda do áudio.
