@@ -143,8 +143,8 @@ Essas configurações combinam processamento de áudio e vídeo para produzir um
 
 * por cortesia geramos uma MP3 da performance!
 
-tudo é gravado no diretório ./outputs
-os playbacks baixados ficam em cache em ./recordings
+* tudo é gravado no diretório *./outputs*
+* os playbacks baixados ficam em cache em *./recordings*
 
 # instalação parcialmente implementada
 
