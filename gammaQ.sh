@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "This is gammaQ the new BETAKê by gu.pro.br";
+
 karaoke_name="$1";
 video_url="$2";
 betake_path="$3";
@@ -22,6 +24,12 @@ OUT_DIR="$betake_path/outputs"      # Directory to store output files
 colorecho() {
     color=$1;
     message=$2;
+
+    if [ "${color}" == "" ]; then
+        color="green";
+        
+    fi
+
     # echo with colored escape codes
     case $color in
         "black") coding="\e[30m" ;;
@@ -32,10 +40,12 @@ colorecho() {
         "magenta") coding="\e[35m" ;;
         "cyan") coding="\e[36m" ;;
         "white") coding="\e[37m" ;;
-        *) coding="\e[32m" ;;
+        *) message="$1"; coding="\e[37m" ;;
     esac
     echo -e "${coding}${message}🎵𝄞\e[0m";
 }
+
+colorecho "Welcome!";
 
 translate_vid_format() {
     case "$1" in
@@ -64,10 +74,7 @@ translate_vid_format() {
 
         # Kill the parent process and all its children
         echo "Killing parent process $parent_pid and its children: $child_pids"
-        kill "$parent_pid" "$child_pids"
-
-        # Optionally, wait for the processes to terminate
-        sleep 1
+        kill -9 "$parent_pid" "$child_pids"
 
         # Check if the processes are still running
         for pid in $parent_pid $child_pids; do
@@ -98,8 +105,6 @@ translate_vid_format() {
 
         # Calculate total size in bytes
         local total_size_bytes=$(( (video_size + audio_size) / 8 ))
-         
-       
 
         # Create a dialog box with a progress bar
         (
@@ -114,18 +119,38 @@ translate_vid_format() {
             current_file_size=$(stat -c%s "${1}" )
             local progress;
             progress=$(echo "scale=0; ($current_file_size * 45) / $total_size_bytes " | bc)
-
             
             echo "$progress"
-
             sleep 1;
+
         done
         ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --pulsate --auto-close
     
-        # if it was cancelled, kill, else it wont kill anybody thats already dead, boss.
+        # if pressed to cancel, kill, else it wont kill anybody thats already dead, boss.
         kill -9 "${pid_ffmpeg}" >/dev/null 2>&1;
 
     }
+
+check_validity() {
+    local filename;
+    filename="${1}";
+    
+    # Check if the file exists
+    if [ ! -f "$filename" ]; then
+        colorecho "$filename : File not found!"
+        kill_parent_and_children $$
+        exit
+    fi
+
+    # Use ffprobe to check if the file is a valid MP4
+    if ffprobe -v error -show_entries format=format_name -of default=noprint_wrappers=1:nokey=1 "$filename" 2>/dev/null | grep -q "${2}"; then
+        colorecho "green" "The file '$filename' is a valid ${2}"
+    else
+        colorecho "red" "The file '$filename' is not a valid ${2}"
+        kill_parent_and_children $$
+        exit
+    fi
+}
 
 # Function to generate MP3 from MP4
 generate_mp3() {
@@ -141,7 +166,6 @@ get_process_start_time() {
     start_epoch_sec_ns=$(date +%s.%N)
     echo "$start_epoch_sec_ns"
 }
-
 
 # Function to calculate time difference in seconds
 time_diff_seconds() {
@@ -175,35 +199,35 @@ ff_pid=$!
 }
 
 # Define log file path
-#LOG_FILE="$betake_path/script.log"
-# Load configuration variables
+###LOG_FILE="$betake_path/script.log"
 
+# Load configuration variables and adj volumes
 SINK="$( pactl get-default-sink )"
 colorecho "yellow" " got sink: $SINK";
 SRC_mic="$( pactl get-default-source )"
 colorecho "green" " got mic src: $SRC_mic";
-
-colorecho "aAjustar vol ${SRC_mic} em 45%";
+colorecho "magenta" "aAjustar vol ${SRC_mic} em 45%";
  pactl set-source-volume "${SRC_mic}" 45%;
-colorecho "aAjustar vol default sink 69% USE HEADPHONES";
+colorecho "green" "aAjustar vol default sink 69% USE HEADPHONES";
  pactl set-source-volume "${SINK}"  69%;
-
+colorecho "white" "Loopback monitor do audio ON";
 pactl load-module module-loopback & 
-
 
 ##DOWNLOAD DO PLAYBACK
 #### yt-dlp time!
-colorecho "yellow" "Try upd yt-dlp";
+colorecho "red" "Try upd yt-dlp";
 yt-dlp -U;
 PLAYBACK_BETA="${REC_DIR}/${karaoke_name}_playback.mp4";
 #remove old playbacks
 rm -rf "${REC_DIR}"/"${karaoke_name}"_playback.*;
 # fetch the video title
-PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}")"
+PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}" --enable-file-urls)"
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
+colorecho "red" "${video_url}";
 # Download the video, it will cache the original and copy the playback
-filename=$(yt-dlp "${video_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300")
-yt-dlp "${video_url}" -o "${REC_DIR}/$filename" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --console-title --quiet --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300"
+filename=$(yt-dlp "${video_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --enable-file-urls --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300")
+yt-dlp "${video_url}" -o "${REC_DIR}/$filename" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --enable-file-urls \
+     --no-check-certificates --console-title --quiet --progress --default-search "ytsearch: karaoke Lyrics --match-filter duration < 300"
 cp "${REC_DIR}/$filename" "${PLAYBACK_BETA}";
 
 # perphaps convert
@@ -212,21 +236,31 @@ export LC_ALL=C;
 filename=$(find "$REC_DIR" \( -name "${karaoke_name}_playback.mkv" -o -name "${karaoke_name}_playback.mp4" -o -name "${karaoke_name}_playback.webm" \) -print -quit)
 # Check if a file was found
 if [ -n "$filename" ]; then
-    echo "Using file: $filename"
-# Get total duration of the video and cast to integer
-PLAYBACK_LEN=$( echo "scale=0; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
-colorecho "yellow" "Playback length: ${PLAYBACK_LEN}";
-ffmpeg -y -hide_banner -loglevel error "$filename" "$PLAYBACK_BETA";
-
-else
-    colorecho "red" "No suitable playback file found."
+    colorecho "blue" "Using file: $filename"
+    # Extracting the extension
+    extension=$(basename "$filename" | awk -F . '{print $NF}')
+    colorecho "green" "Extension of the file is: $extension"
+    # Get total duration of the video and cast to integer
+    PLAYBACK_LEN=$( echo "scale=0; $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filename}")/1" | bc ); 
+    colorecho "yellow" "Playback length: ${PLAYBACK_LEN}";
+    # Checking if the extension is not "mp4" (case-insensitive)
+    if [[ ! "$extension" =~ ^mp4$ ]]; then
+        colorecho "red" "The file is not an MP4 file. will convert;"
+        ffmpeg -y -hide_banner -loglevel error "$filename" "$PLAYBACK_BETA";
+            ff_pid=$!;
+        render_display_progress "${PLAYBACK_BETA}" "${ff_pid}";
+    else
+        colorecho "cyan" "The file is an MP4 file already.";
+    fi
+else 
+    colorecho "red" "No suitable playback file found.";
         # Get the PID of the parent process
         parent_pid=$$
         # Call the function to kill the parent process and all its children
         kill_parent_and_children $parent_pid
     exit;
-    
 fi
+check_validity "${PLAYBACK_BETA}" "mp4";
 
 colorecho "cyan" "All setup to sing!";
 # Display message to start recording
@@ -242,26 +276,25 @@ if [ $? == 1 ]; then
 fi
 
 rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
-# Let's Record with webcam  then Post-production
-ext_recz="mp4"
-OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out."${ext_recz}";
+# Let's Record with webcam, then Post-production
+OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out.mp4;
 OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"_enhance.wav;
 	
 colorecho "SING!---Launching webcam;";
 colorecho "blue" "Using video device: $video_dev";
 colorecho "yellow" "Using audio source: ${SRC_mic}";
-
 colorecho "cyan" "WILL try to enable overlay if available in this webcam, to monitor recording";
 
 v4l2-ctl --overlay 1;
 launch_ffmpeg_webcam true;
 
+
 epoch_ff=$( get_process_start_time );
 renice -n -19 "$ff_pid"
     colorecho "green" "FFmpeg start Epoch: $epoch_ff";
     
-# Wait for the output file to be created
+# Wait for the output file to be created and not empty; only then we run ffplay
 while [ ! -s "${OUT_VIDEO}" ]; do
   sleep 0.001; # Adjust sleep time as needed
 done | zenity --progress --text="GET READY TO SING" \
@@ -269,25 +302,41 @@ done | zenity --progress --text="GET READY TO SING" \
 
 colorecho "yellow" "Launch lyrics video";
 
-	        ffplay -left +0 \
-                        -top +0 \
+	        ffplay -left 0 \
+                        -top 0 \
 			        -window_title "SING" -loglevel quiet -hide_banner \
-                    -af "volume=0.15" \
-                    -noborder -exitonkeydown  \
+                    -af "volume=0.10" \
+                    -noborder \
                     -vf "scale=848:480" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
             epoch_ffplay=$( get_process_start_time  );
 
-    colorecho "red" "ffplay start E: $epoch_ffplay";
+    colorecho "red" "ffplay start Epoch: $epoch_ffplay";
         diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
-        colorecho "magenta" "diff_ss: $diff_ss"; # try to compensate if out of sync brutally
+        colorecho "magenta" "diff_ss: $diff_ss"; # try to compensate sync brutally
 
-cronos_play=1 ### RECORDING PROGRESS! If FFmpeg or playback quits, or clicking cancel, recording stops
+# Get screen dimensions
+screen_info=$(xrandr | grep -oP '\d+x\d+\+\d+\+\d+' | head -n 1)
+screen_width=$(echo "$screen_info" | cut -dx -f1)
+screen_height=$(echo "$screen_info" | cut -dx -f2)
+screen_offset_x=$(echo "$screen_info" | cut -d+ -f2)
+screen_offset_y=$(echo "$screen_info" | cut -d+ -f3)
+
+# Calculate coordinates for bottom-right corner
+window_width=800  # Adjust as needed
+window_height=600  # Adjust as needed
+new_x=$((screen_width - window_width - screen_offset_x))
+new_y=$((screen_height - window_height - screen_offset_y))
+
+cronos_play=1 
+### RECORDING PROGRESS! 
+# If FFmpeg or FFplayback quits, or if click cancel, recording stops
+# the time limit of this loop is the duration of entire playback
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
-    sleep 1
-        if [ "$cronos_play" -le 3 ]; then
-            xdotool search --name "Recording" windowactivate
-        fi
+    sleep 3;
+    
+    wmctrl -r "Recording" -e "0,$new_x,$new_y,$window_width,$window_height" -b add,above
+
     cronos_play=$(( "$cronos_play" + 1 ));
     # shellcheck disable=SC2005
     echo $(( ("$cronos_play"*100) / "$PLAYBACK_LEN" ))
@@ -295,18 +344,18 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
             if ! ps -p "$ff_pid" >/dev/null 2>&1; then
                 break
             fi
-            # Check if the player process is still running
+            # Check if the playback process is still running
             if ! ps -p "$ffplay_pid" >/dev/null 2>&1; then
                 break
             fi
 done | zenity --progress --text="Pressing will STOP recorder and start render post-production MP4" \
-              --title="Recording" --width=640 --height=200 --percentage=0 --auto-close
+              --title="Recording" --width=640 --height=320 --percentage=0 --auto-close
 
 # Check if the progress dialog was canceled OR completed
 if [ $? = 1 ]; then
-    colorecho "red" "Recording skipped.";
+    colorecho "red" "Recording skipped before end of playback.";
 else
-    colorecho "cyan" "Progress completed.";
+    colorecho "cyan" "Entire Progress completed.";
 fi
 
 
@@ -314,40 +363,68 @@ colorecho "blue" "Actual playback duration: ${PLAYBACK_LEN}";
 colorecho "red" "Calculated diff sync: $diff_ss";
 
 # give 5sec for recorder graceful finish, just in case :P
-    colorecho "magenta" "Recorded!";
+    colorecho "magenta" "Performance Recorded!";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
              # disable loopback monitor and cam overlay
             pactl unload-module module-loopback;
             v4l2-ctl --overlay 0;
-    sleep 5;        
-   
+    sleep 5;      
+
+   check_validity "${OUT_VIDEO}" "mp4";
+   check_validity "${OUT_VOCAL}" "wav";
+
 ##POSTprod filtering
 colorecho "yellow" "[AuDIO] Apply shibata dithering with SoX, also noise reduction...";
 sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof;
 sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
     noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
                             dither -s -f shibata;
+check_validity "${VOCAL_FILE}" "wav";
 
-colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Gareus XC42...";
+colorecho "yellow" "Apply vocal tuning algorithm Gareus XC42...";
 lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
     -P Live \
     -p mode:Auto  \
-    http://gareus.org/oss/lv2/fat1
+    http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
+    cat lv2.tmp.log;
+    check_validity "${OUT_VOCAL}" "wav";
+
+    if grep -qi clipping ./lv2.tmp.log ; then
+        colorecho "red" "Will try to FIX clipping with declipper. Perphaps you should record again with a lower volume!";
+        ffmpeg -hide_banner -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000,loudnorm;" "${OUT_VOCAL}";
+        check_validity "${OUT_VOCAL}" "wav";
+        colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Gareus XC42...";
+        lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
+            -P Live \
+            -p mode:Auto  \
+            http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
+            cat lv2.tmp.log;
+            check_validity "${VOCAL_FILE}" "wav";
+            cp -ra "${VOCAL_FILE}" "${OUT_VOCAL}";
+            if grep -qi clipping ./lv2.tmp.log ; then
+                colorecho "red" "Still clipping. you should record again with a lower volume!"
+                sleep 5;
+                colorecho "yellow" "Will proceed anyway... :(";
+            fi
+    fi
+    rm -f lv2.tmp.log;
 
 colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Auburn Sound's Graillon...";
 lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
     -P Younger\ Speech \
     -p p9:1.00 -p p20:2.00 -p p15:0.515 -p p17:1.000 -p p18:1.00 \
-    https://www.auburnsounds.com/products/Graillon.html40733132#in1out2
+    https://www.auburnsounds.com/products/Graillon.html40733132#in1out2;
 
-colorecho "red" "[Audio and Video] PostProduction: rendering mix with enhancements."
+check_validity "${VOCAL_FILE}" "wav";
+
+colorecho "red" "PostProduction: rendering the mix avec enhancements."
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
-ffmpeg -y  -loglevel error -hide_banner \
-                                            -i "${PLAYBACK_BETA}" \
+  ffmpeg -y  -loglevel error -hide_banner \
+                                                                        -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${VOCAL_FILE}" \
     -filter_complex "
       [0:a]volume=volume=0.35,
@@ -367,13 +444,15 @@ ffmpeg -y  -loglevel error -hide_banner \
         [0:v]scale=s=640x360[v0];
         [v1][vscope]xstack=inputs=2,scale=s=640x360[badcoffee];
         [v0][badcoffee]vstack=inputs=2,scale=s=640x480;" \
-            -t "${PLAYBACK_LEN}" \
-     -c:v libx264 -b:v 10000k -movflags faststart \
-       -c:a aac -b:a 250k -ar 44100  \
-         "${OUT_FILE}" &
-           ff_pid=$!;
+        -t "${PLAYBACK_LEN}" \
+            -c:v libx264 -b:v 10000k -movflags faststart \
+            -c:a aac -b:a 250k -ar 44100  \
+                "${OUT_FILE}" &
+                ff_pid=$!;
+
 
     render_display_progress "${OUT_FILE}" $ff_pid;
+    check_validity "${OUT_FILE}" "mp4";
 
 colorecho "green" "[BETAKê] Done. Merging final output!" 
     
@@ -390,9 +469,11 @@ colorecho "green" "[BETAKê] Done. Merging final output!"
                 ff_pid=$!;
 
         render_display_progress "${FINAL_FILE}" $ff_pid;
+        check_validity "${FINAL_FILE}" "mp4";
 
 colorecho "yellow" "Generating MP3 too ou outputs dir..";
 generate_mp3 "${FINAL_FILE}" "${OUT_FILE%.*}".mp3;
+check_validity "${OUT_FILE%.*}".mp3 "mp3";
 
 # display resulting video to user    
 ffplay  -loglevel error -hide_banner -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";

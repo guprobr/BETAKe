@@ -5,13 +5,18 @@ betake_path = "./"  # DEFAULT: BETAKE_PATH
 import time
 import threading
 import subprocess
+import os
+import re
+import psutil
+
 import tkinter as tk
+import tkinter.messagebox
 from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter.font import Font
-import re
+import tkinter.filedialog
+import webbrowser
 import numpy as np
-import os
 
 logfile = f'{betake_path}/script.log'  # Path to the log file
 os.chdir(betake_path)
@@ -98,9 +103,13 @@ class App:
         self.video_dev_entry.place(x=300, y=635, width=100)
         self.video_dev_entry.insert(0, "/dev/video0")
 
-        self.select_video_device_button = tk.Button(
+        self.get_fortune_button = tk.Button(
             master, text="yer Fortunes", command=self.get_fortune)
-        self.select_video_device_button.place(x=600, y=595)
+        self.get_fortune_button.place(x=600, y=595)
+
+        self.select_mp4_button = tk.Button(
+            master, text="Select MP4", command=self.select_mp4_file)
+        self.select_mp4_button.place(x=600, y=700)
 
         self.tail_log_button = tk.Button(
             master, text="Tail Logs", command=self.tail_log)
@@ -125,7 +134,7 @@ class App:
 
         # Kill recording button
         self.kill_button = tk.Button(
-            master, text="Kill BETAKê", command=self.kill_recording)
+            master, text="KaraoKe KiLL", command=self.kill_recording)
         self.kill_button.place(x=730, y=600, width=300, height=166)
 
         
@@ -368,6 +377,23 @@ class App:
         default_video_url = youtube_urls[default_video_index]
 
         return default_video_url
+    
+    def select_mp4_file(self):
+        # Open a file dialog to select an MP4 file
+        mp4_file = tkinter.filedialog.askopenfilename(
+            initialdir=betake_path + "/recordings/",
+            title="Select an MP4 file",
+            filetypes=(("MP4 files", "*.mp4"), ("All files", "*.*"))
+        )
+
+        if mp4_file:
+            # Open the selected MP4 file with the default web browser
+            webbrowser.open(f"file://{mp4_file}")
+            self.video_url_entry.insert(0, f"file://{mp4_file}")
+            # Show a dialog asking a yes/no question
+        response = tkinter.messagebox.showinfo(
+            "Preview cached playback", "Click start to record this choice, or choose another cached playback/external URL"
+        )
 
     def start_recording(self):
         # Get karaoke filename and video URL from entry widgets
@@ -389,7 +415,7 @@ class App:
         # Command to execute betaREC.sh with tee for logging
         command = [
             'bash', '-c',
-            f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} {video_dev} 2>&1 | tee -a script.log'
+            f'{betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" 2>&1 | tee -a script.log'
         ]
 
         # Launch gammaQ.sh and redirect output to script.log
@@ -418,14 +444,15 @@ class App:
         if not self.tail_log_open:
             self.tail_log_open = True
             self.tail_log_button.config(state=tk.DISABLED)
+             # Command to housekeep tailing -f script.log
+            command = [ 'wmctrl', '-c', 'Tail_Logs' ]
+            self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-            # Command to execute py script tailing -f script.log
-            command = [
+            # Command to execute gnome-terminal tailing -f script.log
+            command = [ 'gnome-terminal', '-t', 'Tail_Logs', '--',
                 'tail', '-f', f'{betake_path}/script.log'
             ]
-
-            # Create subprocess with shell=True
-            self.subprocess = subprocess.Popen(command, shell=False)
+            self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             # Start a separate thread to check the subprocess status
             threading.Thread(target=check_tail_log_subprocess_status).start()
@@ -435,24 +462,24 @@ class App:
             self.subprocess.terminate()  # Terminate the subprocess
 
     
-    def kill_parent_and_children(self, parent_process_name):
-        try:
-            # disable loopback
-            subprocess.run(["pactl", "unload-module", "module-loopback"])
-            # Find and terminate all children processes
-            subprocess.run(["killall", "-9", parent_process_name])
-        except subprocess.CalledProcessError:
-            print("Error: Failed to find or terminate parent process and its children.")
-            self.output_text.insert(tk.END, "Error: Failed to find or terminate parent process and its children." + '\n')
-       
+    def kill_children(self, parent_process_name):
+        parent_pid = os.getpid()  # Get PID of the parent process (Tkinter window)
+        parent = psutil.Process(parent_pid)
+
+        # Iterate through all child processes
+        for child in parent.children(recursive=True):
+            child.terminate()  # Terminate child process
 
     def kill_recording(self):     
         # Quit the interface, try housekeeping
         self.master.quit()
-        self.kill_parent_and_children("gammaQ.sh")
-        
-        
-        
+        self.kill_children("BETAKe.py")
+         # Command to execute py script tailing -f script.log
+        command = [ 'pactl', 
+                   'unload-module', 'module-loopback'
+        ]
+        # Create subprocess with shell=True
+        self.subprocess = subprocess.Popen(command, shell=False)
 
 def main():
     root = tk.Tk()

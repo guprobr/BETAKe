@@ -40,7 +40,7 @@ if [[ $response == "yes" ]]; then
     colorecho "green" "You chose to continue.";
     sudo apt -y install fortunes*  swh-plugins lsp-plugins alsa-utils \
 	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview \
-    python3-tk python3-pyaudio python3-numpy gir1.2-gtksource-3.0 python3-pexpect \
+    python3-tk python3-pyaudio python3-numpy gir1.2-gtksource-3.0 python3-pexpect python3-psutil \
     sox vocproc lv2file v4l-utils pandoc git;
 
     sudo cp -ra BETAKe.* /usr/bin/;
