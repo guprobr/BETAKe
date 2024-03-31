@@ -225,8 +225,8 @@ ffmpeg  -f v4l2 -video_size "$video_res" -i "$video_dev" \
  
    
 # Wait for the output file to be created
-while [ ! -f "${OUT_VIDEO}" ]; do
-   echo -n ".";  # Adjust sleep time as needed
+while [ ! -s "${OUT_VIDEO}" ]; do
+  sleep 0.001; # Adjust sleep time as needed
 done | zenity --progress --text="GET READY TO SING" \
               --title="Starting to tape!" --width=440 --height=400 --percentage=50 --pulsate --auto-close --auto-kill
 
@@ -315,7 +315,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
 ffmpeg -y -hide_banner -loglevel info -stats  \
                                             -i "${PLAYBACK_BETA}" \
-                                            -i "${OUT_VOCAL}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "
       [0:a]volume=volume=0.35,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
