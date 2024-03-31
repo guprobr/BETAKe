@@ -88,6 +88,11 @@ class App:
         self.select_video_device_button = tk.Button(
             master, text="cfg /dev/video", command=self.select_video_device)
         self.select_video_device_button.place(x=295, y=595)
+        
+        self.video_dev_entry = tk.Entry(master)
+        self.video_dev_entry.place(x=313, y=584, width=100)
+        self.video_dev_entry.insert(0, "/dev/video0")
+        #self.video_dev_entry.bind('<KeyRelease>', self.sanitize_input)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -122,11 +127,12 @@ class App:
         threading.Thread(target=self.start_tailf, daemon=True).start()
 
     def select_video_device(self):
-        global selected_devCam 
         selected_devCam = open_device_selection_dialog(self.master)
         if selected_devCam:
             print(f"Selected video device: {selected_devCam}")
             self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
+            self.video_dev_entry.delete(0, tk.END)
+            self.video_dev_entry.insert(0, selected_devCam)
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)
@@ -354,6 +360,7 @@ class App:
 
             karaoke_name = "BETAKE"
             karaoke_name = self.karaoke_name_entry.get().strip()
+            video_dev = self.video_dev_entry.get().strip()
             video_url = self.video_url_entry.get().strip()
 
             # Set default values if input fields are empty
@@ -362,13 +369,13 @@ class App:
             if not video_url:
                 default_video_url = self.get_default_video_url()
                 video_url = default_video_url
-            if not selected_devCam:
-                selected_devCam = "/dev/video0"
+            if not video_dev:
+                self.video_dev = "/dev/video0"
             
             # Command to execute betaREC.sh with tee for logging
             command = [
                 'bash', '-c',
-                f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} {selected_devCam} 2>&1 | tee -a script.log'
+                f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} {video_dev} 2>&1 | tee -a script.log'
             ]
 
             # Launch betaREC.sh inside xterm and redirect output to script.log
