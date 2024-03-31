@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=gammaQ (BETAKe)
-Exec=/usr/bin/BETAKe.py
+Exec=xterm -title gammaQ -e /usr/bin/BETAKe.py 
+Terminal=true
 Icon=audio-card.png
 Categories=AudioVideo;Recorder;

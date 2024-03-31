@@ -254,7 +254,7 @@ colorecho "yellow" "Using audio source: ${SRC_mic}";
 
 colorecho "cyan" "WILL try to enable overlay if available in this webcam, to monitor recording";
 
-v4l2-clt --overlay 1;
+v4l2-ctl --overlay 1;
 launch_ffmpeg_webcam true;
 
 epoch_ff=$( get_process_start_time );

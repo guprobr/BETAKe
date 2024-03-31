@@ -38,16 +38,23 @@ read -rp "Do you want to continue? (yes/no): " response
 # Check the response
 if [[ $response == "yes" ]]; then
     colorecho "green" "You chose to continue.";
-    sudo apt -y install fortunes*  swh-plugins lsp-plugins alsa-utils yt-dlp \
-	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview python3-tk \
-    python3-pyaudio python3-numpy sox ladspalist vocproc lv2file v4l-utils pandoc git;
+    sudo apt -y install fortunes*  swh-plugins lsp-plugins alsa-utils \
+	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview \
+    python3-tk python3-pyaudio python3-numpy gir1.2-gtksource-3.0 python3-pexpect \
+    sox vocproc lv2file v4l-utils pandoc git;
 
     sudo cp -ra BETAKe.* /usr/bin/;
-    colorecho "blue" "instale qualquer dependencia que faltar no python3, via pip";
+    colorecho "blue" "PS: instale qualquer dependencia que porventura faltar do python3";
     echo "CANTA RAUL -- vou instalar o yt-dlp do github pois os das distros sempre são podres!";
 
+    colorecho "blue" "Vou obter o yt-dlp do github"
     git clone  https://github.com/yt-dlp/yt-dlp/ && cd yt-dlp && make && sudo make install;
     
+    colorecho "green" "Vou instalar o incrivel Graillon versao FREE plugin LV2 para vocal enhancement";
+    sudo cp -ra ./Auburn\ Sounds\ Graillon\ 2.lv2/ /usr/lib/lv2/;
+    sudo chown -R root:root /usr/lib/lv2/Auburn\ Sounds\ Graillon\ 2.lv2;
+    sudo chmod +x /usr/lib/lv2/Auburn\ Sounds\ Graillon\ 2.lv2/AuburnSoundsGraillon2.so;
+
     colorecho "yellow" "vou instalar o atalho .desktop na sua /home";
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
     cp -ra BETAq.desktop /home/"${YOU}"/.local/share/applications/;

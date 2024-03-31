@@ -21,6 +21,7 @@ class DeviceSelectionDialog:
         self.parent = parent
         self.devices = devices
         self.selected_device = None
+        
 
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("Select Video Device")
@@ -58,7 +59,7 @@ def open_device_selection_dialog(parent):
     devices = list_video_devices()
     if not devices:
         print("No video devices found.")
-        App.output_text.insert(tk.END, "No video devices found." + '\n')
+        parent.output_text.insert(tk.END, "No video devices found." + '\n')
         App.kill_recording()
         return
 
@@ -76,7 +77,9 @@ class App:
         # Define instance variables for buttons
         self.test_video_button = None
         self.audio_loopback_button = None
-        
+        self.video_dev_dialog_open = False
+        self.tail_log_open = None
+
         custom_font = Font(family="Terminus", size=12, weight="bold")
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray", font=custom_font)
@@ -94,7 +97,14 @@ class App:
         self.video_dev_entry = tk.Entry(master)
         self.video_dev_entry.place(x=300, y=635, width=100)
         self.video_dev_entry.insert(0, "/dev/video0")
-        #self.video_dev_entry.bind('<KeyRelease>', self.sanitize_input)
+
+        self.select_video_device_button = tk.Button(
+            master, text="yer Fortunes", command=self.get_fortune)
+        self.select_video_device_button.place(x=600, y=595)
+
+        self.tail_log_button = tk.Button(
+            master, text="Tail Logs", command=self.tail_log)
+        self.tail_log_button.place(x=600, y=640)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -129,12 +139,15 @@ class App:
         threading.Thread(target=self.start_tailf, daemon=True).start()
 
     def select_video_device(self):
-        selected_devCam = open_device_selection_dialog(self.master)
-        if selected_devCam:
-            print(f"Selected video device: {selected_devCam}")
-            self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
-            self.video_dev_entry.delete(0, tk.END)
-            self.video_dev_entry.insert(0, selected_devCam)
+        if not self.video_dev_dialog_open:
+            self.video_dev_dialog_open = True
+            selected_devCam = open_device_selection_dialog(self.master)
+            self.video_dev_dialog_open = False
+            if selected_devCam:
+                print(f"Selected video device: {selected_devCam}")
+                self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
+                self.video_dev_entry.delete(0, tk.END)
+                self.video_dev_entry.insert(0, selected_devCam)
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)
@@ -379,7 +392,7 @@ class App:
             f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} {video_dev} 2>&1 | tee -a script.log'
         ]
 
-        # Launch betaREC.sh inside xterm and redirect output to script.log
+        # Launch gammaQ.sh and redirect output to script.log
         self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Define a function to check the subprocess status
@@ -394,17 +407,40 @@ class App:
 
         # Start a separate thread to check the subprocess status
         threading.Thread(target=check_subprocess_status).start()
+    
+    def tail_log(self):
+        def check_tail_log_subprocess_status():
+            self.subprocess.wait()  # Wait for the subprocess to finish
+            # Enable the button when the subprocess finishes
+            self.tail_log_button.config(state=tk.NORMAL)
+            self.tail_log_open = False
+
+        if not self.tail_log_open:
+            self.tail_log_open = True
+            self.tail_log_button.config(state=tk.DISABLED)
+
+            # Command to execute py script tailing -f script.log
+            command = [
+                'tail', '-f', f'{betake_path}/script.log'
+            ]
+
+            # Create subprocess with shell=True
+            self.subprocess = subprocess.Popen(command, shell=False)
+
+            # Start a separate thread to check the subprocess status
+            threading.Thread(target=check_tail_log_subprocess_status).start()
+
+    def cleanup(self):
+        if self.subprocess is not None:
+            self.subprocess.terminate()  # Terminate the subprocess
 
     
     def kill_parent_and_children(self, parent_process_name):
         try:
-            # Find the PID of the parent process
-            parent_pid = subprocess.check_output(["pgrep", parent_process_name]).strip().decode()
-
             # disable loopback
             subprocess.run(["pactl", "unload-module", "module-loopback"])
             # Find and terminate all children processes
-            subprocess.run(["killall", "-TERM", "-P", parent_pid])
+            subprocess.run(["killall", "-9", parent_process_name])
         except subprocess.CalledProcessError:
             print("Error: Failed to find or terminate parent process and its children.")
             self.output_text.insert(tk.END, "Error: Failed to find or terminate parent process and its children." + '\n')
@@ -412,8 +448,9 @@ class App:
 
     def kill_recording(self):     
         # Quit the interface, try housekeeping
-        self.kill_parent_and_children("gammaQ.sh")
         self.master.quit()
+        self.kill_parent_and_children("gammaQ.sh")
+        
         
         
 

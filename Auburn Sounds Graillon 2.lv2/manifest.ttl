@@ -1,0 +1,4609 @@
+@prefix lv2: <http://lv2plug.in/ns/lv2core#>.
+@prefix atom: <http://lv2plug.in/ns/ext/atom#>.
+@prefix doap: <http://usefulinc.com/ns/doap#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix urid: <http://lv2plug.in/ns/ext/urid#>.
+@prefix ui: <http://lv2plug.in/ns/extensions/ui#>.
+@prefix pset: <http://lv2plug.in/ns/ext/presets#>.
+@prefix opts: <http://lv2plug.in/ns/ext/options#>.
+@prefix pprops: <http://lv2plug.in/ns/ext/port-props#>.
+@prefix vendor: <https://www.auburnsounds.com/products/Graillon.html40733132#>.
+
+vendor:mono
+    a lv2:Plugin, lv2:PitchPlugin ;
+    lv2:binary <AuburnSoundsGraillon2.so> ;
+    doap:name "Graillon 2" ;
+    doap:maintainer [ foaf:name "Auburn Sounds" ] ;
+    lv2:requiredFeature opts:options ,
+                        urid:map ;
+    ui:ui vendor:ui;
+    lv2:port
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 0 ;
+        lv2:symbol "p0" ;
+        lv2:name "Lead Gain" ;
+        lv2:default 0.707946 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 1 ;
+        lv2:symbol "p1" ;
+        lv2:name "2nd Sub Octave Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 2 ;
+        lv2:symbol "p2" ;
+        lv2:name "2nd Sub Fifth Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ;
+        lv2:symbol "p3" ;
+        lv2:name "1st Sub Octave Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ;
+        lv2:symbol "p4" ;
+        lv2:name "1st Sub Fifth Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ;
+        lv2:symbol "p5" ;
+        lv2:name "Dry/Wet" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ;
+        lv2:symbol "p6" ;
+        lv2:name "Dry Mix" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ;
+        lv2:symbol "p7" ;
+        lv2:name "Low Cut Frequency" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ;
+        lv2:symbol "p8" ;
+        lv2:name "Output Level" ;
+        lv2:default 0.707946 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ;
+        lv2:symbol "p9" ;
+        lv2:name "Placebo" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ;
+        lv2:symbol "p10" ;
+        lv2:name "Bitdepth" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ;
+        lv2:symbol "p11" ;
+        lv2:name "Quantize" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ;
+        lv2:symbol "p12" ;
+        lv2:name "Ring Mode" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ;
+        lv2:symbol "p13" ;
+        lv2:name "Mod Octave" ;
+        lv2:default 0.5 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ;
+        lv2:symbol "p14" ;
+        lv2:name "Mono Reduction" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 15 ;
+        lv2:symbol "p15" ;
+        lv2:name "Pitch Shift" ;
+        lv2:default 0.5 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 16 ;
+        lv2:symbol "p16" ;
+        lv2:name "Preserve Formants" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 17 ;
+        lv2:symbol "p17" ;
+        lv2:name "Correction" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 18 ;
+        lv2:symbol "p18" ;
+        lv2:name "Pitch Smoothing" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 19 ;
+        lv2:symbol "p19" ;
+        lv2:name "Snap Range" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 20 ;
+        lv2:symbol "p20" ;
+        lv2:name "Reference" ;
+        lv2:default 0.504682 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 21 ;
+        lv2:symbol "p21" ;
+        lv2:name "Inertia" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 22 ;
+        lv2:symbol "p22" ;
+        lv2:name "Allow C" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 23 ;
+        lv2:symbol "p23" ;
+        lv2:name "Allow C#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 24 ;
+        lv2:symbol "p24" ;
+        lv2:name "Allow D" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 25 ;
+        lv2:symbol "p25" ;
+        lv2:name "Allow D#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 26 ;
+        lv2:symbol "p26" ;
+        lv2:name "Allow E" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 27 ;
+        lv2:symbol "p27" ;
+        lv2:name "Allow F" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 28 ;
+        lv2:symbol "p28" ;
+        lv2:name "Allow F#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 29 ;
+        lv2:symbol "p29" ;
+        lv2:name "Allow G" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 30 ;
+        lv2:symbol "p30" ;
+        lv2:name "Allow G#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 31 ;
+        lv2:symbol "p31" ;
+        lv2:name "Allow A" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 32 ;
+        lv2:symbol "p32" ;
+        lv2:name "Allow A#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 33 ;
+        lv2:symbol "p33" ;
+        lv2:name "Allow B" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 34 ;
+        lv2:symbol "p34" ;
+        lv2:name "Inv. 2nd Sub Octave" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 35 ;
+        lv2:symbol "p35" ;
+        lv2:name "Inv. 2nd Sub Quint" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 36 ;
+        lv2:symbol "p36" ;
+        lv2:name "Inv. 1st Sub Octave#" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 37 ;
+        lv2:symbol "p37" ;
+        lv2:name "Inv. 1st Sub Quint" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:InputPort ;
+        lv2:index 38;
+        lv2:symbol "input_38" ;
+        lv2:name "Input38" ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:OutputPort ;
+        lv2:index 39;
+        lv2:symbol "output_0" ;
+        lv2:name "Output0" ;
+    ] ,
+    [
+        a lv2:ControlPort , lv2:OutputPort ;
+        lv2:index 40;
+        lv2:designation lv2:latency ;
+        lv2:symbol "latency" ;
+        lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency, lv2:connectionOptional, pprops:notOnGUI ;
+    ] ,
+    [
+        a lv2:InputPort, atom:AtomPort ;
+        atom:bufferType atom:Sequence ;
+        lv2:portProperty lv2:connectionOptional ;
+        atom:supports <http://lv2plug.in/ns/ext/midi#MidiEvent> ;
+        atom:supports <http://lv2plug.in/ns/ext/time#Position> ;
+        lv2:designation lv2:control ;
+        lv2:index 41;
+        lv2:symbol "lv2_events_in" ;
+        lv2:name "Events Input"
+    ] .
+vendor:in2out1
+    a lv2:Plugin, lv2:PitchPlugin ;
+    lv2:binary <AuburnSoundsGraillon2.so> ;
+    doap:name "Graillon 2" ;
+    doap:maintainer [ foaf:name "Auburn Sounds" ] ;
+    lv2:requiredFeature opts:options ,
+                        urid:map ;
+    ui:ui vendor:ui;
+    lv2:port
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 0 ;
+        lv2:symbol "p0" ;
+        lv2:name "Lead Gain" ;
+        lv2:default 0.707946 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 1 ;
+        lv2:symbol "p1" ;
+        lv2:name "2nd Sub Octave Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 2 ;
+        lv2:symbol "p2" ;
+        lv2:name "2nd Sub Fifth Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ;
+        lv2:symbol "p3" ;
+        lv2:name "1st Sub Octave Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ;
+        lv2:symbol "p4" ;
+        lv2:name "1st Sub Fifth Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ;
+        lv2:symbol "p5" ;
+        lv2:name "Dry/Wet" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ;
+        lv2:symbol "p6" ;
+        lv2:name "Dry Mix" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ;
+        lv2:symbol "p7" ;
+        lv2:name "Low Cut Frequency" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ;
+        lv2:symbol "p8" ;
+        lv2:name "Output Level" ;
+        lv2:default 0.707946 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ;
+        lv2:symbol "p9" ;
+        lv2:name "Placebo" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ;
+        lv2:symbol "p10" ;
+        lv2:name "Bitdepth" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ;
+        lv2:symbol "p11" ;
+        lv2:name "Quantize" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ;
+        lv2:symbol "p12" ;
+        lv2:name "Ring Mode" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ;
+        lv2:symbol "p13" ;
+        lv2:name "Mod Octave" ;
+        lv2:default 0.5 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ;
+        lv2:symbol "p14" ;
+        lv2:name "Mono Reduction" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 15 ;
+        lv2:symbol "p15" ;
+        lv2:name "Pitch Shift" ;
+        lv2:default 0.5 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 16 ;
+        lv2:symbol "p16" ;
+        lv2:name "Preserve Formants" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 17 ;
+        lv2:symbol "p17" ;
+        lv2:name "Correction" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 18 ;
+        lv2:symbol "p18" ;
+        lv2:name "Pitch Smoothing" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 19 ;
+        lv2:symbol "p19" ;
+        lv2:name "Snap Range" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 20 ;
+        lv2:symbol "p20" ;
+        lv2:name "Reference" ;
+        lv2:default 0.504682 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 21 ;
+        lv2:symbol "p21" ;
+        lv2:name "Inertia" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 22 ;
+        lv2:symbol "p22" ;
+        lv2:name "Allow C" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 23 ;
+        lv2:symbol "p23" ;
+        lv2:name "Allow C#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 24 ;
+        lv2:symbol "p24" ;
+        lv2:name "Allow D" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 25 ;
+        lv2:symbol "p25" ;
+        lv2:name "Allow D#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 26 ;
+        lv2:symbol "p26" ;
+        lv2:name "Allow E" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 27 ;
+        lv2:symbol "p27" ;
+        lv2:name "Allow F" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 28 ;
+        lv2:symbol "p28" ;
+        lv2:name "Allow F#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 29 ;
+        lv2:symbol "p29" ;
+        lv2:name "Allow G" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 30 ;
+        lv2:symbol "p30" ;
+        lv2:name "Allow G#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 31 ;
+        lv2:symbol "p31" ;
+        lv2:name "Allow A" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 32 ;
+        lv2:symbol "p32" ;
+        lv2:name "Allow A#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 33 ;
+        lv2:symbol "p33" ;
+        lv2:name "Allow B" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 34 ;
+        lv2:symbol "p34" ;
+        lv2:name "Inv. 2nd Sub Octave" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 35 ;
+        lv2:symbol "p35" ;
+        lv2:name "Inv. 2nd Sub Quint" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 36 ;
+        lv2:symbol "p36" ;
+        lv2:name "Inv. 1st Sub Octave#" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 37 ;
+        lv2:symbol "p37" ;
+        lv2:name "Inv. 1st Sub Quint" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:InputPort ;
+        lv2:index 38;
+        lv2:symbol "input_38" ;
+        lv2:name "Input38" ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:InputPort ;
+        lv2:index 39;
+        lv2:symbol "input_39" ;
+        lv2:name "Input39" ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:OutputPort ;
+        lv2:index 40;
+        lv2:symbol "output_0" ;
+        lv2:name "Output0" ;
+    ] ,
+    [
+        a lv2:ControlPort , lv2:OutputPort ;
+        lv2:index 41;
+        lv2:designation lv2:latency ;
+        lv2:symbol "latency" ;
+        lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency, lv2:connectionOptional, pprops:notOnGUI ;
+    ] ,
+    [
+        a lv2:InputPort, atom:AtomPort ;
+        atom:bufferType atom:Sequence ;
+        lv2:portProperty lv2:connectionOptional ;
+        atom:supports <http://lv2plug.in/ns/ext/midi#MidiEvent> ;
+        atom:supports <http://lv2plug.in/ns/ext/time#Position> ;
+        lv2:designation lv2:control ;
+        lv2:index 42;
+        lv2:symbol "lv2_events_in" ;
+        lv2:name "Events Input"
+    ] .
+vendor:in1out2
+    a lv2:Plugin, lv2:PitchPlugin ;
+    lv2:binary <AuburnSoundsGraillon2.so> ;
+    doap:name "Graillon 2" ;
+    doap:maintainer [ foaf:name "Auburn Sounds" ] ;
+    lv2:requiredFeature opts:options ,
+                        urid:map ;
+    ui:ui vendor:ui;
+    lv2:port
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 0 ;
+        lv2:symbol "p0" ;
+        lv2:name "Lead Gain" ;
+        lv2:default 0.707946 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 1 ;
+        lv2:symbol "p1" ;
+        lv2:name "2nd Sub Octave Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 2 ;
+        lv2:symbol "p2" ;
+        lv2:name "2nd Sub Fifth Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ;
+        lv2:symbol "p3" ;
+        lv2:name "1st Sub Octave Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ;
+        lv2:symbol "p4" ;
+        lv2:name "1st Sub Fifth Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ;
+        lv2:symbol "p5" ;
+        lv2:name "Dry/Wet" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ;
+        lv2:symbol "p6" ;
+        lv2:name "Dry Mix" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ;
+        lv2:symbol "p7" ;
+        lv2:name "Low Cut Frequency" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ;
+        lv2:symbol "p8" ;
+        lv2:name "Output Level" ;
+        lv2:default 0.707946 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ;
+        lv2:symbol "p9" ;
+        lv2:name "Placebo" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ;
+        lv2:symbol "p10" ;
+        lv2:name "Bitdepth" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ;
+        lv2:symbol "p11" ;
+        lv2:name "Quantize" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ;
+        lv2:symbol "p12" ;
+        lv2:name "Ring Mode" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ;
+        lv2:symbol "p13" ;
+        lv2:name "Mod Octave" ;
+        lv2:default 0.5 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ;
+        lv2:symbol "p14" ;
+        lv2:name "Mono Reduction" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 15 ;
+        lv2:symbol "p15" ;
+        lv2:name "Pitch Shift" ;
+        lv2:default 0.5 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 16 ;
+        lv2:symbol "p16" ;
+        lv2:name "Preserve Formants" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 17 ;
+        lv2:symbol "p17" ;
+        lv2:name "Correction" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 18 ;
+        lv2:symbol "p18" ;
+        lv2:name "Pitch Smoothing" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 19 ;
+        lv2:symbol "p19" ;
+        lv2:name "Snap Range" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 20 ;
+        lv2:symbol "p20" ;
+        lv2:name "Reference" ;
+        lv2:default 0.504682 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 21 ;
+        lv2:symbol "p21" ;
+        lv2:name "Inertia" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 22 ;
+        lv2:symbol "p22" ;
+        lv2:name "Allow C" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 23 ;
+        lv2:symbol "p23" ;
+        lv2:name "Allow C#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 24 ;
+        lv2:symbol "p24" ;
+        lv2:name "Allow D" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 25 ;
+        lv2:symbol "p25" ;
+        lv2:name "Allow D#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 26 ;
+        lv2:symbol "p26" ;
+        lv2:name "Allow E" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 27 ;
+        lv2:symbol "p27" ;
+        lv2:name "Allow F" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 28 ;
+        lv2:symbol "p28" ;
+        lv2:name "Allow F#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 29 ;
+        lv2:symbol "p29" ;
+        lv2:name "Allow G" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 30 ;
+        lv2:symbol "p30" ;
+        lv2:name "Allow G#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 31 ;
+        lv2:symbol "p31" ;
+        lv2:name "Allow A" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 32 ;
+        lv2:symbol "p32" ;
+        lv2:name "Allow A#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 33 ;
+        lv2:symbol "p33" ;
+        lv2:name "Allow B" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 34 ;
+        lv2:symbol "p34" ;
+        lv2:name "Inv. 2nd Sub Octave" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 35 ;
+        lv2:symbol "p35" ;
+        lv2:name "Inv. 2nd Sub Quint" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 36 ;
+        lv2:symbol "p36" ;
+        lv2:name "Inv. 1st Sub Octave#" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 37 ;
+        lv2:symbol "p37" ;
+        lv2:name "Inv. 1st Sub Quint" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:InputPort ;
+        lv2:index 38;
+        lv2:symbol "input_38" ;
+        lv2:name "Input38" ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:OutputPort ;
+        lv2:index 39;
+        lv2:symbol "output_0" ;
+        lv2:name "Output0" ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:OutputPort ;
+        lv2:index 40;
+        lv2:symbol "output_1" ;
+        lv2:name "Output1" ;
+    ] ,
+    [
+        a lv2:ControlPort , lv2:OutputPort ;
+        lv2:index 41;
+        lv2:designation lv2:latency ;
+        lv2:symbol "latency" ;
+        lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency, lv2:connectionOptional, pprops:notOnGUI ;
+    ] ,
+    [
+        a lv2:InputPort, atom:AtomPort ;
+        atom:bufferType atom:Sequence ;
+        lv2:portProperty lv2:connectionOptional ;
+        atom:supports <http://lv2plug.in/ns/ext/midi#MidiEvent> ;
+        atom:supports <http://lv2plug.in/ns/ext/time#Position> ;
+        lv2:designation lv2:control ;
+        lv2:index 42;
+        lv2:symbol "lv2_events_in" ;
+        lv2:name "Events Input"
+    ] .
+vendor:stereo
+    a lv2:Plugin, lv2:PitchPlugin ;
+    lv2:binary <AuburnSoundsGraillon2.so> ;
+    doap:name "Graillon 2" ;
+    doap:maintainer [ foaf:name "Auburn Sounds" ] ;
+    lv2:requiredFeature opts:options ,
+                        urid:map ;
+    ui:ui vendor:ui;
+    lv2:port
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 0 ;
+        lv2:symbol "p0" ;
+        lv2:name "Lead Gain" ;
+        lv2:default 0.707946 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 1 ;
+        lv2:symbol "p1" ;
+        lv2:name "2nd Sub Octave Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 2 ;
+        lv2:symbol "p2" ;
+        lv2:name "2nd Sub Fifth Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 3 ;
+        lv2:symbol "p3" ;
+        lv2:name "1st Sub Octave Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 4 ;
+        lv2:symbol "p4" ;
+        lv2:name "1st Sub Fifth Amount" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 5 ;
+        lv2:symbol "p5" ;
+        lv2:name "Dry/Wet" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 6 ;
+        lv2:symbol "p6" ;
+        lv2:name "Dry Mix" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 7 ;
+        lv2:symbol "p7" ;
+        lv2:name "Low Cut Frequency" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 8 ;
+        lv2:symbol "p8" ;
+        lv2:name "Output Level" ;
+        lv2:default 0.707946 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 9 ;
+        lv2:symbol "p9" ;
+        lv2:name "Placebo" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 10 ;
+        lv2:symbol "p10" ;
+        lv2:name "Bitdepth" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 11 ;
+        lv2:symbol "p11" ;
+        lv2:name "Quantize" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 12 ;
+        lv2:symbol "p12" ;
+        lv2:name "Ring Mode" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 13 ;
+        lv2:symbol "p13" ;
+        lv2:name "Mod Octave" ;
+        lv2:default 0.5 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 14 ;
+        lv2:symbol "p14" ;
+        lv2:name "Mono Reduction" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 15 ;
+        lv2:symbol "p15" ;
+        lv2:name "Pitch Shift" ;
+        lv2:default 0.5 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 16 ;
+        lv2:symbol "p16" ;
+        lv2:name "Preserve Formants" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 17 ;
+        lv2:symbol "p17" ;
+        lv2:name "Correction" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 18 ;
+        lv2:symbol "p18" ;
+        lv2:name "Pitch Smoothing" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 19 ;
+        lv2:symbol "p19" ;
+        lv2:name "Snap Range" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 20 ;
+        lv2:symbol "p20" ;
+        lv2:name "Reference" ;
+        lv2:default 0.504682 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 21 ;
+        lv2:symbol "p21" ;
+        lv2:name "Inertia" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 22 ;
+        lv2:symbol "p22" ;
+        lv2:name "Allow C" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 23 ;
+        lv2:symbol "p23" ;
+        lv2:name "Allow C#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 24 ;
+        lv2:symbol "p24" ;
+        lv2:name "Allow D" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 25 ;
+        lv2:symbol "p25" ;
+        lv2:name "Allow D#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 26 ;
+        lv2:symbol "p26" ;
+        lv2:name "Allow E" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 27 ;
+        lv2:symbol "p27" ;
+        lv2:name "Allow F" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 28 ;
+        lv2:symbol "p28" ;
+        lv2:name "Allow F#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 29 ;
+        lv2:symbol "p29" ;
+        lv2:name "Allow G" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 30 ;
+        lv2:symbol "p30" ;
+        lv2:name "Allow G#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 31 ;
+        lv2:symbol "p31" ;
+        lv2:name "Allow A" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 32 ;
+        lv2:symbol "p32" ;
+        lv2:name "Allow A#" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 33 ;
+        lv2:symbol "p33" ;
+        lv2:name "Allow B" ;
+        lv2:default 1 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 34 ;
+        lv2:symbol "p34" ;
+        lv2:name "Inv. 2nd Sub Octave" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 35 ;
+        lv2:symbol "p35" ;
+        lv2:name "Inv. 2nd Sub Quint" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 36 ;
+        lv2:symbol "p36" ;
+        lv2:name "Inv. 1st Sub Octave#" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:InputPort , lv2:ControlPort ;
+        lv2:index 37 ;
+        lv2:symbol "p37" ;
+        lv2:name "Inv. 1st Sub Quint" ;
+        lv2:default 0 ;
+        lv2:minimum 0.0 ;
+        lv2:maximum 1.0 ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:InputPort ;
+        lv2:index 38;
+        lv2:symbol "input_38" ;
+        lv2:name "Input38" ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:InputPort ;
+        lv2:index 39;
+        lv2:symbol "input_39" ;
+        lv2:name "Input39" ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:OutputPort ;
+        lv2:index 40;
+        lv2:symbol "output_0" ;
+        lv2:name "Output0" ;
+    ] ,
+    [
+        a lv2:AudioPort , lv2:OutputPort ;
+        lv2:index 41;
+        lv2:symbol "output_1" ;
+        lv2:name "Output1" ;
+    ] ,
+    [
+        a lv2:ControlPort , lv2:OutputPort ;
+        lv2:index 42;
+        lv2:designation lv2:latency ;
+        lv2:symbol "latency" ;
+        lv2:name "Latency" ;
+        lv2:portProperty lv2:reportsLatency, lv2:connectionOptional, pprops:notOnGUI ;
+    ] ,
+    [
+        a lv2:InputPort, atom:AtomPort ;
+        atom:bufferType atom:Sequence ;
+        lv2:portProperty lv2:connectionOptional ;
+        atom:supports <http://lv2plug.in/ns/ext/midi#MidiEvent> ;
+        atom:supports <http://lv2plug.in/ns/ext/time#Position> ;
+        lv2:designation lv2:control ;
+        lv2:index 43;
+        lv2:symbol "lv2_events_in" ;
+        lv2:name "Events Input"
+    ] .
+
+vendor:preset0
+        a pset:Preset ;
+        rdfs:label "Default" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset1
+        a pset:Preset ;
+        rdfs:label "Robot Correct" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset2
+        a pset:Preset ;
+        rdfs:label "Correct C major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset3
+        a pset:Preset ;
+        rdfs:label "Correct C# major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset4
+        a pset:Preset ;
+        rdfs:label "Correct D major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset5
+        a pset:Preset ;
+        rdfs:label "Correct D# major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset6
+        a pset:Preset ;
+        rdfs:label "Correct E major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset7
+        a pset:Preset ;
+        rdfs:label "Correct F major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset8
+        a pset:Preset ;
+        rdfs:label "Correct F# major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset9
+        a pset:Preset ;
+        rdfs:label "Correct G major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset10
+        a pset:Preset ;
+        rdfs:label "Correct G# major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset11
+        a pset:Preset ;
+        rdfs:label "Correct A major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset12
+        a pset:Preset ;
+        rdfs:label "Correct A# major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset13
+        a pset:Preset ;
+        rdfs:label "Correct B major" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset14
+        a pset:Preset ;
+        rdfs:label "Correct C minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset15
+        a pset:Preset ;
+        rdfs:label "Correct C# minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset16
+        a pset:Preset ;
+        rdfs:label "Correct D minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset17
+        a pset:Preset ;
+        rdfs:label "Correct D# minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset18
+        a pset:Preset ;
+        rdfs:label "Correct E minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset19
+        a pset:Preset ;
+        rdfs:label "Correct F minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset20
+        a pset:Preset ;
+        rdfs:label "Correct F# minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset21
+        a pset:Preset ;
+        rdfs:label "Correct G minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset22
+        a pset:Preset ;
+        rdfs:label "Correct G# minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset23
+        a pset:Preset ;
+        rdfs:label "Correct A minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 0 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 0 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset24
+        a pset:Preset ;
+        rdfs:label "Correct A# minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 0 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 0 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 0 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 0 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 0 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset25
+        a pset:Preset ;
+        rdfs:label "Correct B minor" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p22"; pset:value 0 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 0 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 0 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 0 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 0 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset26
+        a pset:Preset ;
+        rdfs:label "Add Sub Quint" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.6 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0.6 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.291666 
+        ] , [
+            lv2:symbol "p16"; pset:value 0.2 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset27
+        a pset:Preset ;
+        rdfs:label "Simple Octaver" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.3 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0.66 
+        ] , [
+            lv2:symbol "p7"; pset:value 0.3 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0 
+        ] , [
+            lv2:symbol "p16"; pset:value 1 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset28
+        a pset:Preset ;
+        rdfs:label "Tuner Doubler" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 0.9 
+        ] , [
+            lv2:symbol "p6"; pset:value 0.7 
+        ] , [
+            lv2:symbol "p7"; pset:value 0.25 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5004 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 1 
+        ] , [
+            lv2:symbol "p18"; pset:value 0.7 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0.25 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset29
+        a pset:Preset ;
+        rdfs:label "Younger Speech" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.55 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset30
+        a pset:Preset ;
+        rdfs:label "Only in Full version" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset31
+        a pset:Preset ;
+        rdfs:label "Only in Full version" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset32
+        a pset:Preset ;
+        rdfs:label "Only in Full version" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset33
+        a pset:Preset ;
+        rdfs:label "Only in Full version" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset34
+        a pset:Preset ;
+        rdfs:label "Only in Full version" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset35
+        a pset:Preset ;
+        rdfs:label "Only in Full version" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:preset36
+        a pset:Preset ;
+        rdfs:label "Only in Full version" ;
+        lv2:port [
+            lv2:symbol "p0"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p1"; pset:value 0 
+        ] , [
+            lv2:symbol "p2"; pset:value 0 
+        ] , [
+            lv2:symbol "p3"; pset:value 0 
+        ] , [
+            lv2:symbol "p4"; pset:value 0 
+        ] , [
+            lv2:symbol "p5"; pset:value 1 
+        ] , [
+            lv2:symbol "p6"; pset:value 0 
+        ] , [
+            lv2:symbol "p7"; pset:value 0 
+        ] , [
+            lv2:symbol "p8"; pset:value 0.707946 
+        ] , [
+            lv2:symbol "p9"; pset:value 0 
+        ] , [
+            lv2:symbol "p10"; pset:value 0 
+        ] , [
+            lv2:symbol "p11"; pset:value 0 
+        ] , [
+            lv2:symbol "p12"; pset:value 1 
+        ] , [
+            lv2:symbol "p13"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p14"; pset:value 0 
+        ] , [
+            lv2:symbol "p15"; pset:value 0.5 
+        ] , [
+            lv2:symbol "p16"; pset:value 0 
+        ] , [
+            lv2:symbol "p17"; pset:value 0 
+        ] , [
+            lv2:symbol "p18"; pset:value 0 
+        ] , [
+            lv2:symbol "p19"; pset:value 1 
+        ] , [
+            lv2:symbol "p20"; pset:value 0.504682 
+        ] , [
+            lv2:symbol "p21"; pset:value 0 
+        ] , [
+            lv2:symbol "p22"; pset:value 1 
+        ] , [
+            lv2:symbol "p23"; pset:value 1 
+        ] , [
+            lv2:symbol "p24"; pset:value 1 
+        ] , [
+            lv2:symbol "p25"; pset:value 1 
+        ] , [
+            lv2:symbol "p26"; pset:value 1 
+        ] , [
+            lv2:symbol "p27"; pset:value 1 
+        ] , [
+            lv2:symbol "p28"; pset:value 1 
+        ] , [
+            lv2:symbol "p29"; pset:value 1 
+        ] , [
+            lv2:symbol "p30"; pset:value 1 
+        ] , [
+            lv2:symbol "p31"; pset:value 1 
+        ] , [
+            lv2:symbol "p32"; pset:value 1 
+        ] , [
+            lv2:symbol "p33"; pset:value 1 
+        ] , [
+            lv2:symbol "p34"; pset:value 0 
+        ] , [
+            lv2:symbol "p35"; pset:value 0 
+        ] , [
+            lv2:symbol "p36"; pset:value 0 
+        ] , [
+            lv2:symbol "p37"; pset:value 0 
+        ] ;
+        lv2:appliesTo vendor:mono , vendor:in2out1 , vendor:in1out2 , vendor:stereo . 
+
+vendor:ui
+    a ui:X11UI;
+    lv2:optionalFeature ui:noUserResize ,
+                        ui:resize ,
+                        ui:touch ;
+    lv2:requiredFeature opts:options ,
+                        urid:map ,
+                        <http://lv2plug.in/ns/ext/instance-access> ;
+    ui:binary <AuburnSoundsGraillon2.so> .
