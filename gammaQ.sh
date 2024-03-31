@@ -54,7 +54,7 @@ colorecho() {
         # Check if the processes are still running
         for pid in $parent_pid $child_pids; do
             if ps -p "$pid" > /dev/null; then
-                echo "Process $pid is still running"
+                colorecho "red" "Process $pid is still running"
             else
                 echo "Process $pid has been terminated"
             fi
@@ -306,8 +306,7 @@ colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Auburn Sound's Graillon
 lv2file -o "${OUT_VOCAL}" -i "${VOCAL_FILE}" \
     -P Younger\ Speech \
     -p p9:1.00 -p p20:2.00 -p p15:0.515 -p p17:1.000 -p p18:1.00 \
-    -c 1:input_38 -c 2:input_39  \
-    https://www.auburnsounds.com/products/Graillon.html40733132#stereo
+    https://www.auburnsounds.com/products/Graillon.html40733132#in1out2
 
 colorecho "red" "rendering final mix and video"
 export LC_ALL=C;  
