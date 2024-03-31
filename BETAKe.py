@@ -109,7 +109,7 @@ class App:
 
         self.select_mp4_button = tk.Button(
             master, text="Select MP4", command=self.select_mp4_file)
-        self.select_mp4_button.place(x=600, y=700)
+        self.select_mp4_button.place(x=600, y=700, height=69)
 
         self.tail_log_button = tk.Button(
             master, text="Tail Logs", command=self.tail_log)
@@ -137,7 +137,16 @@ class App:
             master, text="KaraoKe KiLL", command=self.kill_recording)
         self.kill_button.place(x=730, y=600, width=300, height=166)
 
-        
+        # Kill recording button
+        self.clear_url_button = tk.Button(
+            master, text="clear URL", command=self.clear_video_url)
+        self.clear_url_button.place(x=900, y=570)
+
+        # Kill recording button
+        self.clear_karaoke_name_button = tk.Button(
+            master, text="clear FILENAME", command=self.clear_karaoke_name)
+        self.clear_karaoke_name_button.place(x=900, y=520)
+
         #First, truncate last log
         command = [ 'truncate', '-s0', f'{betake_path}/script.log'  ]
         # Launch truncation of script.log
@@ -234,7 +243,11 @@ class App:
         # Scroll to the end of the widget
         self.scroll_to_end()
 
+    def clear_karaoke_name(self):
+        self.karaoke_name_entry.delete(0, tk.END)
 
+    def clear_video_url(self):
+        self.video_url_entry.delete(0, tk.END)
 
     def fetch_random_karaoke_url(self):
    # Command to fetch random karaoke video URL
