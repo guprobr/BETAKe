@@ -379,7 +379,7 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
 
     if grep -qi clipping ./lv2.tmp.log ; then
         colorecho "red" "Will try to FIX clipping with declipper. Perphaps you should record again with a lower volume!";
-        ffmpeg -hide_banner -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000,loudnorm;" "${OUT_VOCAL}";
+        ffmpeg -y -hide_banner -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000,loudnorm;" "${OUT_VOCAL}";
         check_validity "${OUT_VOCAL}" "wav";
         colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Gareus XC42...";
         lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
