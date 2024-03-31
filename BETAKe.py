@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
+
+betake_path = "./"  # DEFAULT: BETAKE_PATH
+
 import time
-import threading 
+import threading
+import subprocess
 import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter.font import Font
-from tkinter.ttk import Progressbar
-import subprocess
 import re
-import pyaudio
 import numpy as np
-betake_path = "./"  # DEFAULT: BETAKE_PATH
-logfile = "script.log"  # Path to the log file
+import os
 
+logfile = f'{betake_path}/script.log'  # Path to the log file
+os.chdir(betake_path)
 class DeviceSelectionDialog:
     
     def __init__(self, parent, devices):
@@ -158,9 +160,9 @@ class App:
 
         while True:
             line = process.stdout.readline().decode('utf-8').rstrip()
-            if line and ('🎵' in line or '𝄞' in line):
-                self.colorize_line(line)
-                self.scroll_to_end()
+            #if line and ('🎵' in line or '𝄞' in line):
+            self.colorize_line(line)
+            self.scroll_to_end()
 
     def colorize_line(self, line):
         # Define a regular expression to match escape codes for foreground colors
@@ -378,17 +380,21 @@ class App:
         ]
 
         # Launch betaREC.sh inside xterm and redirect output to script.log
-        subprocess.Popen(command)
+        self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        # Poll the process until it finishes
-        while True:
-            if subprocess.Popen.poll(self.subprocess) is not None:
-                break
-            time.sleep(1)
-        
-        print("Recording thread has ended")
-        self.output_text.insert(tk.END, "Recording thread finished." + '\n')
-        self.start_recording_button.config(state=tk.NORMAL) 
+        # Define a function to check the subprocess status
+        def check_subprocess_status():
+            while True:
+                if self.subprocess.poll() is not None:
+                    break
+                time.sleep(1)
+
+            # Enable the button when the subprocess finishes
+            self.master.after(0, lambda: self.start_recording_button.config(state=tk.NORMAL))
+
+        # Start a separate thread to check the subprocess status
+        threading.Thread(target=check_subprocess_status).start()
+
     
     def kill_parent_and_children(self, parent_process_name):
         try:
