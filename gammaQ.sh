@@ -34,7 +34,7 @@ colorecho() {
         "white") coding="\e[37m" ;;
         *) coding="\e[32m" ;;
     esac
-    echo -e "${coding}${message} 🎵 𝄞\e[0m";
+    echo -e "${coding}${message}🎵𝄞\e[0m";
 }
 
 translate_vid_format() {
@@ -164,7 +164,7 @@ video_fmt=$(translate_vid_format "${best_format}")
 colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res}";
 
-ffmpeg -loglevel error -hide_banner -stats -stats_period 5s  -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
+ffmpeg -loglevel error -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
        -f pulse -i "${SRC_mic}" -ar 44100 -c:a aac -b:a 320k \
        -c:v libx264 -preset:v slow -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart \
        -bufsize 2M -rtbufsize 2M  \
@@ -300,7 +300,7 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
                 break
             fi
 done | zenity --progress --text="Pressing will STOP recorder and start render post-production MP4" \
-              --title="Recording" --width=640 --height=200 --percentage=0 
+              --title="Recording" --width=640 --height=200 --percentage=0 --auto-close
 
 # Check if the progress dialog was canceled OR completed
 if [ $? = 1 ]; then
@@ -324,7 +324,6 @@ colorecho "red" "Calculated diff sync: $diff_ss";
    
 ##POSTprod filtering
 colorecho "yellow" "[AuDIO] Apply shibata dithering with SoX, also noise reduction...";
-#ffmpeg -y -hide_banner -loglevel error -i "${OUT_VIDEO}" "${VOCAL_FILE}";
 sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof;
 sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
     noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
@@ -347,7 +346,7 @@ export LC_ALL=C;
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
-ffmpeg -y  -loglevel error -hide_banner -stats -stats_period 5s   \
+ffmpeg -y  -loglevel error -hide_banner \
                                             -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${VOCAL_FILE}" \
     -filter_complex "
@@ -380,7 +379,7 @@ colorecho "green" "[BETAKê] Done. Merging final output!"
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
-        ffmpeg  -loglevel error -hide_banner -stats -stats_period 5s  \
+        ffmpeg  -loglevel error \
                                                             -i "${OUT_FILE}" \
         -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" \
                                                             -i "${OUT_VIDEO}" \
