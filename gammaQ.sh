@@ -350,7 +350,7 @@ colorecho "green" "Done. now the final overlay!"
         ffmpeg -hide_banner -loglevel info -stats \
                                                                          -i "${OUT_FILE}" \
         -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VIDEO}" \
-            -filter_complex "[0:v]scale=s=${vid_res}[vidres];
+            -filter_complex "[0:v]scale=s=${video_res}[vidres];
                              [vidres][1:v]xstack=inputs=2;" -s 1920x1080 "${FINAL_FILE}" &
                 ff_pid=$!;
 
