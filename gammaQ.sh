@@ -315,27 +315,14 @@ colorecho "yellow" "Launch lyrics video";
         diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
         colorecho "magenta" "diff_ss: $diff_ss"; # try to compensate sync brutally
 
-# Get screen dimensions
-screen_info=$(xrandr | grep -oP '\d+x\d+\+\d+\+\d+' | head -n 1)
-screen_width=$(echo "$screen_info" | cut -dx -f1)
-screen_height=$(echo "$screen_info" | cut -dx -f2)
-screen_offset_x=$(echo "$screen_info" | cut -d+ -f2)
-screen_offset_y=$(echo "$screen_info" | cut -d+ -f3)
-
-# Calculate coordinates for bottom-right corner
-window_width=800  # Adjust as needed
-window_height=600  # Adjust as needed
-new_x=$((screen_width - window_width - screen_offset_x))
-new_y=$((screen_height - window_height - screen_offset_y))
-
 cronos_play=1 
 ### RECORDING PROGRESS! 
 # If FFmpeg or FFplayback quits, or if click cancel, recording stops
 # the time limit of this loop is the duration of entire playback
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
-    sleep 3;
+    sleep 1;
     
-    wmctrl -r "Recording" -e "0,$new_x,$new_y,$window_width,$window_height" -b add,above
+    #wmctrl -r "Recording" -b add,above
 
     cronos_play=$(( "$cronos_play" + 1 ));
     # shellcheck disable=SC2005
