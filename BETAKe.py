@@ -90,7 +90,7 @@ class App:
         self.select_video_device_button.place(x=295, y=595)
         
         self.video_dev_entry = tk.Entry(master)
-        self.video_dev_entry.place(x=313, y=584, width=100)
+        self.video_dev_entry.place(x=300, y=635, width=100)
         self.video_dev_entry.insert(0, "/dev/video0")
         #self.video_dev_entry.bind('<KeyRelease>', self.sanitize_input)
 
