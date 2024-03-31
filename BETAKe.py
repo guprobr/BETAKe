@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import threading 
 import tkinter as tk
+from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter.font import Font
 from tkinter.ttk import Progressbar
@@ -13,6 +14,56 @@ import numpy as np
 
 betake_path = "./"  # DEFAULT: BETAKE_PATH
 logfile = "script.log"  # Path to the log file
+
+class DeviceSelectionDialog:
+    def __init__(self, parent, devices):
+        self.parent = parent
+        self.devices = devices
+        self.selected_device = None
+
+        self.dialog = tk.Toplevel(parent)
+        self.dialog.title("Select Video Device")
+        self.dialog.geometry("200x300")
+
+        self.device_listbox = tk.Listbox(self.dialog)
+        for device in devices:
+            self.device_listbox.insert(tk.END, device)
+        self.device_listbox.pack(expand=True, fill=tk.BOTH)
+
+        self.select_button = ttk.Button(self.dialog, text="Select", command=self.select_device)
+        self.select_button.pack(pady=5)
+    
+    def select_device(self):
+        selected_index = self.device_listbox.curselection()
+        if selected_index:
+            self.selected_device = self.devices[selected_index[0]]
+            self.dialog.destroy()
+
+def list_video_devices():
+    devices = []
+    try:
+        output = subprocess.check_output(['v4l2-ctl', '--list-devices'], text=True)
+        lines = output.strip().split('\n')
+        for line in lines:
+            if line.strip().startswith('/dev/video'):
+                devices.append(line.strip())
+    except subprocess.CalledProcessError:
+        print("Error: Failed to list video devices using v4l2-ctl.")
+        App.output_text.insert(tk.END, "Error: Failed to list video devices using v4l2-ctl." + '\n')
+        App.kill_recording()
+    return devices
+
+def open_device_selection_dialog(parent):
+    devices = list_video_devices()
+    if not devices:
+        print("No video devices found.")
+        App.output_text.insert(tk.END, "No video devices found." + '\n')
+        App.kill_recording()
+        return
+
+    dialog = DeviceSelectionDialog(parent, devices)
+    parent.wait_window(dialog.dialog)
+    return dialog.selected_device
 
 class App:
     def __init__(self, master):
@@ -33,6 +84,10 @@ class App:
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
         self.left_image_label = tk.Label(master, image=self.left_image)
         self.left_image_label.place(x=400, y=580) 
+
+        self.select_video_device_button = tk.Button(
+            master, text="cfg /dev/video", command=self.select_video_device)
+        self.select_video_device_button.place(x=295, y=595)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -66,6 +121,12 @@ class App:
         # Start tailf in a separate thread
         threading.Thread(target=self.start_tailf, daemon=True).start()
 
+    def select_video_device(self):
+        global selected_devCam 
+        selected_devCam = open_device_selection_dialog(self.master)
+        if selected_devCam:
+            print(f"Selected video device: {selected_devCam}")
+            self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)
@@ -137,7 +198,7 @@ class App:
         if '0' in escape_codes:
             default_color = '#FFAA0E'  # White color
             self.output_text.tag_config('default_color', foreground=default_color)
-            self.output_text.insert(tk.END, line_without_escapes + '\n', 'default_color')
+            self.output_text.insert(tk.END, "🎵", 'default_color')
 
 
         # Scroll to the end of the widget
@@ -201,7 +262,7 @@ class App:
     def get_default_video_url(self):
         # List of YouTube URLs
         youtube_urls = [
-             "https://music.youtube.com/watch?v=eby0bVEIWcs",
+            "https://music.youtube.com/watch?v=eby0bVEIWcs",
             "https://music.youtube.com/watch?v=s8kcyeTd2OQ",
             "https://music.youtube.com/watch?v=t2iIEETOtGk",
             "https://music.youtube.com/watch?v=9BCQqo1XMVw",
@@ -301,17 +362,19 @@ class App:
             if not video_url:
                 default_video_url = self.get_default_video_url()
                 video_url = default_video_url
+            if not selected_devCam:
+                selected_devCam = "/dev/video0"
             
             # Command to execute betaREC.sh with tee for logging
             command = [
                 'bash', '-c',
-                f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} 2>&1 | tee -a script.log'
+                f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} {selected_devCam} 2>&1 | tee -a script.log'
             ]
 
             # Launch betaREC.sh inside xterm and redirect output to script.log
             subprocess.Popen(command)
              # Poll the process until it finishes
-            while self.process.poll() is None:
+            while self.subprocess.poll() is None:
                 # Optionally, you can add a delay to reduce CPU usage
                 self.time.sleep(1)
 

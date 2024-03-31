@@ -1,12 +1,14 @@
 #!/bin/bash
 
-karaoke_name="$1"
-video_url="$2"
-betake_path="$3"
+karaoke_name="$1";
+video_url="$2";
+betake_path="$3";
+video_dev="$4";
 
 if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
 if [ "${video_url}" == "" ]; then video_url=" --simulate "; fi
 if [ "${betake_path}" == "" ]; then betake_path="./"; fi
+if [ "${video_dev}" == "" ]; then video_dev="/dev/video0"; fi
 
 # Configuration
 REC_DIR="$betake_path/recordings"   # Directory to store recordings
@@ -206,14 +208,13 @@ OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 colorecho "SING!--------------------------";
 		
 #vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | tail -n1 | awk '{ print $2 }');
-vid_res=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
-vid_dev=$( v4l2-ctl --list-devices | grep video | awk '{ print $1 }' | head -n1 )
+video_res=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
 
-colorecho "blue" "Using video device $vid_dev";
-colorecho "yellow" "Using pulse source: ${SRC_mic}";
+colorecho "blue" "Using video device: $video_dev";
+colorecho "yellow" "Using audio source: ${SRC_mic}";
 
  epoch_ff=$( get_process_start_time );
-ffmpeg  -f v4l2 -video_size "$vid_res" -i "$vid_dev" \
+ffmpeg  -f v4l2 -video_size "$video_res" -i "$video_dev" \
         -f pulse -i "${SRC_mic}" -ar 44100 \
         -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart         \
                                                     "${OUT_VIDEO}"  &
