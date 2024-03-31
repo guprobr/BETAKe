@@ -314,8 +314,8 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
 ffmpeg -y -hide_banner -loglevel info -stats  \
-                                                                    -i "${PLAYBACK_BETA}" \
-   -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}" | bc )" )" -i "${OUT_VOCAL}" \
+                                            -i "${PLAYBACK_BETA}" \
+                                            -i "${OUT_VOCAL}" \
     -filter_complex "
       [0:a]volume=volume=0.35,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
