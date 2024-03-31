@@ -389,10 +389,11 @@ class App:
         if mp4_file:
             # Open the selected MP4 file with the default web browser
             webbrowser.open(f"file://{mp4_file}")
+            self.video_url_entry.delete(0, tk.END)
             self.video_url_entry.insert(0, f"file://{mp4_file}")
             # Show a dialog asking a yes/no question
         response = tkinter.messagebox.showinfo(
-            "Preview cached playback", "Click start to record this choice, or choose another cached playback/external URL"
+            "Preview cached playback on browser", "Click START button to record this choice, or choose another cached playback/external URL"
         )
 
     def start_recording(self):
