@@ -35,6 +35,22 @@ colorecho() {
     echo -e "${coding}${message} 🎵 𝄞\e[0m";
 }
 
+translate_vid_format() {
+    case "$1" in
+        YUYV) echo "yuyv422";;
+        UYVY) echo "uyvy422";;
+        NV12) echo "nv12";;
+        NV21) echo "nv21";;
+        YV12) echo "yuv420p";;
+        YV16) echo "yuv422p";;
+        YV24) echo "yuv444p";;
+        RGB3) echo "rgb24";;
+        RGB4) echo "bgr24";;
+        GREY) echo "gray";;
+        *) echo "mjpeg";;
+    esac
+}
+
 
 # Function to kill the parent process and all its children
     kill_parent_and_children() {
@@ -103,6 +119,10 @@ colorecho() {
             sleep 1;
         done
         ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --pulsate --auto-close --auto-kill
+    
+        # if it was cancelled, kill, else it wont kill anybody thats already dead, boss.
+        kill -9 "${pid_ffmpeg}";
+
     }
 
 # Function to generate MP3 from MP4
@@ -131,6 +151,25 @@ time_diff_seconds() {
     echo "$(echo "scale=6; (${end_secs} - ${start_secs}) " | bc)"
 }
 
+launch_ffmpeg_webcam() {
+		
+best_format=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | grep -e '\[[0-9]\]' | awk '{ print $2 " " $3 }' | sort -k2 -n | tail -n1 | awk '{ print $1 }')
+video_res=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | \
+                           awk -v fmt="${best_format}" '$0 ~ fmt {f=1} f && /Size/ {print $3; f=0}' | \
+                           sort -k1 -n | tail -n1 );
+video_fmt=$(translate_vid_format "${best_format}")
+
+colorecho "green" "FFmpeg format name: ${video_fmt}";
+colorecho "cyan" "Best resolution: ${video_res}";
+
+ffmpeg -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
+       -f pulse -i "${SRC_mic}" -ar 44100 -c:a aac -b:a 320k \
+       -c:v libx264 -preset:v slow -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart \
+       -bufsize 2M -rtbufsize 2M  -map 0:v -map 1:a \
+       "${OUT_VIDEO}" &                                                       
+ff_pid=$! 
+
+}
 
 # Define log file path
 #LOG_FILE="$betake_path/script.log"
@@ -200,30 +239,24 @@ if [ $? == 1 ]; then
 fi
 
 rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
-# Recording then Post-production
+# Let's Record with webcam  then Post-production
 ext_recz="mp4"
 OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out."${ext_recz}";
 OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 	
-colorecho "SING!--------------------------";
-		
-#vidformat=$(v4l2-ctl --list-formats-ext | grep -e '\[[0-9]\]' | tail -n1 | awk '{ print $2 }');
-video_res=$(v4l2-ctl --list-formats-ext | grep -A2 -e '\[[0-9]\]' | grep Size | head -n1 | awk '{ print $3 }');
-
+colorecho "SING!---Launching webcam;";
 colorecho "blue" "Using video device: $video_dev";
 colorecho "yellow" "Using audio source: ${SRC_mic}";
 
- epoch_ff=$( get_process_start_time );
-ffmpeg  -f v4l2 -video_size "$video_res" -i "$video_dev" \
-        -f pulse -i "${SRC_mic}" -ar 44100 \
-        -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart         \
-                                                    "${OUT_VIDEO}"  &
-                                            ff_pid=$!;
-        renice -n -19 "$ff_pid";
+colorecho "cyan" "WILL try to enable overlay if available in this webcam, to monitor recording";
 
+v4l2-cl --overlay 1;
+launch_ffmpeg_webcam true;
+
+epoch_ff=$( get_process_start_time );
+renice -n -19 "$ff_pid"
     colorecho "green" "FFmpeg start: $epoch_ff";
- 
-   
+    
 # Wait for the output file to be created
 while [ ! -s "${OUT_VIDEO}" ]; do
   sleep 0.001; # Adjust sleep time as needed
@@ -231,25 +264,25 @@ done | zenity --progress --text="GET READY TO SING" \
               --title="Starting to tape!" --width=440 --height=400 --percentage=50 --pulsate --auto-close --auto-kill
 
 colorecho "yellow" "Launch lyrics video";
-             epoch_ffplay=$( get_process_start_time  );
+
 	        ffplay -left +0 \
-                        -top -0 \
+                        -top +0 \
 			        -window_title "SING" -loglevel quiet -hide_banner \
                     -af "volume=0.15" \
                     -noborder -exitonkeydown  \
-                    -vf "scale=1280:720" "${PLAYBACK_BETA}" &
+                    -vf "scale=848:480" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
-           
-            colorecho "red" "ffplay start: $epoch_ffplay";
-                
-                diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
-                colorecho "magenta" "diff_ss: $diff_ss"; # try to compensate if out of sync brutally
+            epoch_ffplay=$( get_process_start_time  );
+
+    colorecho "red" "ffplay start: $epoch_ffplay";
+        diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
+        colorecho "magenta" "diff_ss: $diff_ss"; # try to compensate if out of sync brutally
 
 cronos_play=1 ### RECORDING PROGRESS! If FFmpeg or playback quits, or clicking cancel, recording stops
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
     sleep 1
         if [ "$cronos_play" -le 3 ]; then
-            wmctrl -r "Recording" -e 0,-1,-1,-1,-1
+            wmctrl -i -r "Recording" -e 0,+0,+0,-1,-1
             xdotool search --name "Recording" windowactivate
         fi
     cronos_play=$(( "$cronos_play" + 1 ));
@@ -266,13 +299,13 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
 done | zenity --progress --text="Pressing will STOP recorder and start render post-production MP4" \
               --title="Recording" --width=640 --height=200 --percentage=0 
 
-
 # Check if the progress dialog was canceled OR completed
 if [ $? = 1 ]; then
     colorecho "red" "Recording skipped.";
 else
     colorecho "cyan" "Progress completed.";
 fi
+
 
 colorecho "blue" "Actual playback duration: ${PLAYBACK_LEN}";
 colorecho "red" "Calculated diff sync: $diff_ss";
@@ -281,8 +314,9 @@ colorecho "red" "Calculated diff sync: $diff_ss";
     colorecho "magenta" "Recording finished";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
-             # disable loopback monitor
+             # disable loopback monitor and cam overlay
             pactl unload-module module-loopback;
+            v4l2-ctl --overlay 0;
     sleep 5;        
    
 ##POSTprod filtering
@@ -296,7 +330,6 @@ sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
                             dither -s -f shibata;
 
 colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Gareus XC42...";
-
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     -P Live \
     -p mode:Auto  \
@@ -308,7 +341,7 @@ lv2file -o "${OUT_VOCAL}" -i "${VOCAL_FILE}" \
     -p p9:1.00 -p p20:2.00 -p p15:0.515 -p p17:1.000 -p p18:1.00 \
     https://www.auburnsounds.com/products/Graillon.html40733132#in1out2
 
-colorecho "red" "rendering final mix and video"
+colorecho "red" "[Audio and Video] PostProduction: rendering mix with enhancements."
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
@@ -336,29 +369,33 @@ ffmpeg -y -hide_banner -loglevel info -stats  \
         [v0][badcoffee]vstack=inputs=2,scale=s=640x480;" \
             -t "${PLAYBACK_LEN}" \
      -c:v libx264 -b:v 10000k -movflags faststart \
-       -c:a aac -b:a 1000k -ar 44100  \
+       -c:a aac -b:a 250k -ar 44100  \
          "${OUT_FILE}"   &
            ff_pid=$!;
 
     render_display_progress "${OUT_FILE}" $ff_pid;
 
-colorecho "green" "Done. now the final overlay!" 
+colorecho "green" "[BETAKê] Done. Merging final output!" 
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
         ffmpeg -hide_banner -loglevel info -stats \
-                                                                         -i "${OUT_FILE}" \
-        -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VIDEO}" \
+                                                            -i "${OUT_FILE}" \
+        -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" \
+                                                            -i "${OUT_VIDEO}" \
             -filter_complex "[0:v]scale=s=${video_res}[vidres];
-                             [vidres][1:v]xstack=inputs=2;" -s 1920x1080 "${FINAL_FILE}" &
+                             [vidres][1:v]xstack=inputs=2,
+                             drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:$PLAYBACK_LEN-t\:d}':fontcolor=white:fontsize=24:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;" \
+                              -s 1920x1080 "${FINAL_FILE}" &
                 ff_pid=$!;
 
         render_display_progress "${FINAL_FILE}" $ff_pid;
 
 colorecho "yellow" "Generating MP3 too ou outputs dir..";
-
 generate_mp3 "${FINAL_FILE}" "${OUT_FILE%.*}".mp3;
-    
+
+# display resulting video to user    
 ffplay -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";
 
+colorecho "green" "Thank you for having fun!"
 exit;

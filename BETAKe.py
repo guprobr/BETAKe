@@ -16,6 +16,7 @@ betake_path = "./"  # DEFAULT: BETAKE_PATH
 logfile = "script.log"  # Path to the log file
 
 class DeviceSelectionDialog:
+    
     def __init__(self, parent, devices):
         self.parent = parent
         self.devices = devices
@@ -38,7 +39,7 @@ class DeviceSelectionDialog:
         if selected_index:
             self.selected_device = self.devices[selected_index[0]]
             self.dialog.destroy()
-
+#########################################################
 def list_video_devices():
     devices = []
     try:
@@ -66,6 +67,7 @@ def open_device_selection_dialog(parent):
     return dialog.selected_device
 
 class App:
+    
     def __init__(self, master):
         self.master = master
         master.title("gammaQ v3")
@@ -196,7 +198,7 @@ class App:
         for escape_code in escape_codes:
             if escape_code in tag_color_map:
                 tag_name, _ = tag_color_map[escape_code]
-                self.output_text.tag_add(tag_name, 'end - %dc' % len(line_without_escapes), 'end')
+                self.output_text.tag_add(tag_name, 'end - %dc' % (len(line_without_escapes) + 2), 'end')
 
         
 
@@ -243,6 +245,8 @@ class App:
 
         except subprocess.CalledProcessError:
             print("Error: Failed to fetch karaoke video URL.")
+            self.output_text.insert(tk.END, "Error: Failed to fetch karaoke video URL." + '\n')
+
 
     def display_fortunes(self):
         # Get and display three random fortunes
@@ -266,7 +270,7 @@ class App:
         self.scroll_to_end()
 
     def get_default_video_url(self):
-        # List of YouTube URLs
+        # List of YouTube URLs when user does not fill URL text input
         youtube_urls = [
             "https://music.youtube.com/watch?v=eby0bVEIWcs",
             "https://music.youtube.com/watch?v=s8kcyeTd2OQ",
@@ -353,47 +357,45 @@ class App:
         return default_video_url
 
     def start_recording(self):
-        # Define a function to be executed in a separate thread
-        def start_recording_thread():
-            # Get karaoke name and video URL from entry widgets
-            self.start_recording_button.config(state=tk.DISABLED)
+        # Get karaoke name and video URL from entry widgets
+        self.start_recording_button.config(state=tk.DISABLED)
 
+        karaoke_name = "BETAKE"
+        karaoke_name = self.karaoke_name_entry.get().strip()
+        video_dev = self.video_dev_entry.get().strip()
+        video_url = self.video_url_entry.get().strip()
+
+        # Set default values if input fields are empty
+        if not karaoke_name:
             karaoke_name = "BETAKE"
-            karaoke_name = self.karaoke_name_entry.get().strip()
-            video_dev = self.video_dev_entry.get().strip()
-            video_url = self.video_url_entry.get().strip()
+        if not video_url:
+            default_video_url = self.get_default_video_url()
+            video_url = default_video_url
+        if not video_dev:
+            self.video_dev = "/dev/video0"
+        
+        # Command to execute betaREC.sh with tee for logging
+        command = [
+            'bash', '-c',
+            f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} {video_dev} 2>&1 | tee -a script.log'
+        ]
 
-            # Set default values if input fields are empty
-            if not karaoke_name:
-                karaoke_name = "BETAKE"
-            if not video_url:
-                default_video_url = self.get_default_video_url()
-                video_url = default_video_url
-            if not video_dev:
-                self.video_dev = "/dev/video0"
-            
-            # Command to execute betaREC.sh with tee for logging
-            command = [
-                'bash', '-c',
-                f'{betake_path}/gammaQ.sh {karaoke_name} {video_url} {betake_path} {video_dev} 2>&1 | tee -a script.log'
-            ]
-
-            # Launch betaREC.sh inside xterm and redirect output to script.log
-            subprocess.Popen(command)
-             # Poll the process until it finishes
-            while self.subprocess.poll() is None:
-                # Optionally, you can add a delay to reduce CPU usage
-                self.time.sleep(1)
-
-            
-            print("Recording thread has ended")
-            self.start_recording_button.config(state=tk.NORMAL)
-
+        # Launch betaREC.sh inside xterm and redirect output to script.log
+        subprocess.Popen(command)
+            # Poll the process until it finishes
+        while self.subprocess.poll() is None:
+            # Optionally, you can add a delay to reduce CPU usage
+            self.time.sleep(1)
+        
+        print("Recording thread has ended")
+        self.output_text.insert(tk.END, "Recording thread finished." + '\n')
+        self.start_recording_button.config(state=tk.NORMAL)
+        
         # Create a new thread and start it
-        recording_thread = threading.Thread(target=start_recording_thread)
+        recording_thread = threading.Thread(target=self.start_recording)
         recording_thread.start()  
     
-    def kill_parent_and_children(pself, parent_process_name):
+    def kill_parent_and_children(self, parent_process_name):
         try:
             # Find the PID of the parent process
             parent_pid = subprocess.check_output(["pgrep", parent_process_name]).strip().decode()
@@ -404,15 +406,20 @@ class App:
             subprocess.run(["killall", "-TERM", "-P", parent_pid])
         except subprocess.CalledProcessError:
             print("Error: Failed to find or terminate parent process and its children.")
+            self.output_text.insert(tk.END, "Error: Failed to find or terminate parent process and its children." + '\n')
+       
 
     def kill_recording(self):     
         # Quit the interface, try housekeeping
         self.kill_parent_and_children("gammaQ.sh")
         self.master.quit()
+        
+        
 
 def main():
     root = tk.Tk()
     app = App(root)
+
     root.mainloop()
 
 if __name__ == "__main__":

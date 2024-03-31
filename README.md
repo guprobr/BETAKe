@@ -70,7 +70,7 @@ aplica esse algoritmo ao arquivo de áudio vocal, gerando um novo arquivo de áu
 O Graillon é um plugin de processamento de áudio desenvolvido pela Auburn Sounds, usado para ajustar e modificar vozes.
 A linha 
 ```
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Younger\ Speech -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 -c 1:input_38 -c 2:input_39 https://www.auburnsounds.com/products/Graillon.html40733132#stereo 
+lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Younger\ Speech -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 -c 1:input_38 -c 2:input_39 https://www.auburnsounds.com/products/Graillon.html40733132#in1out2 
 ```
 aplica o plugin Graillon ao arquivo de áudio vocal, com diferentes parâmetros de ajuste especificados.
 
