@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 import threading 
 import tkinter as tk
 from tkinter import ttk
@@ -9,9 +10,6 @@ import subprocess
 import re
 import pyaudio
 import numpy as np
-
-
-
 betake_path = "./"  # DEFAULT: BETAKE_PATH
 logfile = "script.log"  # Path to the log file
 
@@ -357,10 +355,9 @@ class App:
         return default_video_url
 
     def start_recording(self):
-        # Get karaoke name and video URL from entry widgets
+        # Get karaoke filename and video URL from entry widgets
         self.start_recording_button.config(state=tk.DISABLED)
 
-        karaoke_name = "BETAKE"
         karaoke_name = self.karaoke_name_entry.get().strip()
         video_dev = self.video_dev_entry.get().strip()
         video_url = self.video_url_entry.get().strip()
@@ -372,7 +369,7 @@ class App:
             default_video_url = self.get_default_video_url()
             video_url = default_video_url
         if not video_dev:
-            self.video_dev = "/dev/video0"
+            video_dev = "/dev/video0"
         
         # Command to execute betaREC.sh with tee for logging
         command = [
@@ -382,18 +379,16 @@ class App:
 
         # Launch betaREC.sh inside xterm and redirect output to script.log
         subprocess.Popen(command)
-            # Poll the process until it finishes
-        while self.subprocess.poll() is None:
-            # Optionally, you can add a delay to reduce CPU usage
-            self.time.sleep(1)
+
+        # Poll the process until it finishes
+        while True:
+            if subprocess.Popen.poll(self.subprocess) is not None:
+                break
+            time.sleep(1)
         
         print("Recording thread has ended")
         self.output_text.insert(tk.END, "Recording thread finished." + '\n')
-        self.start_recording_button.config(state=tk.NORMAL)
-        
-        # Create a new thread and start it
-        recording_thread = threading.Thread(target=self.start_recording)
-        recording_thread.start()  
+        self.start_recording_button.config(state=tk.NORMAL) 
     
     def kill_parent_and_children(self, parent_process_name):
         try:
