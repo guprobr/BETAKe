@@ -1,5 +1,11 @@
 (docs em pt_BR seguem após)
 
+
+a Karaoke video PLAYER with performance RECORDER for Linux. 
+* just a Shell script karaoke: vocal enhanced effects, pitch correction, auto-download YouTube playbacks + final mix/video render 
+* based on FFMpeg + LV2 plugins
+*AlphaQ - BETAke - now gammaQ v3*
+
 # OPERA SUMMARY
 
 Tonal correction algorithms in general aim to adjust the pitch or pitch of musical notes in an audio recording to ensure that they conform to a particular scale or tonal pattern. These algorithms are often used in audio editing software to correct pitch problems in vocal or instrumental performances.
