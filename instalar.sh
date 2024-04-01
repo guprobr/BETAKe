@@ -38,10 +38,10 @@ read -rp "Do you want to continue? (yes/no): " response
 # Check the response
 if [[ $response == "yes" ]]; then
     colorecho "green" "You chose to continue.";
-    sudo apt -y install fortunes*  swh-plugins lsp-plugins alsa-utils \
-	autotalent python3-pexpect pulseaudio-utils pavumeter wmctrl guvcview \
+    sudo apt -y install fortunes*  alsa-utils \
+	python3-pexpect pulseaudio-utils wmctrl  \
     python3-tk python3-pyaudio python3-numpy gir1.2-gtksource-3.0 python3-pexpect python3-psutil \
-    sox vocproc lv2file v4l-utils pandoc git;
+    sox x42-plugins lv2file v4l-utils pandoc git ffmpeg;
 
     sudo cp -ra BETAKe.* /usr/bin/;
     colorecho "blue" "PS: instale qualquer dependencia que porventura faltar do python3";
