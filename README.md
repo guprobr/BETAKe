@@ -1,4 +1,6 @@
 (docs em pt_BR seguem após)
+
+
 a Karaoke video PLAYER with performance RECORDER for Linux. 
 * just a Shell script karaoke: vocal enhanced effects, pitch correction, auto-download YouTube playbacks + final mix/video render 
 * based on FFMpeg + LV2 plugins
