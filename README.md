@@ -69,7 +69,7 @@ In terms of the quality of the approach, This shell script presents a series of 
 XC 42 is another tonal correction algorithm, developed by Joshua Reiss and Andrew McLeod. It uses advanced audio signal processing techniques to perform tonal correction on vocal recordings.
 The XC 42 is designed to provide accurate and efficient tonal correction, with control over parameters such as the extent of correction and the smoothing of transitions between musical notes.
 
-###Graillon:
+### Graillon:
 
 Graillon is a machine learning-based tonal correction tool developed by Grzegorz Ptasinski. It uses advanced audio signal processing algorithms and machine learning techniques to perform tonal correction on high-quality audio recordings.
 The Graillon is known for its ability to correct pitches precisely and naturally, adapting to the vocal style and nuances of the singer's performance.
