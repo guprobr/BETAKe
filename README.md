@@ -1,14 +1,84 @@
 
 
-A versão que está aqui deve funcionar sem requisitos macabros.
-Mas esse projeto estou descontinuado publicamente, quero entender como construir um binário de código multiplataforma, que atenda os requisitos de funcionalidade e latencia em qualquer sistema de Desktop, inicialmente. portanto continuarei a pesquisar de forma privada até que eu tenha maturidade para criar esses binários pelo mesmo código multiplataforma, eu sou um programador C então Cê vai ver no futuro... algo que contemple os requisitos de baixa latencia necessarios para a qualidade que creio que as pessoas desejam. Foi realmente muito difícil só com o shell script sincronizar e rodar de modo eficaz os filtros, pesados, e nem consegui rodar LIVE, eles rodam em pós-produção. Aguardem.
+# RESUMO DA OPERA
+
+Os algoritmos de correção tonal em geral têm o objetivo de ajustar a afinação ou a altura das notas musicais em uma gravação de áudio para garantir que elas estejam em conformidade com uma determinada escala ou padrão tonal. Esses algoritmos são frequentemente usados em softwares de edição de áudio para corrigir problemas de afinação em performances vocais ou instrumentais.
+
+```
+O princípio matemático subjacente aos algoritmos de correção tonal envolve a detecção das frequências fundamentais das notas musicais na gravação de áudio e, em seguida, a aplicação de transformações para ajustar essas frequências para correspondência com uma escala tonal desejada. Aqui está uma explicação detalhada do processo:
+```
+
+### Detecção de Frequências Fundamentais: 
+O primeiro passo é detectar as frequências fundamentais das notas musicais na gravação de áudio. Isso pode ser feito usando técnicas de análise de espectro, como a Transformada de Fourier, que permite decompor o sinal de áudio em suas componentes de frequência.
+
+### Correlação com Escala Tonal: 
+Uma vez que as frequências fundamentais são identificadas, elas são correlacionadas com uma escala tonal desejada. Isso pode envolver a comparação das frequências detectadas com os intervalos da escala musical para determinar quais notas estão sendo tocadas ou cantadas.
+
+### Cálculo do Desvio de Afinação: 
+Com base na correlação com a escala tonal, é calculado o desvio de afinação de cada nota em relação à escala desejada. Isso é feito comparando as frequências detectadas com as frequências padrão das notas na escala tonal.
+
+### Aplicação de Transformações: 
+Com o desvio de afinação determinado para cada nota, são aplicadas transformações para ajustar suas frequências. Isso pode envolver a transposição das frequências para cima ou para baixo para corresponder à afinação correta da nota na escala tonal.
+
+### Suavização de Transições: 
+Para garantir que as transições entre as notas ajustadas soem naturais, são aplicadas técnicas de interpolação, como interpolação linear ou interpolação por splines, para suavizar as mudanças de frequência ao longo do tempo.
+
+### Reprocessamento e Síntese de Áudio: 
+Após o ajuste das frequências, o áudio é reprocessado e sintetizado para criar uma nova versão da gravação com as correções tonais aplicadas. Isso pode envolver a sobreposição das notas ajustadas sobre a gravação original ou a síntese de novos sons com base nas correções aplicadas.
+
+Este é um resumo simplificado do princípio matemático por trás dos algoritmos de correção tonal. Na prática, esses algoritmos podem ser bastante complexos e incorporar uma variedade de técnicas de processamento de sinais de áudio e modelagem matemática para obter resultados precisos e naturais.
+
+## este SONETO COMPLETO, por etapas:
+
+A interface python constantemente recebe atualizações e novas features, mas é o shell script que realmente faz o trabalho da aplicação. 
+Este script shell aborda uma série de etapas para melhorar a qualidade vocal em uma gravação de karaokê. Vamos analisar cada uma dessas etapas em detalhes:
+
+## Download do Vídeo de Karaokê:
+
+Utilizando a ferramenta yt-dlp, o script faz o download do vídeo de karaokê da URL fornecida. O vídeo é então renomeado e armazenado localmente.
 
 
-# v3.0 - gammaQ
+## Gravação de Áudio e Vídeo:
 
-Esse script em shell realiza uma série de tarefas relacionadas à produção de karaokê. Aqui está uma descrição das principais funcionalidades e ações realizadas:
+O script começa capturando a entrada de áudio e vídeo de uma fonte, como uma webcam, enquanto o vídeo de karaokê é reproduzido. Isso é feito usando o FFmpeg para gravar a entrada de vídeo e áudio simultaneamente.
 
-* Recebendo Parâmetros: O script recebe três parâmetros: o nome do karaokê, a URL do vídeo e o caminho do diretório beta.
+
+## Processamento de Áudio:
+
+Após a gravação, o áudio da voz é separado do vídeo e passa por várias etapas de processamento:
+Primeiramente, o áudio é submetido a um perfil de ruído para identificar e remover o ruído de fundo.
+Em seguida, é aplicado um algoritmo de correção tonal usando o plugin Gareus XC42 e Auburn Sound's Graillon, com ajustes de volume e equalização para melhorar a qualidade vocal.
+Se o áudio apresentar problemas de clipping, é utilizado um declipper para corrigir esses problemas.
+Finalmente, o áudio processado é combinado com o áudio do vídeo original.
+
+## Renderização do Vídeo Final:
+
+Após o processamento do áudio, o vídeo é reajustado para sincronizar com o áudio tratado. O tempo de atraso ou adiantamento é calculado com base na diferença de duração entre a gravação do áudio e do vídeo.
+A renderização final combina o vídeo original com o áudio tratado, aplicando texto na tela para exibir o tempo restante da música. O vídeo resultante é então salvo.
+
+## Geração de Arquivo de Saída MP3:
+
+Além do vídeo final, o script também gera um arquivo de áudio MP3 separado a partir do arquivo de saída final. Isso permite que os usuários tenham uma versão apenas de áudio da gravação de karaokê.
+
+## Exibição do Vídeo para o Usuário:
+
+Por fim, o vídeo final é reproduzido para o usuário usando o FFplay, permitindo que eles visualizem o resultado final da gravação de karaokê.
+Em termos de qualidade da abordagem, este script shell apresenta uma série de técnicas para melhorar a qualidade vocal, incluindo redução de ruído, correção tonal e equalização. No entanto, a eficácia dessas técnicas pode variar dependendo da qualidade da gravação original e da precisão dos algoritmos utilizados, estando em constante aperfeiçoamento, buscando não exagerar nos recursos mas sim construir uma solução direta, que não obrigue subtrações de um conjunto maior no percurso.
+
+### XC 42:
+
+O XC 42 é outro algoritmo de correção tonal, desenvolvido por Joshua Reiss e Andrew McLeod. Ele usa técnicas avançadas de processamento de sinais de áudio para realizar correção tonal em gravações vocais.
+O XC 42 é projetado para oferecer correção tonal precisa e eficiente, com controle sobre parâmetros como a extensão de correção e a suavização de transições entre notas musicais.
+
+### Graillon:
+
+O Graillon é uma ferramenta de correção tonal baseada em aprendizado de máquina, desenvolvida por Grzegorz Ptasinski. Ele usa algoritmos avançados de processamento de sinais de áudio e técnicas de aprendizado de máquina para realizar correção tonal em gravações de áudio de alta qualidade.
+O Graillon é conhecido por sua capacidade de corrigir afinações de forma precisa e natural, adaptando-se ao estilo vocal e às nuances da performance do cantor.
+
+# v3.0 - gammaQ.sh
+
+
+* Recebendo Parâmetros: O script recebe agora 4 parâmetros: o nome do karaokê, a URL do vídeo e o caminho do diretório beta, agora o dispositivo v4l2 /dev/video configurado no *python launcher*;
 
 * Configuração de Diretórios: Define diretórios para armazenar gravações e arquivos de saída, criando-os se não existirem.
 
