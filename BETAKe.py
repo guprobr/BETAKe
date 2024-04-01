@@ -191,9 +191,9 @@ class App:
 
         while True:
             line = process.stdout.readline().decode('utf-8').rstrip()
-            #if line and ('🎵' in line or '𝄞' in line):
-            self.colorize_line(line)
-            self.scroll_to_end()
+            if line and ('🎵' in line or '𝄞' in line):
+                self.colorize_line(line)
+                self.scroll_to_end()
 
     def colorize_line(self, line):
         # Define a regular expression to match escape codes for foreground colors
@@ -459,12 +459,12 @@ class App:
             self.tail_log_open = True
             self.tail_log_button.config(state=tk.DISABLED)
              # Command to housekeep tailing -f script.log
-            command = [ 'wmctrl', '-c', 'Tail_Logs' ]
+            command = [ 'wmctrl', '-c', 'script.log' ]
             self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             # Command to execute gnome-terminal tailing -f script.log
-            command = [ 'gnome-terminal', '-t', 'Tail_Logs', '--',
-                'tail', '-f', f'{betake_path}/script.log'
+            command = [ 'gnome-terminal', '-t', 'script.log', '--',
+                'cat', f'{betake_path}/script.log', '&&', 'tail', '-f', f'{betake_path}/script.log'
             ]
             self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

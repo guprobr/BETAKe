@@ -188,13 +188,19 @@ video_fmt=$(translate_vid_format "${best_format}")
 colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res}";
 
-ffmpeg -loglevel error -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
+if ffmpeg -loglevel error -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
        -f pulse -i "${SRC_mic}" -ar 44100 -c:a aac -b:a 320k \
        -c:v libx264 -preset:v slow -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart \
        -bufsize 2M -rtbufsize 2M  \
        -map 0:v "${OUT_VIDEO}"      \
        -map 1:a "${OUT_VOCAL}" &
-ff_pid=$! 
+ff_pid=$!; then
+                colorecho "green" "FFMpeg recorder started";
+    else
+        colorecho "red" "FFMpeg RECORDER failed!!";
+        kill_parent_and_children $$;
+        exit;
+    fi 
 
 }
 
@@ -379,7 +385,11 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
 
     if grep -qi clipping ./lv2.tmp.log ; then
         colorecho "red" "Will try to FIX clipping with declipper. Perphaps you should record again with a lower volume!";
-        ffmpeg -y -hide_banner -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000,loudnorm;" "${OUT_VOCAL}";
+        
+        ffmpeg -y -hide_banner -loglevel error \
+        -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000,loudnorm;" \
+                "${OUT_VOCAL}";
+
         check_validity "${OUT_VOCAL}" "wav";
         colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Gareus XC42...";
         lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
@@ -410,7 +420,7 @@ export LC_ALL=C;
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
-  ffmpeg -y  -loglevel error -hide_banner \
+ if ffmpeg -y  -loglevel error -hide_banner \
                                                                         -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${VOCAL_FILE}" \
     -filter_complex "
@@ -435,7 +445,13 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
             -c:v libx264 -b:v 10000k -movflags faststart \
             -c:a aac -b:a 250k -ar 44100  \
                 "${OUT_FILE}" &
-                ff_pid=$!;
+                ff_pid=$!; then
+                colorecho "green" "FFMpeg postprod started";
+    else
+        colorecho "red" "FFMpeg POSTPROD failed!!";
+        kill_parent_and_children $$;
+        exit;
+    fi
 
 
     render_display_progress "${OUT_FILE}" $ff_pid;
@@ -445,7 +461,7 @@ colorecho "green" "[BETAKê] Done. Merging final output!"
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
-        ffmpeg  -loglevel error \
+    if    ffmpeg  -loglevel error \
                                                             -i "${OUT_FILE}" \
         -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" \
                                                             -i "${OUT_VIDEO}" \
@@ -453,7 +469,13 @@ colorecho "green" "[BETAKê] Done. Merging final output!"
                              [vidres][1:v]xstack=inputs=2,
                              drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:$PLAYBACK_LEN-t\:d}':fontcolor=white:fontsize=24:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;" \
                               -s 1920x1080 "${FINAL_FILE}" &
-                ff_pid=$!;
+                ff_pid=$!; then
+                colorecho "green" "FFMpeg FINAL RENDER started";
+    else
+        colorecho "red" "FFMpeg FINAL RENDER failed!!";
+        kill_parent_and_children $$;
+        exit;
+    fi
 
         render_display_progress "${FINAL_FILE}" $ff_pid;
         check_validity "${FINAL_FILE}" "mp4";
