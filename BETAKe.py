@@ -111,16 +111,15 @@ class App:
             master, text="Select MP4", command=self.select_mp4_file)
         self.select_mp4_button.place(x=600, y=700, height=69)
 
-        self.tail_log_button = tk.Button(
-            master, text="Tail Logs", command=self.tail_log)
-        self.tail_log_button.place(x=600, y=640)
+        #self.tail_log_button = tk.Button(
+        #    master, text="Tail Logs", command=self.tail_log)
+        #self.tail_log_button.place(x=600, y=640)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
         self.karaoke_name_entry = tk.Entry(master)
         self.karaoke_name_entry.place(x=160, y=530, width=750)
         self.karaoke_name_entry.bind('<KeyRelease>', self.sanitize_input)
-
 
         # Entry for custom video URL
         tk.Label(master, text="Playback Video URL:").place(x=1, y=570)
@@ -137,12 +136,12 @@ class App:
             master, text="KaraoKe KiLL", command=self.kill_recording)
         self.kill_button.place(x=730, y=600, width=300, height=166)
 
-        # Kill recording button
+        # clear URL
         self.clear_url_button = tk.Button(
             master, text="clear URL", command=self.clear_video_url)
         self.clear_url_button.place(x=900, y=570)
 
-        # Kill recording button
+        # clear karaoke name
         self.clear_karaoke_name_button = tk.Button(
             master, text="clear FILENAME", command=self.clear_karaoke_name)
         self.clear_karaoke_name_button.place(x=900, y=520)
