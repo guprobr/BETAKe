@@ -14,3 +14,4 @@
 *.flv
 *.prof
 yt-dlp/
+.vscode/

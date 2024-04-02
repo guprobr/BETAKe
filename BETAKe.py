@@ -191,9 +191,9 @@ class App:
 
         while True:
             line = process.stdout.readline().decode('utf-8').rstrip()
-            if line and ('🎵' in line or '𝄞' in line):
-                self.colorize_line(line)
-                self.scroll_to_end()
+            #if line and ('🎵' in line or '𝄞' in line):
+            self.colorize_line(line)
+            self.scroll_to_end()
 
     def colorize_line(self, line):
         # Define a regular expression to match escape codes for foreground colors
@@ -433,12 +433,12 @@ class App:
         ]
 
         # Launch gammaQ.sh and redirect output to script.log
-        self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.recprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Define a function to check the subprocess status
-        def check_subprocess_status():
+        def check_recprocess_status():
             while True:
-                if self.subprocess.poll() is not None:
+                if self.recprocess.poll() is not None:
                     break
                 time.sleep(1)
 
@@ -446,30 +446,28 @@ class App:
             self.master.after(0, lambda: self.start_recording_button.config(state=tk.NORMAL))
 
         # Start a separate thread to check the subprocess status
-        threading.Thread(target=check_subprocess_status).start()
+        threading.Thread(target=check_recprocess_status).start()
     
     def tail_log(self):
+        self.tail_log_button.config(state=tk.DISABLED)
+        
+        # Command to execute gnome-terminal tailing -f script.log
+        command = [ 'gnome-terminal', '-t', 'Tail_Logs', '--',
+            'tail', '-f', f'{betake_path}/script.log'
+        ]
+        self.tailprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
         def check_tail_log_subprocess_status():
-            self.subprocess.wait()  # Wait for the subprocess to finish
+            while True:
+                if self.tailprocess.poll() is not None:
+                    break
+                time.sleep(1)
+
             # Enable the button when the subprocess finishes
-            self.tail_log_button.config(state=tk.NORMAL)
-            self.tail_log_open = False
+            self.master.after(0, lambda: self.tail_log_button.config(state=tk.NORMAL))
 
-        if not self.tail_log_open:
-            self.tail_log_open = True
-            self.tail_log_button.config(state=tk.DISABLED)
-             # Command to housekeep tailing -f script.log
-            command = [ 'wmctrl', '-c', 'script.log' ]
-            self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-            # Command to execute gnome-terminal tailing -f script.log
-            command = [ 'gnome-terminal', '-t', 'script.log', '--',
-                'cat', f'{betake_path}/script.log', '&&', 'tail', '-f', f'{betake_path}/script.log'
-            ]
-            self.subprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-            # Start a separate thread to check the subprocess status
-            threading.Thread(target=check_tail_log_subprocess_status).start()
+        # Start a separate thread to check the subprocess status
+        threading.Thread(target=check_tail_log_subprocess_status).start()
 
     def cleanup(self):
         if self.subprocess is not None:

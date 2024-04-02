@@ -457,6 +457,8 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
     render_display_progress "${OUT_FILE}" $ff_pid;
     check_validity "${OUT_FILE}" "mp4";
 
+rm -rf "${REC_DIR}"/"${karaoke_name}"_playback.*;
+
 colorecho "green" "[BETAKê] Done. Merging final output!" 
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
