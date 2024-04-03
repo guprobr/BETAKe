@@ -457,8 +457,8 @@ class App:
         # Command to execute a preview of webcam with ffplay
         command = [ 'ffplay', '-hide_banner', '-loglevel', 'error', 
                    '-autoexit', '-exitonmousedown', '-exitonkeydown', 
-                   '-window_title', 'Press any key or click to close', '-left', '0', '-top', '0', 
-                   '-fast', '-genpts', '-f', 'v4l2', '-i', self.video_dev_entry.get().strip(),
+                   '-window_title', 'Press any key or click to close',
+                   '-fast', '-genpts', '-t', '30', '-f', 'v4l2', '-i', self.video_dev_entry.get().strip(),
                  ]
         self.videotestprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
@@ -481,13 +481,15 @@ class App:
         tkinter.messagebox.showinfo(
             "Listen to test microphone volume", "Verify mic volume BEFORE clicking ok -- if volume is too high it will loop creating a horrible feedback sound. Set lowest volume BEFORE CLICKING OK and test by increasing it slowly."
         )
-        command = ['ffmpeg', '-hide_banner', '-loglevel', 'error', 
-            '-f', 'pulse', '-i', 'default', 
-            '-filter_complex', '[0:a]asplit[a][b];[a]showwaves=s=640x400:mode=line:rate=90:n=2:colors=green|yellow:scale=0[spec];[b]showcqt=s=640x400[cqt];[cqt][spec]overlay',
-            '-f', 'nut', '-']
+        command = ['ffmpeg', '-hide_banner', '-loglevel', 'error',
+           '-f', 'pulse', '-i', 'default', '-t', '7',
+           '-filter_complex', '[0:a]asplit[a][b];[a]showwaves=s=1920x1080:mode=line:rate=15:n=1:colors=green|yellow:scale=0[spec];[b]showcqt=s=1920x1080[cqt];[cqt][spec]overlay',
+           '-bufsize', '8k', '-maxrate', '300k', '-f', 'nut', '-']
 
-        ffplay_command = ['ffplay', '-autoexit', '-exitonmousedown', '-exitonkeydown', '-window_title', 'Press any key or click to close', 
-                    '-left', '0', '-top', '0', '-']
+        ffplay_command = ['ffplay', '-autoexit', '-exitonmousedown', '-exitonkeydown', '-window_title', 'Press any key or click to close',
+                  '-sync', 'ext', '-noborder', '-']
+
+
 
         ffmpeg_process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ffplay_process = subprocess.Popen(ffplay_command, stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

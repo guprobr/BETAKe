@@ -212,7 +212,7 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" &
 colorecho "red" "Try upd yt-dlp";
 yt-dlp -U;
 colorecho "white" "fetch the video title";
-PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}" --no-check-certificates --enable-file-urls)";
+PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}" --no-check-certificates --enable-file-urls --no-playlist)";
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
 colorecho "red" "${video_url}";
 
