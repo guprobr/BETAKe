@@ -13,7 +13,7 @@ if [ "${betake_path}" == "" ]; then betake_path="$(pwd)"; fi
 if [ "${video_dev}" == "" ]; then video_dev="/dev/video0"; fi
 
 # Configuration
-REC_DIR="$betake_path/recordings"   # Directory to store recordings
+REC_DIR="$betake_path/playbacks"   # Directory to store downloaded playbacks
 OUT_DIR="$betake_path/outputs"      # Directory to store output files
 
     cd "${betake_path}" || exit;
@@ -71,6 +71,7 @@ translate_vid_format() {
         child_pids=$(pgrep -P "$parent_pid")
 
                     pactl unload-module module-loopback;
+                    pactl unload-module module-echo-cancel;
 
         # Kill the parent process and all its children
         echo "Killing parent process $parent_pid and its children: $child_pids"
@@ -189,8 +190,6 @@ ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_re
 # Define log file path
 LOG_FILE="$betake_path/script.log"
 
-#export LANG=en_US.UTF-8;
-
 # Load configuration variables and adj volumes
 SINK="$( pactl get-default-sink )"
 colorecho "yellow" " got sink: $SINK";
@@ -200,13 +199,16 @@ colorecho "magenta" "Ajustar vol ${SRC_mic} em 45%";
  pactl set-source-volume "${SRC_mic}" 45%;
 colorecho "green" "Ajustar vol default sink 69% USE HEADPHONES";
  pactl set-sink-volume "${SINK}"  69%;
+
+colorecho "red" "Habilitando echo-cancel com gain-control";
+pactl load-module module-echo-cancel \
+ use_master_format=1 aec_method=webrtc \
+ aec_args="analog_gain_control=adaptive" \
+ source_name="${SRC_mic}" sink_name="${SINK}"
 colorecho "white" "Loopback monitor do audio ON";
-pactl load-module module-loopback & 
+pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
-
-
-##DOWNLOAD DO PLAYBACK
-#### yt-dlp time!
+##DOWNLOAD PLAYBACK
 colorecho "red" "Try upd yt-dlp";
 yt-dlp -U;
 colorecho "white" "fetch the video title";
@@ -255,11 +257,11 @@ fi
 check_validity "${PLAYBACK_BETA}" "mp4";
 
 colorecho "cyan" "All setup to sing!";
-# Display message to start recording
+# Display message to start webcam capture
 export LC_ALL=C;
-zenity --question --text=" - - Let's sing? " --title "Please confirm recording" --ok-label="SING";
+zenity --question --text=" - - Let's sing? " --title "Webcam capture" --ok-label="SING";
 if [ $? == 1 ]; then
-    colorecho "red" "Recording aborted.";
+    colorecho "red" "Performance aborted.";
     # Get the PID of the parent process
     parent_pid=$$
     # Call the function to kill the parent process and all its children
@@ -276,7 +278,7 @@ VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"_enhance.wav;
 colorecho "SING!---Launching webcam;";
 colorecho "blue" "Using video device: $video_dev";
 colorecho "yellow" "Using audio source: ${SRC_mic}";
-colorecho "cyan" "WILL try to enable overlay if available in this webcam, to monitor video recording";
+colorecho "cyan" "WILL try to enable overlay if available, to monitor webcam video while performing";
 
 v4l2-ctl --overlay 1;
 launch_ffmpeg_webcam true;
@@ -294,12 +296,12 @@ done | zenity --progress --text="GET READY TO SING" \
 
 colorecho "yellow" "Launch lyrics video";
 
-	        ffplay -left 0 \
-                        -top 0 \
+	        ffplay -left -0 \
+                        -top -0 \
 			        -window_title "SING" -loglevel quiet -hide_banner \
                     -af "volume=0.10" \
                     -noborder \
-                    -vf "scale=848:480" "${PLAYBACK_BETA}" &
+                    -vf "scale=1024:768" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
             epoch_ffplay=$( get_process_start_time  );
 
@@ -309,8 +311,7 @@ colorecho "yellow" "Launch lyrics video";
 
 cronos_play=1 
 ### RECORDING PROGRESS! 
-# If FFmpeg or FFplayback quits, or if click cancel, recording stops
-# the time limit of this loop is the duration of entire playback
+# If FFmpeg or FFplayback quits, or if click cancel, webcam capture stops
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
     sleep 1;
     
@@ -327,9 +328,8 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
             if ! ps -p "$ffplay_pid" >/dev/null 2>&1; then
                 break
             fi
-done | zenity --progress --text="Press to STOP recorder and render MP4" \
+done | zenity --progress --text="Press to STOP performing and render MP4" \
               --title="Recording" --percentage=0 --auto-close
-
 # Check if the progress dialog was canceled OR completed
 if [ $? = 1 ]; then
     colorecho "red" "Recording skipped before end of playback. Will render MP4!";
@@ -347,6 +347,7 @@ colorecho "red" "Calculated diff sync: $diff_ss";
             killall -9 ffplay;
             colorecho "white" "disable audio loopback monitor and cam overlay"
             pactl unload-module module-loopback;
+            pactl unload-module module-echo-cancel;
             v4l2-ctl --overlay 0;
     sleep 5;      
 

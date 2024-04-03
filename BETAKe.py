@@ -103,6 +103,14 @@ class App:
         self.video_dev_entry.place(x=300, y=635, width=100)
         self.video_dev_entry.insert(0, "/dev/video0")
 
+        self.video_test_button = tk.Button(
+            master, text="Preview webcam", command=self.test_video_device)
+        self.video_test_button.place(x=295, y=685)
+
+        self.audio_test_button = tk.Button(
+            master, text="Adjust mic", command=self.test_audio_device)
+        self.audio_test_button.place(x=295, y=715)
+
         self.get_fortune_button = tk.Button(
             master, text="yer Fortunes", command=self.get_fortune)
         self.get_fortune_button.place(x=600, y=595)
@@ -393,7 +401,7 @@ class App:
     def select_mp4_file(self):
         # Open a file dialog to select an MP4 file
         mp4_file = tkinter.filedialog.askopenfilename(
-            initialdir=betake_path + "/recordings/",
+            initialdir=betake_path + "/playbacks/",
             title="Select an MP4 file",
             filetypes=(("MP4 files", "*.mp4"), ("All files", "*.*"))
         )
@@ -403,9 +411,6 @@ class App:
             ###webbrowser.open(f"file://{mp4_file}")
             self.video_url_entry.delete(0, tk.END)
             self.video_url_entry.insert(0, f"file://{mp4_file}")
-        #response = tkinter.messagebox.showinfo(
-        #    "Preview cached playback on browser", "Click START button to record this choice, or choose another cached playback/external URL"
-        #)
 
     def start_recording(self):
         # Get karaoke filename and video URL from entry widgets
@@ -447,10 +452,64 @@ class App:
         # Start a separate thread to execute the subprocess
         threading.Thread(target=execute_subprocess).start()
     
+    def test_video_device(self):
+        self.video_test_button.config(state=tk.DISABLED)
+        # Command to execute a preview of webcam with ffplay
+        command = [ 'ffplay', '-hide_banner', '-loglevel', 'error', 
+                   '-autoexit', '-exitonmousedown', '-exitonkeydown', 
+                   '-window_title', 'Press any key or click to close', '-left', '0', '-top', '0', 
+                   '-fast', '-genpts', '-f', 'v4l2', '-i', self.video_dev_entry.get().strip(),
+                 ]
+        self.videotestprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        def check_video_test_subprocess_status():
+            while True:
+                if self.videotestprocess.poll() is not None:
+                    break
+                time.sleep(1)
+
+            # Enable the button when the subprocess finishes
+            self.master.after(0, lambda: self.video_test_button.config(state=tk.NORMAL))
+
+        # Start a separate thread to check the subprocess status
+        threading.Thread(target=check_video_test_subprocess_status).start()
+
+    def test_audio_device(self):
+        self.audio_test_button.config(state=tk.DISABLED)
+        command = [ 'pactl', 'set-source-volume', 'default', '0%' ]
+        subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        tkinter.messagebox.showinfo(
+            "Listen to test microphone volume", "Verify mic volume BEFORE clicking ok -- if volume is too high it will loop creating a horrible feedback sound. Set lowest volume BEFORE CLICKING OK and test by increasing it slowly."
+        )
+        command = ['ffmpeg', '-hide_banner', '-loglevel', 'error', 
+            '-f', 'pulse', '-i', 'default', 
+            '-filter_complex', '[0:a]asplit[a][b];[a]showwaves=s=640x400:mode=line:rate=90:n=2:colors=green|yellow:scale=0[spec];[b]showcqt=s=640x400[cqt];[cqt][spec]overlay',
+            '-f', 'nut', '-']
+
+        ffplay_command = ['ffplay', '-autoexit', '-exitonmousedown', '-exitonkeydown', '-window_title', 'Press any key or click to close', 
+                    '-left', '0', '-top', '0', '-']
+
+        ffmpeg_process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ffplay_process = subprocess.Popen(ffplay_command, stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        def check_audio_test_subprocess_status():
+            while True:
+                if ffplay_process.poll() is not None:
+                    # Once ffplay exits, terminate ffmpeg
+                    ffmpeg_process.terminate()
+                    break
+                time.sleep(1)
+
+            # Enable the button when the subprocess finishes
+            self.master.after(0, lambda: self.audio_test_button.config(state=tk.NORMAL))
+
+        # Start a separate thread to check the subprocess status
+        threading.Thread(target=check_audio_test_subprocess_status).start()
+
     def tail_log(self):
         self.tail_log_button.config(state=tk.DISABLED)
         
-        # Command to execute gnome-terminal tailing -f script.log
+        # Command to execute Terminal tailing -f script.log
         command = [ 'xterm', '-bg', 'black', '-fg', 'white', '-fs', '12', '-fa', 'Noto', '-title', 'Extended-Logs', '-e',
             'tail', '-f', f'{betake_path}/script.log'
         ]
@@ -467,12 +526,7 @@ class App:
 
         # Start a separate thread to check the subprocess status
         threading.Thread(target=check_tail_log_subprocess_status).start()
-
-    def cleanup(self):
-        if self.subprocess is not None:
-            self.subprocess.terminate()  # Terminate the subprocess
-
-    
+  
     def kill_children(self, parent_process_name):
         parent_pid = os.getpid()  # Get PID of the parent process (Tkinter window)
         parent = psutil.Process(parent_pid)
@@ -500,5 +554,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-     
-   
