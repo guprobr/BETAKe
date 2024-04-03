@@ -92,6 +92,7 @@ render_display_progress() {
     # Create a dialog box with a progress bar
     (
     while true; do
+        sleep 2;
         # Check if the ffmpeg process is still running
         if ! ps -p "$pid_ffmpeg" >/dev/null 2>&1; then
             break
@@ -117,7 +118,7 @@ render_display_progress() {
         # Calculate the percentage of completion based on the current duration already rendered
         progress=$( printf "%.0f" "$(echo "scale=4; ($current_duration / $total_duration) * 100" | bc)" );
         echo "$progress";
-        sleep 1;
+        
 
     done
     ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --percentage=0 --auto-close
@@ -149,13 +150,6 @@ check_validity() {
     fi
 }
 
-# Function to generate MP3 from MP4
-generate_mp3() {
-    local mp4_file="$1"
-    local mp3_file="$2"
-    ffmpeg -y -hide_banner -loglevel info  -i "$mp4_file" -vn -acodec libmp3lame "$mp3_file"
-}
-
 # Function to get the start time of a process in Unix epoch seconds with %s format
 get_process_start_time() {
     # Get the start time of the process in Unix epoch seconds
@@ -185,20 +179,14 @@ video_fmt=$(translate_vid_format "${best_format}")
 colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res}";
 
-if ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
+ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
        -f pulse -i "${SRC_mic}" -ar 44100 -c:a aac -b:a 320k \
        -c:v libx264 -preset:v slow -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart \
        -bufsize 2M -rtbufsize 2M  \
        -map 0:v "${OUT_VIDEO}"      \
        -map 1:a "${OUT_VOCAL}" &
-ff_pid=$!; then
-                colorecho "green" "FFMpeg recorder started";
-    else
-        colorecho "red" "FFMpeg RECORDER failed!!";
-        kill_parent_and_children $$;
-        exit;
-    fi 
-
+                    ff_pid=$!;
+   
 }
 
 # Define log file path
@@ -418,14 +406,14 @@ colorecho "white" "$( lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
 
 check_validity "${VOCAL_FILE}" "wav";
 
-zenity --info --text="Gonna now render an overlay video with effects" --title "Vocal enhancements rdy" --timeout=10;
+zenity --info --text="Gonna now masterize the song mix into a video with effects" --title "Vocal enhancements rdy" --timeout=10;
 
 colorecho "red" "PostProduction: rendering the mix avec enhancements."
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 #-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
- if ffmpeg -y  -loglevel info -hide_banner \
+ ffmpeg -y  -loglevel info -hide_banner \
                                                -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${VOCAL_FILE}" \
     -filter_complex "
@@ -449,49 +437,34 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
         -t "${PLAYBACK_LEN}" \
             -c:v libx264 -b:v 10000k -movflags faststart \
             -c:a aac -b:a 250k -ar 44100  \
-                "${OUT_FILE}" & then
+                "${OUT_FILE}" &
                     ff_pid=$!; 
-                colorecho "green" "FFMpeg postprod started";
-    else
-        colorecho "red" "FFMpeg POSTPROD failed!!";
-        kill_parent_and_children $$;
-        exit;
-    fi
-
+                
     render_display_progress "${OUT_FILE}" $ff_pid;
     check_validity "${OUT_FILE}" "mp4";
 
-zenity --info --text="Overlay video render Done." --title "Gonna now render FINAL VIDEO" --timeout=10;
+zenity --info --text="Overlay video render Done." --title "render FINAL VIDEO" --timeout=10;
 
-colorecho "green" "[BETAKê] Done. Merging final output!" 
+colorecho "green" "Done. Merging final output!" 
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
-    if    ffmpeg -hide_banner -loglevel info  \
+    ffmpeg -hide_banner -loglevel info  \
                               -i "${OUT_FILE}" \
         -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" \
                                  -i "${OUT_VIDEO}" \
             -filter_complex "[0:v]scale=s=${video_res}[vidres];
                              [vidres][1:v]xstack=inputs=2,
                              drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:$PLAYBACK_LEN-t\:d}':fontcolor=white:fontsize=24:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;" \
-                              -s 1920x1080 "${FINAL_FILE}" & then
+                              -s 1920x1080 -r 30 "${FINAL_FILE}" &
                                                 ff_pid=$!;
-                colorecho "green" "FFMpeg FINAL RENDER started";
-    else
-        colorecho "red" "FFMpeg FINAL RENDER failed!!";
-        kill_parent_and_children $$;
-        exit;
-    fi
-        colorecho "teste1";
-        render_display_progress "${FINAL_FILE}" $ff_pid;
-        colorecho "teste";
-        check_validity "${FINAL_FILE}" "mp4";
+    
+    render_display_progress "${FINAL_FILE}" $ff_pid;
+    check_validity "${FINAL_FILE}" "mp4";
 
-zenity --info --text="FINAL render Done." --title "Gonna now render a MP3" --timeout=10;
+zenity --info --text="FINAL render Done." --title "Gonna show performance" --timeout=10;
 
-colorecho "yellow" "Generating MP3 too on outputs dir..";
-generate_mp3 "${OUT_FILE}" "${OUT_FILE%.*}".mp3;
-check_validity "${OUT_FILE%.*}".mp3 "mp3";
+
 
 # display resulting video to user    
 ffplay  -loglevel error -hide_banner -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";
