@@ -122,9 +122,6 @@ render_display_progress() {
 
     done
     ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --percentage=0 --auto-close
-    
-    # if pressed to cancel, kill, else it wont kill anybody thats already dead, boss.
-    kill -9 "${pid_ffmpeg}";
 
 }
 
