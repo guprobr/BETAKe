@@ -38,7 +38,7 @@ read -rp "Do you want to continue? (yes/no): " response
 # Check the response
 if [[ $response == "yes" ]]; then
     colorecho "green" "You chose to continue.";
-    sudo apt -y install fortunes*  alsa-utils \
+    sudo apt -y install fortunes*  alsa-utils expect \
 	python3-pexpect pulseaudio-utils wmctrl fonts-noto \
     python3-tk python3-numpy python3-psutil xterm \
     sox x42-plugins lv2file v4l-utils pandoc git ffmpeg;

@@ -426,25 +426,26 @@ class App:
         
         # Command to execute betaREC.sh with tee for logging
         command = [
-            'bash', '-c',
-            f'{betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" 2>&1 | tee -a script.log'
+            'bash', '-c', 
+            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}"' # 2>&1 | tee -a script.log'
         ]
 
-        # Launch gammaQ.sh and redirect output to script.log
-        self.recprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Open script.log file for appending
+        logfile = "script.log"
+        def execute_subprocess():
+            with open(logfile, "a") as log_file:
+                recprocess = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+                for line in recprocess.stdout:
+                    log_file.write(line)
+                    log_file.flush()  # Flush the buffer to ensure immediate writing to the file
+                    print(line.strip())  # Print output to console if needed
+                recprocess.wait()
 
-        # Define a function to check the subprocess status
-        def check_recprocess_status():
-            while True:
-                if self.recprocess.poll() is not None:
-                    break
-                time.sleep(1)
+                # Enable the button when the subprocess finishes
+                self.master.after(0, lambda: self.start_recording_button.config(state=tk.NORMAL))
 
-            # Enable the button when the subprocess finishes
-            self.master.after(0, lambda: self.start_recording_button.config(state=tk.NORMAL))
-
-        # Start a separate thread to check the subprocess status
-        threading.Thread(target=check_recprocess_status).start()
+        # Start a separate thread to execute the subprocess
+        threading.Thread(target=execute_subprocess).start()
     
     def tail_log(self):
         self.tail_log_button.config(state=tk.DISABLED)

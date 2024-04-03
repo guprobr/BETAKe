@@ -442,7 +442,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
 zenity --info --text="Overlay video render Done." --title "render FINAL VIDEO" --timeout=10;
 
-colorecho "green" "Done. Merging final output!" 
+colorecho "green" "Merging final output!" 
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
