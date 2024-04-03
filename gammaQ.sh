@@ -178,9 +178,9 @@ colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res}";
 
 ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
-       -f pulse -i "${SRC_mic}" -ar 44100 -c:a aac -b:a 320k \
-       -c:v libx264 -preset:v slow -crf:v 23 -g 25 -pix_fmt yuv420p -movflags +faststart \
-       -bufsize 2M -rtbufsize 2M  \
+       -f pulse -i "${SRC_mic}" -ar 44100 -c:a aac -b:a 5000k \
+       -c:v libx264 -preset:v slow -crf:v 23 -g 25 -b:v 10000k -pix_fmt yuv420p -movflags +faststart \
+       -bufsize 3M -rtbufsize 3M  \
        -map 0:v "${OUT_VIDEO}"      \
        -map 1:a "${OUT_VOCAL}" &
                     ff_pid=$!;
@@ -332,14 +332,14 @@ done | zenity --progress --text="Press to STOP performing and render MP4" \
               --title="Recording" --percentage=0 --auto-close
 # Check if the progress dialog was canceled OR completed
 if [ $? = 1 ]; then
-    colorecho "red" "Recording skipped before end of playback. Will render MP4!";
+    colorecho "white" "Recording skipped before end of playback. Will render MP4!";
 else
-    colorecho "cyan" "Entire Progress completed. Will render MP4!";
+    colorecho "blue" "Entire Progress completed. Will render MP4!";
 fi
 
 
-colorecho "blue" "Actual playback duration: ${PLAYBACK_LEN}";
-colorecho "red" "Calculated diff sync: $diff_ss";
+colorecho "cyan" "Actual playback duration: ${PLAYBACK_LEN}";
+colorecho "magenta" "Calculated diff sync: $diff_ss";
 
 # give 5sec for recorder graceful finish, just in case :P
     colorecho "magenta" "Performance Recorded!";
@@ -380,7 +380,7 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
                 "${OUT_VOCAL}";
 
         check_validity "${OUT_VOCAL}" "wav";
-        colorecho "yellow" "Apply vocal tuning algorithm Gareus XC42...";
+        colorecho "red" "Try apply vocal tuning algorithm Gareus XC42 after declipper...";
         lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
             -P Live \
             -p mode:Auto  \
@@ -396,7 +396,7 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
     fi
     rm -f lv2.tmp.log;
 
-colorecho "yellow" "[AuDIO] Apply vocal tuning algorithm Auburn Sound's Graillon...";
+colorecho "yellow" "Apply vocal tuning algorithm Auburn Sound's Graillon...";
 colorecho "white" "$( lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
     -P Younger\ Speech \
     -p p9:1.00 -p p20:2.00 -p p15:0.515 -p p17:1.000 -p p18:1.00 \
@@ -406,10 +406,9 @@ check_validity "${VOCAL_FILE}" "wav";
 
 zenity --info --text="Gonna now masterize the song mix into a video with effects" --title "Vocal enhancements rdy" --timeout=10;
 
-colorecho "red" "PostProduction: rendering the mix avec enhancements."
+colorecho "yellow" "Rendering mix avec visuals overlay"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
-#-ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * -1 " | bc )" )"  -i "${OUT_VIDEO}" \
 
  ffmpeg -y  -loglevel info -hide_banner \
                                                -i "${PLAYBACK_BETA}" \
@@ -434,7 +433,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
         [v0][badcoffee]vstack=inputs=2,scale=s=640x480;" \
         -t "${PLAYBACK_LEN}" \
             -c:v libx264 -b:v 10000k -movflags faststart \
-            -c:a aac -b:a 250k -ar 44100  \
+            -c:a aac -b:a 5000k -ar 44100  \
                 "${OUT_FILE}" &
                     ff_pid=$!; 
                 
@@ -443,7 +442,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
 zenity --info --text="Overlay video render Done." --title "render FINAL VIDEO" --timeout=10;
 
-colorecho "green" "Merging final output!" 
+colorecho "yellow" "Merging final output!" 
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
@@ -467,5 +466,5 @@ zenity --info --text="FINAL render Done." --title "Gonna show performance" --tim
 # display resulting video to user    
 ffplay  -loglevel error -hide_banner -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";
 
-colorecho "green" "Thank you for having fun!"
+colorecho "cyan" "Thank you for having fun!"
 exit;
