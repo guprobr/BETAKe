@@ -104,7 +104,7 @@ class App:
         self.video_dev_entry.insert(0, "/dev/video0")
 
         self.video_test_button = tk.Button(
-            master, text="Preview webcam", command=self.test_video_device)
+            master, text="Preview cam", command=self.test_video_device)
         self.video_test_button.place(x=295, y=685)
 
         self.audio_test_button = tk.Button(
@@ -458,7 +458,7 @@ class App:
         command = [ 'ffplay', '-hide_banner', '-loglevel', 'error', 
                    '-autoexit', '-exitonmousedown', '-exitonkeydown', 
                    '-window_title', 'Press any key or click to close',
-                   '-fast', '-genpts', '-t', '30', '-f', 'v4l2', '-i', self.video_dev_entry.get().strip(),
+                   '-fast', '-genpts', '-f', 'v4l2', '-i', self.video_dev_entry.get().strip(), '-vf', 'scale=1920x1080'
                  ]
         self.videotestprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
@@ -475,35 +475,40 @@ class App:
         threading.Thread(target=check_video_test_subprocess_status).start()
 
     def test_audio_device(self):
+        
         self.audio_test_button.config(state=tk.DISABLED)
-        command = [ 'pactl', 'set-source-volume', 'default', '0%' ]
-        subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Mute the microphone to avoid feedback
+        subprocess.run(['pactl', 'set-source-volume', 'default', '0%'])
         tkinter.messagebox.showinfo(
-            "Listen to test microphone volume", "Verify mic volume BEFORE clicking ok -- if volume is too high it will loop creating a horrible feedback sound. Set lowest volume BEFORE CLICKING OK and test by increasing it slowly."
+            "Listen to test microphone volume",
+            "Verify mic volume BEFORE clicking ok -- if volume is too high it will loop creating a horrible feedback sound. Set lowest volume BEFORE CLICKING OK and test by increasing it slowly."
         )
-        command = ['ffmpeg', '-hide_banner', '-loglevel', 'error',
-           '-f', 'pulse', '-i', 'default', '-t', '7',
-           '-filter_complex', '[0:a]asplit[a][b];[a]showwaves=s=1920x1080:mode=line:rate=15:n=1:colors=green|yellow:scale=0[spec];[b]showcqt=s=1920x1080[cqt];[cqt][spec]overlay',
-           '-bufsize', '8k', '-maxrate', '300k', '-f', 'nut', '-']
+        
+        command = [
+            'ffmpeg', '-hide_banner', '-loglevel', 'error',
+            '-f', 'pulse', '-i', 'default',
+            '-filter_complex', '[0:a]asplit[a][b];[a]showwaves=s=200x128:mode=line:rate=10:n=1:colors=green|yellow:scale=0[spec];[b]showcqt=s=100x96[cqt];[cqt][spec]overlay',
+            '-bufsize', '8k', '-maxrate', '284k', '-f', 'nut', '-'
+        ]
 
-        ffplay_command = ['ffplay', '-autoexit', '-exitonmousedown', '-exitonkeydown', '-window_title', 'Press any key or click to close',
-                  '-sync', 'ext', '-noborder', '-']
+        ffplay_command = ['ffplay', '-hide_banner', '-loglevel', 'error', '-autoexit', '-exitonmousedown', '-exitonkeydown', 
+                   '-window_title', 'Press any key or click to close',
+                   '-fast', '-genpts', '-vf', 'scale=1024x768', '-']
 
-
-
-        ffmpeg_process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ffmpeg_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ffplay_process = subprocess.Popen(ffplay_command, stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
         def check_audio_test_subprocess_status():
             while True:
-                if ffplay_process.poll() is not None:
+                if ffplay_process.poll() is not None or ffmpeg_process.poll() is not None:
                     # Once ffplay exits, terminate ffmpeg
                     ffmpeg_process.terminate()
+                    ffplay_process.terminate()
                     break
                 time.sleep(1)
 
             # Enable the button when the subprocess finishes
-            self.master.after(0, lambda: self.audio_test_button.config(state=tk.NORMAL))
+            self.audio_test_button.config(state=tk.NORMAL)
 
         # Start a separate thread to check the subprocess status
         threading.Thread(target=check_audio_test_subprocess_status).start()
