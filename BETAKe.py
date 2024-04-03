@@ -85,7 +85,7 @@ class App:
         self.video_dev_dialog_open = False
         self.tail_log_open = None
 
-        custom_font = Font(family="Terminus", size=12, weight="bold")
+        custom_font = Font(family="Verdana", size=13)
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray", font=custom_font)
         self.output_text.place(x=0, y=0, width=1024, height=510)
@@ -111,9 +111,9 @@ class App:
             master, text="Select MP4", command=self.select_mp4_file)
         self.select_mp4_button.place(x=600, y=700, height=69)
 
-        #self.tail_log_button = tk.Button(
-        #    master, text="Tail Logs", command=self.tail_log)
-        #self.tail_log_button.place(x=600, y=640)
+        self.tail_log_button = tk.Button(
+            master, text="Tail Logs", command=self.tail_log)
+        self.tail_log_button.place(x=600, y=640)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -190,9 +190,9 @@ class App:
 
         while True:
             line = process.stdout.readline().decode('utf-8').rstrip()
-            #if line and ('🎵' in line or '𝄞' in line):
-            self.colorize_line(line)
-            self.scroll_to_end()
+            if line and '🎼' in line:
+                self.colorize_line(line)
+                self.scroll_to_end()
 
     def colorize_line(self, line):
         # Define a regular expression to match escape codes for foreground colors
@@ -234,9 +234,9 @@ class App:
 
         # Reset to default foreground color after termination escape code (39)
         if '0' in escape_codes:
-            default_color = '#FFAA0E'  # White color
+            default_color = '#FFFFFF'  # White color
             self.output_text.tag_config('default_color', foreground=default_color)
-            self.output_text.insert(tk.END, "🎵", 'default_color')
+            self.output_text.insert(tk.END, " ", 'default_color')
 
 
         # Scroll to the end of the widget
@@ -399,14 +399,13 @@ class App:
         )
 
         if mp4_file:
-            # Open the selected MP4 file with the default web browser
-            webbrowser.open(f"file://{mp4_file}")
+            ### Open the selected MP4 file with the default web browser
+            ###webbrowser.open(f"file://{mp4_file}")
             self.video_url_entry.delete(0, tk.END)
             self.video_url_entry.insert(0, f"file://{mp4_file}")
-            # Show a dialog asking a yes/no question
-        response = tkinter.messagebox.showinfo(
-            "Preview cached playback on browser", "Click START button to record this choice, or choose another cached playback/external URL"
-        )
+        #response = tkinter.messagebox.showinfo(
+        #    "Preview cached playback on browser", "Click START button to record this choice, or choose another cached playback/external URL"
+        #)
 
     def start_recording(self):
         # Get karaoke filename and video URL from entry widgets
@@ -451,7 +450,7 @@ class App:
         self.tail_log_button.config(state=tk.DISABLED)
         
         # Command to execute gnome-terminal tailing -f script.log
-        command = [ 'gnome-terminal', '-t', 'Tail_Logs', '--',
+        command = [ 'xterm', '-bg', 'black', '-fg', 'white', '-fs', '12', '-fa', 'Noto', '-title', 'Extended-Logs', '-e',
             'tail', '-f', f'{betake_path}/script.log'
         ]
         self.tailprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
