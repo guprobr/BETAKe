@@ -93,7 +93,7 @@ render_display_progress() {
     # Create a dialog box with a progress bar
     (
     while true; do
-        sleep 2;
+        sleep 3;
         # Check if the ffmpeg process is still running
         if ! ps -p "$pid_ffmpeg" >/dev/null 2>&1; then
             break
@@ -119,7 +119,6 @@ render_display_progress() {
         # Calculate the percentage of completion based on the current duration already rendered
         progress=$( printf "%.0f" "$(echo "scale=4; ($current_duration / $total_duration) * 100" | bc)" );
         echo "$progress";
-        
 
     done
     ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --percentage=0 --auto-close
@@ -177,14 +176,19 @@ video_fmt=$(translate_vid_format "${best_format}")
 colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res}";
 
-ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
-       -f pulse -i "${SRC_mic}" -ar 44100 -c:a aac -b:a 5000k \
+if ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
+       -f pulse -i "${SRC_mic}" -ar 96000  -ac 2 -c:a aac -b:a 5000k \
        -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -b:v 10000k -pix_fmt yuv420p -movflags +faststart \
        -bufsize 3M -rtbufsize 3M  \
        -map 0:v   "${OUT_VIDEO}"      \
-       -map 1:a         "${OUT_VOCAL}"      \
-       -map 0:v -s 200x120 -f nut - | ffplay -window_title "Preview em baixa resolução" -hide_banner -loglevel error -autoexit -fast - -vf scale=640x400 &
-                    ff_pid=$! 
+       -map 1:a   "${OUT_VOCAL}"  &
+                    ff_pid=$!; then
+       colorecho "cyan" "Success: ffmpeg process";
+else
+       colorecho "red" "FAIL ffmpeg process";
+       kill_parent_and_children $$
+       exit
+fi
    
 }
 
@@ -430,7 +434,7 @@ colorecho "yellow" "Rendering mix avec visuals and playback"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
- ffmpeg -y  -loglevel info -hide_banner \
+ if ffmpeg -y  -loglevel info -hide_banner \
                                                -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "
@@ -439,7 +443,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
     aresample=resampler=soxr:osf=s16[playback];
 
     [1:a]
-    adeclip,compensationdelay,alimiter,speechnorm,acompressor,
+    compensationdelay,alimiter,speechnorm,acompressor,
     aecho=0.8:0.8:56:0.33,treble=g=4,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
@@ -453,8 +457,14 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
         -t "${PLAYBACK_LEN}" \
             -c:v libx264 -b:v 10000k -movflags faststart \
             -c:a aac -b:a 5000k -ar 96000  \
-                -s "${video_res}" "${OUT_FILE}" &
-                                            ff_pid=$!; 
+                "${OUT_FILE}" &
+                                            ff_pid=$!; then
+                    colorecho "cyan" "Started render ffmpeg process";
+else
+       colorecho "red" "FAIL to start ffmpeg process";
+       kill_parent_and_children $$
+       exit
+fi 
                 
     render_display_progress "${OUT_FILE}" $ff_pid;
     #check_validity "${OUT_FILE}" "mp4";
@@ -465,28 +475,41 @@ colorecho "yellow" "Merging final output!"
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
-ffmpeg -hide_banner -loglevel info \
+seedy=$( fortune | wc -c );
+
+if ffmpeg -hide_banner -loglevel info \
     -ss "$(printf "%0.8f" "$(echo "scale=8; ${diff_ss} " | bc)")" \
     -i "${OUT_VIDEO}" \
     -i "${OUT_FILE}" \
     -filter_complex "
-        [0:v]hue=h=2*PI*t/5[hugo];
-        [hugo]scale=s=${video_res}[user];[user][1:v]xstack=inputs=2,
-        drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:$PLAYBACK_LEN-t\:d}':fontcolor=white:fontsize=24:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
+        [0:v]hue=h=3*PI*t+($seedy*PI/8),lumakey,lagfun[hugo];
+        [1:v]scale=s=${video_res}[hugh];
+        [hugo][hugh]xstack=inputs=2,
+        drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
     -s 1920x1080 -r 30 -t "${PLAYBACK_LEN}" \
             -c:v libx264 -b:v 10000k -movflags faststart \
             -c:a aac -b:a 5000k -ar 96000 "${FINAL_FILE}" &
-        ff_pid=$!;
-
-
+        ff_pid=$!; then
+                    colorecho "cyan" "Started FINAL  merge process";
+else
+       colorecho "red" "FAIL to start ffmpeg merge process";
+       kill_parent_and_children $$
+       exit
+fi
     
     render_display_progress "${FINAL_FILE}" $ff_pid;
     check_validity "${FINAL_FILE}" "mp4";
 
-zenity --info --text="FINAL render Done." --title "Gonna show performance" --timeout=10;
+zenity --info --text="FINAL render Done." --title "Gonna render MP3" --timeout=10;
 
+if ffmpeg -hide_banner -loglevel error -y -i "${FINAL_FILE}" "${FINAL_FILE%.*}".mp3; then
+    colorecho "cyan" "MP3 rendered OK"
+else
+    colorecho "red" "Failed to render MP3. This is not a fatal error.";
+fi
 
+zenity --info --text="FINAL render Done." --title "Gonna show results" --timeout=10;
 
 # display resulting video to user    
 ffplay  -loglevel error -hide_banner -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";

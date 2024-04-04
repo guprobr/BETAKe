@@ -463,8 +463,7 @@ class App:
         command = [ 'ffplay', '-hide_banner', '-loglevel', 'error', 
                    '-autoexit', '-exitonmousedown', '-exitonkeydown', 
                    '-window_title', 'Press any key or click to close',
-                   '-fast', '-genpts', '-f', 'v4l2', '-i', self.video_dev_entry.get().strip(), '-vf', 'scale=1920x1080'
-                 ]
+                   '-rtbufsize', '100M', '-bufsize', '100M', '-fast', '-genpts', '-f', 'v4l2', '-input_format', 'mjpeg', '-video_size', '200x120', '-i', self.video_dev_entry.get().strip()                 ]
         self.videotestprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
         def check_video_test_subprocess_status():
@@ -500,7 +499,7 @@ class App:
 
         ffplay_command = ['ffplay', '-hide_banner', '-loglevel', 'error', '-autoexit', '-exitonmousedown', '-exitonkeydown', 
                    '-window_title', 'Press any key or click to close',
-                   '-fast', '-genpts', '-vf', 'scale=1024x768', '-']
+                   '-fast', '-vf', 'scale=1024x768', '-']
 
         ffmpeg_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ffplay_process = subprocess.Popen(ffplay_command, stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
