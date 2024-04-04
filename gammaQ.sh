@@ -170,7 +170,7 @@ launch_ffmpeg_webcam() {
 		
 best_format=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | grep -e '\[[0-9]\]' | awk '{ print $2 " " $3 }' | sort -k2 -n | tail -n1 | awk '{ print $1 }')
 video_res=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | \
-                           awk -v fmt="${best_format}" '$0 ~ fmt {f=1} f && /Size/ {print $3; f=0}' | \
+                           awk -v fmt="${best_format}" '$0 ~ fmt {f=1} f && /Size/ {print $3; f=1}' | \
                            sort -k1 -n | tail -n1 );
 video_fmt=$(translate_vid_format "${best_format}")
 
@@ -179,11 +179,12 @@ colorecho "cyan" "Best resolution: ${video_res}";
 
 ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
        -f pulse -i "${SRC_mic}" -ar 44100 -c:a aac -b:a 5000k \
-       -c:v libx264 -preset:v slow -crf:v 23 -g 25 -b:v 10000k -pix_fmt yuv420p -movflags +faststart \
+       -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -b:v 10000k -pix_fmt yuv420p -movflags +faststart \
        -bufsize 3M -rtbufsize 3M  \
-       -map 0:v "${OUT_VIDEO}"      \
-       -map 1:a "${OUT_VOCAL}" &
-                    ff_pid=$!;
+       -map 0:v   "${OUT_VIDEO}"      \
+       -map 1:a         "${OUT_VOCAL}"      \
+       -map 0:v -s 200x120 -f nut - | ffplay -window_title "Preview em baixa resolução" -hide_banner -loglevel error -autoexit -fast - -vf scale=640x400 &
+                    ff_pid=$! 
    
 }
 
@@ -278,9 +279,7 @@ VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"_enhance.wav;
 colorecho "SING!---Launching webcam;";
 colorecho "blue" "Using video device: $video_dev";
 colorecho "yellow" "Using audio source: ${SRC_mic}";
-colorecho "cyan" "WILL try to enable overlay if available, to monitor webcam video while performing";
 
-v4l2-ctl --overlay 1;
 launch_ffmpeg_webcam true;
 
 
@@ -345,23 +344,37 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
     colorecho "magenta" "Performance Recorded!";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
-            colorecho "white" "disable audio loopback monitor and cam overlay"
+            colorecho "white" "disable audio loopback monitor"
             pactl unload-module module-loopback;
             pactl unload-module module-echo-cancel;
-            v4l2-ctl --overlay 0;
-    sleep 5;      
+    sleep 1;      
 
    check_validity "${OUT_VIDEO}" "mp4";
    check_validity "${OUT_VOCAL}" "wav";
 
 zenity --info --text="Gonna now apply several vocal enhancements" --title "SoX + LV2 Vocal enhancements" --timeout=10;
 
-##POSTprod filtering
+##POST filtering
+colorecho "yellow" "DECLIPPER";
+lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+        http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+check_validity "${VOCAL_FILE}" "wav";
+
 colorecho "yellow" "Apply shibata dithering with SoX, also noise reduction...";
-sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof;
-sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
+sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
     noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
-                            dither -s -f shibata;
+                            dither -s -f shibata > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+check_validity "${OUT_VOCAL}" "wav";
+
+colorecho "yellow" "Aliasing";
+lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+    -p level:0.69                               \
+        http://plugin.org.uk/swh-plugins/alias > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${VOCAL_FILE}" "wav";
 
 colorecho "yellow" "Apply vocal tuning algorithm Gareus XC42...";
@@ -397,64 +410,76 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
     rm -f lv2.tmp.log;
 
 colorecho "yellow" "Apply vocal tuning algorithm Auburn Sound's Graillon...";
-colorecho "white" "$( lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
+lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     -P Younger\ Speech \
     -p p9:1.00 -p p20:2.00 -p p15:0.515 -p p17:1.000 -p p18:1.00 \
-    https://www.auburnsounds.com/products/Graillon.html40733132#in1out2 )";
+    https://www.auburnsounds.com/products/Graillon.html40733132#in1out2 > lv2.tmp.log 2>&1
+     colorecho "white" "$( cat lv2.tmp.log )";
+    check_validity "${VOCAL_FILE}" "wav";
 
-check_validity "${VOCAL_FILE}" "wav";
+colorecho "yellow" "Apply SC4 - Steve Harris...";
+lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
+    -p rms_peak:1.0 -p makeup_gain:0.969 \
+        http://plugin.org.uk/swh-plugins/sc4 > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+    check_validity "${OUT_VOCAL}" "wav";
 
-zenity --info --text="Gonna now masterize the song mix into a video with effects" --title "Vocal enhancements rdy" --timeout=10;
+zenity --info --text="Gonna now mix vocals and playback into a video with effects" --title "Vocal enhanced" --timeout=10;
 
-colorecho "yellow" "Rendering mix avec visuals overlay"
+colorecho "yellow" "Rendering mix avec visuals and playback"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
  ffmpeg -y  -loglevel info -hide_banner \
                                                -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${VOCAL_FILE}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "
-      [0:a]volume=volume=0.35,
+    [0:a]volume=volume=0.30,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
-      [1:a]
+    [1:a]
     adeclip,compensationdelay,alimiter,speechnorm,acompressor,
     aecho=0.8:0.8:56:0.33,treble=g=4,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
-
     [playback][vocals]amix=inputs=2:weights=0.45|0.56;
 
     waveform,scale=s=640x360[v1];
-    gradients=n=7:s=640x360,format=rgba[vscope];
+    gradients=n=4:s=640x360,format=rgba[vscope];
         [0:v]scale=s=640x360[v0];
         [v1][vscope]xstack=inputs=2,scale=s=640x360[badcoffee];
         [v0][badcoffee]vstack=inputs=2,scale=s=640x480;" \
         -t "${PLAYBACK_LEN}" \
             -c:v libx264 -b:v 10000k -movflags faststart \
-            -c:a aac -b:a 5000k -ar 44100  \
-                "${OUT_FILE}" &
-                    ff_pid=$!; 
+            -c:a aac -b:a 5000k -ar 96000  \
+                -s "${video_res}" "${OUT_FILE}" &
+                                            ff_pid=$!; 
                 
     render_display_progress "${OUT_FILE}" $ff_pid;
-    check_validity "${OUT_FILE}" "mp4";
+    #check_validity "${OUT_FILE}" "mp4";
 
-zenity --info --text="Overlay video render Done." --title "render FINAL VIDEO" --timeout=10;
+zenity --info --text="Visuals video render Done." --title "render FINAL VIDEO" --timeout=10;
 
 colorecho "yellow" "Merging final output!" 
     
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
     
-    ffmpeg -hide_banner -loglevel info  \
-                              -i "${OUT_FILE}" \
-        -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" \
-                                 -i "${OUT_VIDEO}" \
-            -filter_complex "[0:v]scale=s=${video_res}[vidres];
-                             [vidres][1:v]xstack=inputs=2,
-                             drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:$PLAYBACK_LEN-t\:d}':fontcolor=white:fontsize=24:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;" \
-                              -s 1920x1080 -r 30 "${FINAL_FILE}" &
-                                                ff_pid=$!;
+ffmpeg -hide_banner -loglevel info \
+    -ss "$(printf "%0.8f" "$(echo "scale=8; ${diff_ss} " | bc)")" \
+    -i "${OUT_VIDEO}" \
+    -i "${OUT_FILE}" \
+    -filter_complex "
+        [0:v]hue=h=2*PI*t/5[hugo];
+        [hugo]scale=s=${video_res}[user];[user][1:v]xstack=inputs=2,
+        drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:$PLAYBACK_LEN-t\:d}':fontcolor=white:fontsize=24:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
+    " \
+    -s 1920x1080 -r 30 -t "${PLAYBACK_LEN}" \
+            -c:v libx264 -b:v 10000k -movflags faststart \
+            -c:a aac -b:a 5000k -ar 96000 "${FINAL_FILE}" &
+        ff_pid=$!;
+
+
     
     render_display_progress "${FINAL_FILE}" $ff_pid;
     check_validity "${FINAL_FILE}" "mp4";

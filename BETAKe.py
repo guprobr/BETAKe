@@ -415,6 +415,8 @@ class App:
     def start_recording(self):
         # Get karaoke filename and video URL from entry widgets
         self.start_recording_button.config(state=tk.DISABLED)
+        self.video_test_button.config(state=tk.DISABLED)
+        self.audio_test_button.config(state=tk.DISABLED)
 
         karaoke_name = self.karaoke_name_entry.get().strip()
         video_dev = self.video_dev_entry.get().strip()
@@ -448,12 +450,15 @@ class App:
 
                 # Enable the button when the subprocess finishes
                 self.master.after(0, lambda: self.start_recording_button.config(state=tk.NORMAL))
+                self.master.after(0, lambda: self.video_test_button.config(state=tk.NORMAL))
+                self.master.after(0, lambda: self.audio_test_button.config(state=tk.NORMAL))
 
         # Start a separate thread to execute the subprocess
         threading.Thread(target=execute_subprocess).start()
     
     def test_video_device(self):
         self.video_test_button.config(state=tk.DISABLED)
+        self.start_recording_button.config(state=tk.DISABLED)
         # Command to execute a preview of webcam with ffplay
         command = [ 'ffplay', '-hide_banner', '-loglevel', 'error', 
                    '-autoexit', '-exitonmousedown', '-exitonkeydown', 
@@ -470,13 +475,15 @@ class App:
 
             # Enable the button when the subprocess finishes
             self.master.after(0, lambda: self.video_test_button.config(state=tk.NORMAL))
+            self.master.after(0, lambda: self.start_recording_button.config(state=tk.NORMAL))
 
         # Start a separate thread to check the subprocess status
         threading.Thread(target=check_video_test_subprocess_status).start()
 
     def test_audio_device(self):
-        
+        self.start_recording_button.config(state=tk.DISABLED)
         self.audio_test_button.config(state=tk.DISABLED)
+
         # Mute the microphone to avoid feedback
         subprocess.run(['pactl', 'set-source-volume', 'default', '0%'])
         tkinter.messagebox.showinfo(
@@ -509,6 +516,7 @@ class App:
 
             # Enable the button when the subprocess finishes
             self.audio_test_button.config(state=tk.NORMAL)
+            self.start_recording_button.config(state=tk.NORMAL)
 
         # Start a separate thread to check the subprocess status
         threading.Thread(target=check_audio_test_subprocess_status).start()
