@@ -56,7 +56,7 @@ colorecho "Welcome!";
         local child_pids;
         child_pids=$(pgrep -P "$parent_pid")
 
-                    #pactl unload-module module-loopback;
+                    pactl unload-module module-loopback;
                     ##pactl unload-module module-echo-cancel;
 
         # Kill the parent process and all its children
@@ -198,11 +198,15 @@ video_res=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | \
                            sort -k1 -n | tail -n1 );
 video_fmt=$(translate_vid_format "${best_format}")
 
+RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' | sed 's/[[:alpha:]]//g' )"
+CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | sed 's/[[:alpha:]]//g' )"
+BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | sed 's/[[:alpha:]]//g' )"
+
 colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res}";
 
 if ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
-       -f pulse -i "${SRC_mic}" -ar 96000  -ac 2 -c:a aac -b:a 5000k \
+       -f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -b:a "${BITS_mic}" -c:a aac \
        -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -b:v 10000k -pix_fmt yuv420p -movflags +faststart \
        -bufsize 3M -rtbufsize 3M  \
        -map 0:v   "${OUT_VIDEO}"      \
@@ -235,8 +239,8 @@ colorecho "green" " got mic src: $SRC_mic";
 # use_master_format=1 aec_method=webrtc \
 # aec_args="analog_gain_control=adaptive" \
 # source_name="${SRC_mic}" sink_name="${SINK}"
-###colorecho "white" "Loopback monitor do audio ON";
-###pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
+colorecho "white" "Loopback monitor do audio ON";
+pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
 ##DOWNLOAD PLAYBACK
 colorecho "red" "Try upd yt-dlp";
@@ -375,8 +379,8 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
             killall -9 ffplay;
             killall -TERM guvcview;
 
-            #colorecho "white" "disable audio loopback monitor"
-            #pactl unload-module module-loopback;
+            colorecho "white" "disable audio loopback monitor"
+            pactl unload-module module-loopback;
             ##pactl unload-module module-echo-cancel;
     sleep 1;      
 
@@ -487,7 +491,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
         [v0][badcoffee]vstack=inputs=2,scale=s=640x480;" \
         -t "${PLAYBACK_LEN}" \
             -c:v libx264 -b:v 10000k -movflags faststart \
-            -c:a aac -b:a 5000k -ar 96000  \
+            -c:a aac -ar 96000  \
                 "${OUT_FILE}" &
                                             ff_pid=$!; then
                     colorecho "cyan" "Started render ffmpeg process";
@@ -520,7 +524,7 @@ if ffmpeg -hide_banner -loglevel info \
     " \
     -s 1920x1080 -r 30 -t "${PLAYBACK_LEN}" \
             -c:v libx264 -b:v 10000k -movflags faststart \
-            -c:a aac -b:a 5000k -ar 96000 "${FINAL_FILE}" &
+            -c:a aac -ar 96000 "${FINAL_FILE}" &
         ff_pid=$!; then
                     colorecho "cyan" "Started FINAL  merge process";
 else
