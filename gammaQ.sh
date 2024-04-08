@@ -203,7 +203,7 @@ CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | s
 BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | sed 's/[[:alpha:]]//g' )"
 
 colorecho "green" "FFmpeg format name: ${video_fmt}";
-colorecho "cyan" "Best resolution: ${video_res}";
+colorecho "cyan" "Best resolution: ${video_res} Audio: ${CH_mic}ch ${BITS_mic}bits ${RATE_mic}Hz";
 
 if ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
        -f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -b:a "${BITS_mic}" -c:a aac \
@@ -240,6 +240,7 @@ colorecho "green" " got mic src: $SRC_mic";
 # aec_args="analog_gain_control=adaptive" \
 # source_name="${SRC_mic}" sink_name="${SINK}"
 colorecho "white" "Loopback monitor do audio ON";
+pactl unload-module module-loopback;
 pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
 ##DOWNLOAD PLAYBACK
@@ -333,7 +334,7 @@ colorecho "yellow" "Launch lyrics video";
 			        -window_title "SING" -loglevel quiet -hide_banner \
                     -af "volume=0.10" \
                     -noborder \
-                    -vf "scale=1024:768" "${PLAYBACK_BETA}" &
+                    -vf "scale=640:400" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
             epoch_ffplay=$( get_process_start_time  );
 
@@ -479,10 +480,10 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
     [1:a]
     compensationdelay,alimiter,speechnorm,acompressor,
-    aecho=0.8:0.8:56:0.33,treble=g=4,
+    aecho=0.8:0.8:56:0.33,treble=g=4,volume=volume=5dB,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.45|0.56;
+    [playback][vocals]amix=inputs=2:weights=0.4|0.6;
 
     waveform,scale=s=640x360[v1];
     gradients=n=4:s=640x360,format=rgba[vscope];
@@ -490,8 +491,8 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
         [v1][vscope]xstack=inputs=2,scale=s=640x360[badcoffee];
         [v0][badcoffee]vstack=inputs=2,scale=s=640x480;" \
         -t "${PLAYBACK_LEN}" \
-            -c:v libx264 -b:v 10000k -movflags faststart \
-            -c:a aac -ar 96000  \
+            -c:v libx264 -movflags faststart \
+            -c:a aac  \
                 "${OUT_FILE}" &
                                             ff_pid=$!; then
                     colorecho "cyan" "Started render ffmpeg process";
@@ -517,14 +518,14 @@ if ffmpeg -hide_banner -loglevel info \
     -i "${OUT_VIDEO}" \
     -i "${OUT_FILE}" \
     -filter_complex "
-        [0:v]hue=h=3*PI*t+($seedy*PI/8),lumakey,lagfun[hugo];
+        [0:v]hue=h=PI*t+($seedy*PI/2),lumakey,lagfun[hugo];
         [1:v]scale=s=${video_res}[hugh];
         [hugo][hugh]xstack=inputs=2,
         drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
     -s 1920x1080 -r 30 -t "${PLAYBACK_LEN}" \
-            -c:v libx264 -b:v 10000k -movflags faststart \
-            -c:a aac -ar 96000 "${FINAL_FILE}" &
+            -c:v libx264 -movflags faststart \
+            -c:a aac "${FINAL_FILE}" &
         ff_pid=$!; then
                     colorecho "cyan" "Started FINAL  merge process";
 else
