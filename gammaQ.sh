@@ -56,7 +56,7 @@ colorecho "Welcome!";
         local child_pids;
         child_pids=$(pgrep -P "$parent_pid")
 
-                    pactl unload-module module-loopback;
+                    #pactl unload-module module-loopback;
                     ##pactl unload-module module-echo-cancel;
 
         # Kill the parent process and all its children
@@ -225,18 +225,18 @@ SINK="$( pactl get-default-sink )"
 colorecho "yellow" " got sink: $SINK";
 SRC_mic="$( pactl get-default-source )"
 colorecho "green" " got mic src: $SRC_mic";
-colorecho "magenta" "Ajustar vol ${SRC_mic} em 45%";
- pactl set-source-volume "${SRC_mic}" 45%;
-colorecho "green" "Ajustar vol default sink 69% USE HEADPHONES";
- pactl set-sink-volume "${SINK}"  69%;
+#colorecho "magenta" "Ajustar vol ${SRC_mic} em 45%";
+# pactl set-source-volume "${SRC_mic}" 45%;
+#colorecho "green" "Ajustar vol default sink 69% USE HEADPHONES";
+# pactl set-sink-volume "${SINK}"  69%;
 
 #colorecho "red" "Habilitando echo-cancel com gain-control";
 #pactl load-module module-echo-cancel \
 # use_master_format=1 aec_method=webrtc \
 # aec_args="analog_gain_control=adaptive" \
 # source_name="${SRC_mic}" sink_name="${SINK}"
-colorecho "white" "Loopback monitor do audio ON";
-pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
+###colorecho "white" "Loopback monitor do audio ON";
+###pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
 ##DOWNLOAD PLAYBACK
 colorecho "red" "Try upd yt-dlp";
@@ -375,8 +375,8 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
             killall -9 ffplay;
             killall -TERM guvcview;
 
-            colorecho "white" "disable audio loopback monitor"
-            pactl unload-module module-loopback;
+            #colorecho "white" "disable audio loopback monitor"
+            #pactl unload-module module-loopback;
             ##pactl unload-module module-echo-cancel;
     sleep 1;      
 
