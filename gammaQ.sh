@@ -47,21 +47,7 @@ colorecho() {
 
 colorecho "Welcome!";
 
-translate_vid_format() {
-    case "$1" in
-        YUYV) echo "yuyv422";;
-        UYVY) echo "uyvy422";;
-        NV12) echo "nv12";;
-        NV21) echo "nv21";;
-        YV12) echo "yuv420p";;
-        YV16) echo "yuv422p";;
-        YV24) echo "yuv444p";;
-        RGB3) echo "rgb24";;
-        RGB4) echo "bgr24";;
-        GREY) echo "gray";;
-        *) echo "mjpeg";;
-    esac
-}
+
 
 
 # Function to kill the parent process and all its children
@@ -71,7 +57,7 @@ translate_vid_format() {
         child_pids=$(pgrep -P "$parent_pid")
 
                     pactl unload-module module-loopback;
-                    pactl unload-module module-echo-cancel;
+                    ##pactl unload-module module-echo-cancel;
 
         # Kill the parent process and all its children
         echo "Killing parent process $parent_pid and its children: $child_pids"
@@ -165,8 +151,47 @@ time_diff_seconds() {
     echo "$(echo "scale=6; (${end_secs} - ${start_secs}) " | bc)"
 }
 
+#launch_guvcview() {
+
+ #   best_format=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | grep -e '\[[0-9]\]' | awk '{ print $2 " " $3 }' | sort -k2 -n | tail -n1 | awk '{ print $1 }')
+ #   video_res=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | \
+ #                          awk -v fmt="${best_format}" '$0 ~ fmt {f=1} f && /Size/ {print $3; f=1}' | \
+ #                          sort -k1 -n | tail -n1 );
+
+#    colorecho "green" "format name: ${best_format}";
+#    colorecho "cyan" "Best resolution: ${video_res}";
+# if   guvcview -e -c read -d "${video_dev}" -f "${best_format}" -x "${video_res}" -u h264 \
+#                -F 30 -r sdl -m 640x400 \
+#                -a pulse -k "${SRC_mic}" -o aac \
+#                -g none -j "${OUT_VIDEO}" -y "${PLAYBACK_LEN}" & 
+#                                              ff_pid=$!; then
+#       colorecho "cyan" "Success: guvcview process";
+#       killall -USR1 guvcview
+#else
+#       colorecho "red" "FAIL guvcview process";
+#       kill_parent_and_children $$
+#       exit
+#fi
+#}
+
+translate_vid_format() {
+    case "$1" in
+        YUYV) echo "yuyv422";;
+        UYVY) echo "uyvy422";;
+        NV12) echo "nv12";;
+        NV21) echo "nv21";;
+        YV12) echo "yuv420p";;
+        YV16) echo "yuv422p";;
+        YV24) echo "yuv444p";;
+        RGB3) echo "rgb24";;
+        RGB4) echo "bgr24";;
+        GREY) echo "gray";;
+        *) echo "mjpeg";;
+    esac
+}
+
 launch_ffmpeg_webcam() {
-		
+
 best_format=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | grep -e '\[[0-9]\]' | awk '{ print $2 " " $3 }' | sort -k2 -n | tail -n1 | awk '{ print $1 }')
 video_res=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | \
                            awk -v fmt="${best_format}" '$0 ~ fmt {f=1} f && /Size/ {print $3; f=1}' | \
@@ -205,11 +230,11 @@ colorecho "magenta" "Ajustar vol ${SRC_mic} em 45%";
 colorecho "green" "Ajustar vol default sink 69% USE HEADPHONES";
  pactl set-sink-volume "${SINK}"  69%;
 
-colorecho "red" "Habilitando echo-cancel com gain-control";
-pactl load-module module-echo-cancel \
- use_master_format=1 aec_method=webrtc \
- aec_args="analog_gain_control=adaptive" \
- source_name="${SRC_mic}" sink_name="${SINK}"
+#colorecho "red" "Habilitando echo-cancel com gain-control";
+#pactl load-module module-echo-cancel \
+# use_master_format=1 aec_method=webrtc \
+# aec_args="analog_gain_control=adaptive" \
+# source_name="${SRC_mic}" sink_name="${SINK}"
 colorecho "white" "Loopback monitor do audio ON";
 pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
@@ -289,7 +314,7 @@ launch_ffmpeg_webcam true;
 
 epoch_ff=$( get_process_start_time );
 renice -n -19 "$ff_pid"
-    colorecho "green" "FFmpeg start Epoch: $epoch_ff";
+    colorecho "green" "RECORDER start Epoch: $epoch_ff";
     
 # Wait for the output file to be created and not empty; only then we run ffplay
 while [ ! -s "${OUT_VIDEO}" ]; do
@@ -348,10 +373,16 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
     colorecho "magenta" "Performance Recorded!";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
+            killall -TERM guvcview;
+
             colorecho "white" "disable audio loopback monitor"
             pactl unload-module module-loopback;
-            pactl unload-module module-echo-cancel;
+            ##pactl unload-module module-echo-cancel;
     sleep 1;      
+
+    #only if using guvcview
+    #mv "${OUT_VIDEO%.*}"-1.mp4 "${OUT_VIDEO}";
+    #ffmpeg -hide_banner -loglevel info -y -i "${OUT_VIDEO}" "${OUT_VOCAL}";
 
    check_validity "${OUT_VIDEO}" "mp4";
    check_validity "${OUT_VOCAL}" "wav";
