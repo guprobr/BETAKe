@@ -480,7 +480,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
     [1:a]
     compensationdelay,alimiter,speechnorm,acompressor,
-    aecho=0.8:0.8:56:0.33,treble=g=4,volume=volume=5dB,
+    aecho=0.8:0.8:56:0.33,treble=g=4,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
     [playback][vocals]amix=inputs=2:weights=0.3|0.7;
@@ -493,7 +493,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
         -t "${PLAYBACK_LEN}" \
             -c:v libx264 -movflags faststart \
             -c:a aac  \
-                "${OUT_FILE}" &
+               -s "${video_res}" "${OUT_FILE}" &
                                             ff_pid=$!; then
                     colorecho "cyan" "Started render ffmpeg process";
 else
@@ -503,7 +503,7 @@ else
 fi 
                 
     render_display_progress "${OUT_FILE}" $ff_pid;
-    #check_validity "${OUT_FILE}" "mp4";
+    check_validity "${OUT_FILE}" "mp4";
 
 zenity --info --text="Visuals video render Done." --title "render MP3" --timeout=10;
 
@@ -514,8 +514,6 @@ else
     colorecho "red" "Failed to render MP3. This is not a fatal error.";
 fi
 zenity --info --text="MP3 render Done." --title "MP3 Done" --timeout=10;
-
-
 
 colorecho "yellow" "Merging final output!" 
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
@@ -538,9 +536,9 @@ if [ "$5" == "" ]; then
             -c:v libx264 -movflags faststart \
             -c:a aac "${FINAL_FILE}" &
         ff_pid=$!; then
-                    colorecho "cyan" "Started FINAL  merge process";
+                    colorecho "cyan" "Started FINAL video merge process";
   else
-       colorecho "red" "FAIL to start ffmpeg merge process";
+       colorecho "red" "FAIL to start ffmpeg video merge process";
        kill_parent_and_children $$
        exit
   fi
