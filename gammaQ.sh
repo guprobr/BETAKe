@@ -47,15 +47,13 @@ colorecho() {
 
 colorecho "Welcome!";
 
-
-
-
 # Function to kill the parent process and all its children
     kill_parent_and_children() {
         local parent_pid=$1
         local child_pids;
         child_pids=$(pgrep -P "$parent_pid")
 
+                    killall -9 pavumeter;
                     pactl unload-module module-loopback;
                     ##pactl unload-module module-echo-cancel;
 
@@ -72,6 +70,7 @@ colorecho "Welcome!";
             fi
         done
     }
+
 render_display_progress() {
     local total_duration="${PLAYBACK_LEN}"  # Total duration of the video in seconds
     local pid_ffmpeg="$2"     # PID of the ffmpeg process
@@ -167,6 +166,21 @@ translate_vid_format() {
     esac
 }
 
+# Define the function to calculate dB difference
+calculate_db_difference() {
+    # Extract RMS amplitude from each file
+    RMS1="$1";
+    RMS2="$2";
+    
+    # Calculate dB difference
+    dB_difference=$(awk -v RMS1="$RMS1" -v RMS2="$RMS2" 'BEGIN { print 20 * log(RMS1 / RMS2) / log(10) }');
+
+    # Print the result
+    echo "$dB_difference";
+
+}
+
+
 launch_sox() {
  # we use just to cfg audio
         RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' | sed 's/[[:alpha:]]//g' )"
@@ -235,6 +249,7 @@ colorecho "green" " got mic src: $SRC_mic";
 colorecho "white" "Loopback monitor do audio ON";
 pactl unload-module module-loopback;
 pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
+pavumeter --record &
 
 ##DOWNLOAD PLAYBACK
 colorecho "red" "Try upd yt-dlp";
@@ -324,7 +339,7 @@ colorecho "yellow" "Launch lyrics video";
 	        ffplay -left -0 \
                         -top -0 \
 			        -window_title "SING" -loglevel quiet -hide_banner \
-                    -af "volume=0.10" \
+                    -af "volume=0.40" \
                     -vf "scale=800x448" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
             epoch_ffplay=$( get_process_start_time  );
@@ -372,7 +387,8 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
 
             colorecho "white" "disable audio loopback monitor"
             pactl unload-module module-loopback;
-            
+            killall -9 pavumeter;
+
     sleep 3;
 
    check_validity "${OUT_VIDEO}" "mp4";
@@ -380,36 +396,37 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
 
 zenity --info --text="Gonna now apply several vocal enhancements" --title "SoX + LV2 Vocal enhancements" --timeout=10;
 
-##POST filtering
-colorecho "yellow" "DECLIPPER";
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
-        http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
-check_validity "${VOCAL_FILE}" "wav";
 
-colorecho "yellow" "Apply shibata dithering with SoX, also noise reduction...";
-sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
-sox "${VOCAL_FILE}" "${OUT_VOCAL}" \
-    noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
-                            dither -s -f shibata > lv2.tmp.log 2>&1
+##POSTprod filtering
+colorecho "yellow" "Applying DECLIPPER";
+lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
+        http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${OUT_VOCAL}" "wav";
 
-colorecho "yellow" "Aliasing";
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
-    -p level:0.69                               \
-        http://plugin.org.uk/swh-plugins/alias > lv2.tmp.log 2>&1
+colorecho "yellow" "Apply shibata dithering with SoX, also noise reduction...";
+sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
+    noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
+                            dither -s -f shibata > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${VOCAL_FILE}" "wav";
 
-colorecho "yellow" "Apply vocal tuning algorithm Gareus XC42...";
+colorecho "yellow" "run Aliasing";
 lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
+    -p level:0.69                               \
+        http://plugin.org.uk/swh-plugins/alias > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+check_validity "${OUT_VOCAL}" "wav";
+
+colorecho "yellow" "Execute vocal tuning algorithm Gareus XC42...";
+lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     -P Live \
     -p mode:Auto  \
     http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${OUT_VOCAL}" "wav";
+    check_validity "${VOCAL_FILE}" "wav";
 
     if grep -qi clipping ./lv2.tmp.log ; then
         colorecho "red" "Will try to FIX clipping with declipper. Perphaps you should record again with a lower volume!";
@@ -417,10 +434,10 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
         ffmpeg -y -hide_banner -loglevel info  \
         -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000,loudnorm;" \
                 "${OUT_VOCAL}";
-
         check_validity "${OUT_VOCAL}" "wav";
+
         colorecho "red" "Try apply vocal tuning algorithm Gareus XC42 after declipper...";
-        lv2file -o "${VOCAL_FILE}" -i "${OUT_VOCAL}" \
+        lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
             -P Live \
             -p mode:Auto  \
             http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
@@ -435,7 +452,7 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
     fi
     rm -f lv2.tmp.log;
 
-colorecho "yellow" "Apply vocal tuning algorithm Auburn Sound's Graillon...";
+colorecho "yellow" "Vocal tuning algorithm Auburn Sound's Graillon...";
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     -P Younger\ Speech \
     -p p9:1.00 -p p20:2.00 -p p15:0.515 -p p17:1.000 -p p18:1.00 \
@@ -443,12 +460,24 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
      colorecho "white" "$( cat lv2.tmp.log )";
     check_validity "${VOCAL_FILE}" "wav";
 
-colorecho "yellow" "Apply SC4 - Steve Harris...";
+colorecho "yellow" "Finnally, Apply SC4 - Steve Harris...";
 lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
-    -p rms_peak:1.0 -p makeup_gain:0.969 \
-        http://plugin.org.uk/swh-plugins/sc4 > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
+   -p rms_peak:1.0 -p makeup_gain:0.969 \
+       http://plugin.org.uk/swh-plugins/sc4 > lv2.tmp.log 2>&1
+   colorecho "white" "$( cat lv2.tmp.log )";
     check_validity "${OUT_VOCAL}" "wav";
+
+
+colorecho "magenta" "Will fix volumes";
+ffmpeg -hide_banner -v quiet -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
+                         check_validity "${PLAYBACK_BETA%.*}".wav "wav";
+# Extract volume info and calc diff in dB of each file
+DB_diff=$( calculate_db_difference "$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" "$( sox "${OUT_VOCAL}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" );
+colorecho "red" "The aprox. difference in dB between the files is ${DB_diff}";
+    rm -rf "${PLAYBACK_BETA%.*}".wav;
+    ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff}dB" "${VOCAL_FILE}"
+    colorecho "red" "vocals VOL adjustment applied"
+    check_validity "${VOCAL_FILE}" "wav";
 
 zenity --info --text="Gonna now mix vocals and playback into a video with effects" --title "Vocal enhanced" --timeout=10;
 
@@ -458,26 +487,23 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
  if ffmpeg -y  -loglevel info -hide_banner \
                                                -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
     -filter_complex "
-    [0:a]volume=volume=1dB,
+    [0:a]volume=volume=-${DB_diff}dB[playback];
+    [1:a]compensationdelay,alimiter,speechnorm,acompressor,
+    aecho=0.98:0.84:56:0.33,treble=g=5,volume=volume=${DB_diff}dB,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
-    aresample=resampler=soxr:osf=s16[playback];
-
-    [1:a]
-    compensationdelay,alimiter,speechnorm,acompressor,
-    aecho=0.8:0.8:56:0.33,treble=g=4,volume=volume=6dB,
-        aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
-        aresample=resampler=soxr:osf=s16:precision=33[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.3|0.7;
-
-    gradients=n=6:s=432x240,format=rgba[vscope];
-        [0:v]scale=s=432x240[v0];
-        [v0][vscope]xstack=inputs=2,scale=s=432x240;" \
+    aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
+    
+    [playback][vocals]amix=inputs=2:weights=0.25|1.00;
+    
+    gradients=n=8:s=320x240,format=rgba[vscope];
+        [0:v]scale=s=320x240[v0];
+        [v0][vscope]xstack=inputs=2;" \
         -t "${PLAYBACK_LEN}" \
             -c:v libx264 -movflags faststart \
-            -c:a aac  \
-               -s "${video_res}" "${OUT_FILE}" &
+            -c:a aac  -preset:v ultrafast  \
+                "${OUT_FILE}" &
                                             ff_pid=$!; then
                 colorecho "cyan" "Started render ffmpeg process";
 else
@@ -502,9 +528,6 @@ zenity --info --text="MP3 render Done." --title "MP3 Done" --timeout=10;
 colorecho "yellow" "Merging final output!" 
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
 
-#for random seed in filters (legacy)    
-#seedy=$( fortune | wc -c );
-
 if [ "$5" == "" ]; then
   if ffmpeg -hide_banner -loglevel info \
     -ss "$(printf "%0.8f" "$(echo "scale=8; ${diff_ss} * 2 " | bc)")" \
@@ -512,11 +535,11 @@ if [ "$5" == "" ]; then
     -i "${OUT_FILE}" \
     -filter_complex "
         [1:v]scale=s=${video_res}[hugh];
-        [hugh][0:v]xstack=inputs=2,
-        drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
+        [hugh][0:v]overlay=alpha=0.4,
+        drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
-    -s 1920x1080 -r 30 -t "${PLAYBACK_LEN}" \
-            -c:v libx264 -movflags faststart \
+    -s 1920x1080 -t "${PLAYBACK_LEN}" \
+            -c:v libx264 -movflags faststart -preset:v ultrafast \
             -c:a aac "${FINAL_FILE}" &
         ff_pid=$!; then
                     colorecho "cyan" "Started FINAL video merge process";
