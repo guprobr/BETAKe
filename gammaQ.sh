@@ -396,7 +396,7 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
 
 zenity --info --text="Gonna now apply several vocal enhancements" --title "SoX + LV2 Vocal enhancements" --timeout=10;
 
-
+cp -ra "${OUT_VOCAL}"  "${VOCAL_FILE}"; # this is tmp
 ##POSTprod filtering
 colorecho "yellow" "Applying DECLIPPER";
 lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
