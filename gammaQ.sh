@@ -507,7 +507,7 @@ colorecho "yellow" "Merging final output!"
 
 if [ "$5" == "" ]; then
   if ffmpeg -hide_banner -loglevel info \
-    -ss "$(printf "%0.8f" "$(echo "scale=8; ${diff_ss} " | bc)")" \
+    -ss "$(printf "%0.8f" "$(echo "scale=8; ${diff_ss} * 2 " | bc)")" \
     -i "${OUT_VIDEO}" \
     -i "${OUT_FILE}" \
     -filter_complex "
