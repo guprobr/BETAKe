@@ -202,17 +202,37 @@ RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' |
 CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | sed 's/[[:alpha:]]//g' )"
 BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | sed 's/[[:alpha:]]//g' )"
 
+if pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | grep -q float; then
+    ENC_mic="floating-point";
+else
+    if pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | grep -q u; then
+        ENC_mic="unsigned-integer";
+    else
+        ENC_mic="signed-integer";
+    fi
+fi
+
 colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res} Audio: ${CH_mic}ch ${BITS_mic}bits ${RATE_mic}Hz";
 
+
+#-f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -b:a "${BITS_mic}" -c:a aac \
 if ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
-       -f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -b:a "${BITS_mic}" -c:a aac \
        -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -b:v 10000k -pix_fmt yuv420p -movflags +faststart \
        -bufsize 3M -rtbufsize 3M  \
-       -map 0:v   "${OUT_VIDEO}"      \
-       -map 1:a   "${OUT_VOCAL}"  &
+       -map 0:v   "${OUT_VIDEO}"  &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
+       if parec --device="${SRC_mic}" | sox -t raw -r "${RATE_mic}" -c "${CH_mic}" -b "${BITS_mic}" -e "${ENC_mic}" \
+                                - -t wav -r "${RATE_mic}" -c "${CH_mic}" -b "${BITS_mic}" -e "${ENC_mic}" "${OUT_VOCAL}" &
+                                                                                    sox_pid=$!; then
+                                    colorecho "green" "Success: SoX process. Recording started!";
+                        else
+                            colorecho "red" "FAIL SoX process";
+                            kill_parent_and_children $$
+                            exit
+                        fi
+
 else
        colorecho "red" "FAIL ffmpeg process";
        kill_parent_and_children $$
@@ -353,8 +373,12 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
     cronos_play=$(( "$cronos_play" + 1 ));
     # shellcheck disable=SC2005
     echo $(( ("$cronos_play"*100) / "$PLAYBACK_LEN" ))
-            # Check if the webcam process is still running
+            # Check if the webcam recorder process is still running
             if ! ps -p "$ff_pid" >/dev/null 2>&1; then
+                break
+            fi
+             # Check if the audio recorder process is still running
+            if ! ps -p "$sox_pid" >/dev/null 2>&1; then
                 break
             fi
             # Check if the playback process is still running
@@ -378,7 +402,8 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
     colorecho "magenta" "Performance Recorded!";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
-            killall -TERM guvcview;
+            killall -SIGINT sox;
+            #killall -TERM guvcview;
 
             colorecho "white" "disable audio loopback monitor"
             pactl unload-module module-loopback;
