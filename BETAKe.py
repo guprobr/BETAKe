@@ -430,6 +430,7 @@ class App:
         self.start_recording_button.config(state=tk.DISABLED)
         self.video_test_button.config(state=tk.DISABLED)
         self.audio_test_button.config(state=tk.DISABLED)
+        self.skip_selfie_button.config(state=tk.DISABLED)
 
         karaoke_name = self.karaoke_name_entry.get().strip()
         video_dev = self.video_dev_entry.get().strip()
@@ -465,6 +466,7 @@ class App:
                 self.master.after(0, lambda: self.start_recording_button.config(state=tk.NORMAL))
                 self.master.after(0, lambda: self.video_test_button.config(state=tk.NORMAL))
                 self.master.after(0, lambda: self.audio_test_button.config(state=tk.NORMAL))
+                self.master.after(0, lambda: self.skip_selfie_button.config(state=tk.NORMAL))
 
         # Start a separate thread to execute the subprocess
         threading.Thread(target=execute_subprocess).start()
