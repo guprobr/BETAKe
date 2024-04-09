@@ -84,6 +84,7 @@ class App:
         self.audio_loopback_button = None
         self.video_dev_dialog_open = False
         self.tail_log_open = None
+        self.selfie_disable = ""
 
         custom_font = Font(family="Verdana", size=13)
         # Create scrolled text widget for displaying output
@@ -121,7 +122,11 @@ class App:
 
         self.tail_log_button = tk.Button(
             master, text="Tail Logs", command=self.tail_log)
-        self.tail_log_button.place(x=600, y=640)
+        self.tail_log_button.place(x=600, y=620)
+
+        self.skip_selfie_button = tk.Button(
+            master, text="Skip Selfie Render", command=self.skip_selfie)
+        self.skip_selfie_button.place(x=600, y=660)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -173,6 +178,14 @@ class App:
                 self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
                 self.video_dev_entry.delete(0, tk.END)
                 self.video_dev_entry.insert(0, selected_devCam)
+
+    def skip_selfie(self):
+        if self.selfie_disable == "":
+            self.selfie_disable = "TRUE"
+            self.output_text.insert(tk.END, "Will not render webcam video at end of postprocessing." + '\n')
+        else:
+            self.selfie_disable = ""
+            self.output_text.insert(tk.END, "WILL render webcam video;" + '\n')
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)
@@ -434,7 +447,7 @@ class App:
         # Command to execute betaREC.sh with tee for logging
         command = [
             'bash', '-c', 
-            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}"' # 2>&1 | tee -a script.log'
+            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{self.selfie_disable}" ' # 2>&1 | tee -a script.log'
         ]
 
         # Open script.log file for appending
@@ -463,7 +476,7 @@ class App:
         command = [ 'ffplay', '-hide_banner', '-loglevel', 'error', 
                    '-autoexit', '-exitonmousedown', '-exitonkeydown', 
                    '-window_title', 'Press any key or click to close',
-                   '-rtbufsize', '100M', '-bufsize', '100M', '-fast', '-genpts', '-f', 'v4l2', '-input_format', 'mjpeg', '-video_size', '200x120', '-i', self.video_dev_entry.get().strip()                 ]
+                   '-rtbufsize', '100M', '-bufsize', '100M', '-fast', '-genpts', '-f', 'v4l2', '-input_format', 'mjpeg', '-video_size', '640x400', '-i', self.video_dev_entry.get().strip()                 ]
         self.videotestprocess = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
         def check_video_test_subprocess_status():

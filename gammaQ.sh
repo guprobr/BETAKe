@@ -474,7 +474,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
                                                -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "
-    [0:a]volume=volume=0.30,
+    [0:a]
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
@@ -483,7 +483,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
     aecho=0.8:0.8:56:0.33,treble=g=4,volume=volume=5dB,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.4|0.6;
+    [playback][vocals]amix=inputs=2:weights=0.3|0.7;
 
     waveform,scale=s=640x360[v1];
     gradients=n=4:s=640x360,format=rgba[vscope];
@@ -505,20 +505,31 @@ fi
     render_display_progress "${OUT_FILE}" $ff_pid;
     #check_validity "${OUT_FILE}" "mp4";
 
-zenity --info --text="Visuals video render Done." --title "render FINAL VIDEO" --timeout=10;
+zenity --info --text="Visuals video render Done." --title "render MP3" --timeout=10;
+
+
+if ffmpeg -hide_banner -loglevel error -y -i "${OUT_FILE}" "${OUT_FILE%.*}".mp3; then
+    colorecho "cyan" "MP3 rendered OK"
+else
+    colorecho "red" "Failed to render MP3. This is not a fatal error.";
+fi
+zenity --info --text="MP3 render Done." --title "MP3 Done" --timeout=10;
+
+
 
 colorecho "yellow" "Merging final output!" 
-    
     FINAL_FILE="${OUT_FILE%.*}"ke.mp4
-    
-seedy=$( fortune | wc -c );
 
-if ffmpeg -hide_banner -loglevel info \
+#for random seed in filters (legacy)    
+#seedy=$( fortune | wc -c );
+
+if [ "$5" == "" ]; then
+  if ffmpeg -hide_banner -loglevel info \
     -ss "$(printf "%0.8f" "$(echo "scale=8; ${diff_ss} " | bc)")" \
     -i "${OUT_VIDEO}" \
     -i "${OUT_FILE}" \
     -filter_complex "
-        [0:v]hue=h=PI*t+($seedy*PI/2),lumakey,lagfun[hugo];
+        [0:v]lagfun[hugo];
         [1:v]scale=s=${video_res}[hugh];
         [hugo][hugh]xstack=inputs=2,
         drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
@@ -528,24 +539,21 @@ if ffmpeg -hide_banner -loglevel info \
             -c:a aac "${FINAL_FILE}" &
         ff_pid=$!; then
                     colorecho "cyan" "Started FINAL  merge process";
-else
+  else
        colorecho "red" "FAIL to start ffmpeg merge process";
        kill_parent_and_children $$
        exit
-fi
+  fi
     
     render_display_progress "${FINAL_FILE}" $ff_pid;
     check_validity "${FINAL_FILE}" "mp4";
 
-zenity --info --text="FINAL render Done." --title "Gonna render MP3" --timeout=10;
+zenity --info --text="FINAL render Done." --title "Finished!" --timeout=10;
 
-if ffmpeg -hide_banner -loglevel error -y -i "${FINAL_FILE}" "${FINAL_FILE%.*}".mp3; then
-    colorecho "cyan" "MP3 rendered OK"
 else
-    colorecho "red" "Failed to render MP3. This is not a fatal error.";
+    colorecho "red" "Skipping webcam render per configuration";
+    FINAL_FILE="${OUT_FILE}";
 fi
-
-zenity --info --text="FINAL render Done." --title "Gonna show results" --timeout=10;
 
 # display resulting video to user    
 ffplay  -loglevel error -hide_banner -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";
