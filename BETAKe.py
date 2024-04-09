@@ -86,7 +86,7 @@ class App:
         self.tail_log_open = None
         self.selfie_disable = ""
 
-        custom_font = Font(family="Verdana", size=13)
+        custom_font = Font(family="Verdana", size=10)
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray", font=custom_font)
         self.output_text.place(x=0, y=0, width=1024, height=510)

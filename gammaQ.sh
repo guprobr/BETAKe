@@ -151,29 +151,6 @@ time_diff_seconds() {
     echo "$(echo "scale=6; (${end_secs} - ${start_secs}) " | bc)"
 }
 
-#launch_guvcview() {
-
- #   best_format=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | grep -e '\[[0-9]\]' | awk '{ print $2 " " $3 }' | sort -k2 -n | tail -n1 | awk '{ print $1 }')
- #   video_res=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | \
- #                          awk -v fmt="${best_format}" '$0 ~ fmt {f=1} f && /Size/ {print $3; f=1}' | \
- #                          sort -k1 -n | tail -n1 );
-
-#    colorecho "green" "format name: ${best_format}";
-#    colorecho "cyan" "Best resolution: ${video_res}";
-# if   guvcview -e -c read -d "${video_dev}" -f "${best_format}" -x "${video_res}" -u h264 \
-#                -F 30 -r sdl -m 640x400 \
-#                -a pulse -k "${SRC_mic}" -o aac \
-#                -g none -j "${OUT_VIDEO}" -y "${PLAYBACK_LEN}" & 
-#                                              ff_pid=$!; then
-#       colorecho "cyan" "Success: guvcview process";
-#       killall -USR1 guvcview
-#else
-#       colorecho "red" "FAIL guvcview process";
-#       kill_parent_and_children $$
-#       exit
-#fi
-#}
-
 translate_vid_format() {
     case "$1" in
         YUYV) echo "yuyv422";;
@@ -190,6 +167,33 @@ translate_vid_format() {
     esac
 }
 
+launch_sox() {
+ # we use just to cfg audio
+        RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' | sed 's/[[:alpha:]]//g' )"
+        CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | sed 's/[[:alpha:]]//g' )"
+       BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | sed 's/[[:alpha:]]//g' )"
+        if pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | grep -q float; then
+            ENC_mic="floating-point";
+        else
+            if pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | grep -q u; then
+                ENC_mic="unsigned-integer";
+            else
+                ENC_mic="signed-integer";
+            fi
+       fi
+############################### START AUDIO RECORDER
+  #     if parec --device="${SRC_mic}" | sox -t raw -r 44100 -b 16 -c 2 -e signed-integer \
+  #                              - -t wav -r "${RATE_mic}" -b "${BITS_mic}" -c "${CH_mic}" -e "${ENC_mic}" "${OUT_VOCAL}" &
+  #                                                                                  sox_pid=$!; then
+  #                                  colorecho "green" "Success: SoX process. Recording started!";
+  #                      else
+  #                          colorecho "red" "FAIL SoX process";
+  #                          kill_parent_and_children $$
+  #                          exit
+  #                      fi
+
+}
+
 launch_ffmpeg_webcam() {
 
 best_format=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | grep -e '\[[0-9]\]' | awk '{ print $2 " " $3 }' | sort -k2 -n | tail -n1 | awk '{ print $1 }')
@@ -198,47 +202,25 @@ video_res=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | \
                            sort -k1 -n | tail -n1 );
 video_fmt=$(translate_vid_format "${best_format}")
 
-RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' | sed 's/[[:alpha:]]//g' )"
-CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | sed 's/[[:alpha:]]//g' )"
-BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | sed 's/[[:alpha:]]//g' )"
-
-if pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | grep -q float; then
-    ENC_mic="floating-point";
-else
-    if pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | grep -q u; then
-        ENC_mic="unsigned-integer";
-    else
-        ENC_mic="signed-integer";
-    fi
-fi
+launch_sox true
 
 colorecho "green" "FFmpeg format name: ${video_fmt}";
-colorecho "cyan" "Best resolution: ${video_res} Audio: ${CH_mic}ch ${BITS_mic}bits ${RATE_mic}Hz";
+colorecho "cyan" "Best resolution: ${video_res}";
+colorecho "green" "params Audio: ${CH_mic}ch ${BITS_mic}bits ${RATE_mic}Hz ${ENC_mic}";
 
-
-#-f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -b:a "${BITS_mic}" -c:a aac \
 if ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
+        -f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -sample_fmt s"${BITS_mic}" -b:a 1000k \
        -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -b:v 10000k -pix_fmt yuv420p -movflags +faststart \
        -bufsize 3M -rtbufsize 3M  \
-       -map 0:v   "${OUT_VIDEO}"  &
+       -map 0:v   "${OUT_VIDEO}"  \
+       -map 1:a   "${OUT_VOCAL}" &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
-       if parec --device="${SRC_mic}" | sox -t raw -r "${RATE_mic}" -c "${CH_mic}" -b "${BITS_mic}" -e "${ENC_mic}" \
-                                - -t wav -r "${RATE_mic}" -c "${CH_mic}" -b "${BITS_mic}" -e "${ENC_mic}" "${OUT_VOCAL}" &
-                                                                                    sox_pid=$!; then
-                                    colorecho "green" "Success: SoX process. Recording started!";
-                        else
-                            colorecho "red" "FAIL SoX process";
-                            kill_parent_and_children $$
-                            exit
-                        fi
-
 else
        colorecho "red" "FAIL ffmpeg process";
        kill_parent_and_children $$
        exit
 fi
-   
 }
 
 # Define log file path
@@ -249,16 +231,7 @@ SINK="$( pactl get-default-sink )"
 colorecho "yellow" " got sink: $SINK";
 SRC_mic="$( pactl get-default-source )"
 colorecho "green" " got mic src: $SRC_mic";
-#colorecho "magenta" "Ajustar vol ${SRC_mic} em 45%";
-# pactl set-source-volume "${SRC_mic}" 45%;
-#colorecho "green" "Ajustar vol default sink 69% USE HEADPHONES";
-# pactl set-sink-volume "${SINK}"  69%;
 
-#colorecho "red" "Habilitando echo-cancel com gain-control";
-#pactl load-module module-echo-cancel \
-# use_master_format=1 aec_method=webrtc \
-# aec_args="analog_gain_control=adaptive" \
-# source_name="${SRC_mic}" sink_name="${SINK}"
 colorecho "white" "Loopback monitor do audio ON";
 pactl unload-module module-loopback;
 pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
@@ -334,16 +307,15 @@ colorecho "SING!---Launching webcam;";
 colorecho "blue" "Using video device: $video_dev";
 colorecho "yellow" "Using audio source: ${SRC_mic}";
 
+# launch webcam recorder
 launch_ffmpeg_webcam true;
-
-
 epoch_ff=$( get_process_start_time );
 renice -n -19 "$ff_pid"
-    colorecho "green" "RECORDER start Epoch: $epoch_ff";
-    
+colorecho "green" "RECORDER start Epoch: $epoch_ff";
+
 # Wait for the output file to be created and not empty; only then we run ffplay
 while [ ! -s "${OUT_VIDEO}" ]; do
-  sleep 0.001; # Adjust sleep time as needed
+  sleep 0.1; # Adjust sleep time as needed
 done | zenity --progress --text="GET READY TO SING" \
               --title="Starting to tape!" --percentage=50 --pulsate --auto-close --auto-kill
 
@@ -353,8 +325,7 @@ colorecho "yellow" "Launch lyrics video";
                         -top -0 \
 			        -window_title "SING" -loglevel quiet -hide_banner \
                     -af "volume=0.10" \
-                    -noborder \
-                    -vf "scale=640:400" "${PLAYBACK_BETA}" &
+                    -vf "scale=800x448" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
             epoch_ffplay=$( get_process_start_time  );
 
@@ -377,10 +348,6 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
             if ! ps -p "$ff_pid" >/dev/null 2>&1; then
                 break
             fi
-             # Check if the audio recorder process is still running
-            if ! ps -p "$sox_pid" >/dev/null 2>&1; then
-                break
-            fi
             # Check if the playback process is still running
             if ! ps -p "$ffplay_pid" >/dev/null 2>&1; then
                 break
@@ -394,25 +361,19 @@ else
     colorecho "blue" "Entire Progress completed. Will render MP4!";
 fi
 
-
 colorecho "cyan" "Actual playback duration: ${PLAYBACK_LEN}";
 colorecho "magenta" "Calculated diff sync: $diff_ss";
 
-# give 5sec for recorder graceful finish, just in case :P
+# give 3 sec for recorder graceful finish, just in case :P
     colorecho "magenta" "Performance Recorded!";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
-            killall -SIGINT sox;
-            #killall -TERM guvcview;
+            #killall -SIGINT sox;
 
             colorecho "white" "disable audio loopback monitor"
             pactl unload-module module-loopback;
-            ##pactl unload-module module-echo-cancel;
-    sleep 1;      
-
-    #only if using guvcview
-    #mv "${OUT_VIDEO%.*}"-1.mp4 "${OUT_VIDEO}";
-    #ffmpeg -hide_banner -loglevel info -y -i "${OUT_VIDEO}" "${OUT_VOCAL}";
+            
+    sleep 3;
 
    check_validity "${OUT_VIDEO}" "mp4";
    check_validity "${OUT_VOCAL}" "wav";
@@ -497,30 +458,28 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
  if ffmpeg -y  -loglevel info -hide_banner \
                                                -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss}/2  " | bc )" )" -i "${OUT_VOCAL}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "
-    [0:a]
+    [0:a]volume=volume=1dB,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:osf=s16[playback];
 
     [1:a]
     compensationdelay,alimiter,speechnorm,acompressor,
-    aecho=0.8:0.8:56:0.33,treble=g=4,
+    aecho=0.8:0.8:56:0.33,treble=g=4,volume=volume=6dB,
         aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
         aresample=resampler=soxr:osf=s16:precision=33[vocals];
     [playback][vocals]amix=inputs=2:weights=0.3|0.7;
 
-    waveform,scale=s=640x360[v1];
-    gradients=n=4:s=640x360,format=rgba[vscope];
-        [0:v]scale=s=640x360[v0];
-        [v1][vscope]xstack=inputs=2,scale=s=640x360[badcoffee];
-        [v0][badcoffee]vstack=inputs=2,scale=s=640x480;" \
+    gradients=n=6:s=432x240,format=rgba[vscope];
+        [0:v]scale=s=432x240[v0];
+        [v0][vscope]xstack=inputs=2,scale=s=432x240;" \
         -t "${PLAYBACK_LEN}" \
             -c:v libx264 -movflags faststart \
             -c:a aac  \
                -s "${video_res}" "${OUT_FILE}" &
                                             ff_pid=$!; then
-                    colorecho "cyan" "Started render ffmpeg process";
+                colorecho "cyan" "Started render ffmpeg process";
 else
        colorecho "red" "FAIL to start ffmpeg process";
        kill_parent_and_children $$
@@ -552,9 +511,8 @@ if [ "$5" == "" ]; then
     -i "${OUT_VIDEO}" \
     -i "${OUT_FILE}" \
     -filter_complex "
-        [0:v]lagfun[hugo];
         [1:v]scale=s=${video_res}[hugh];
-        [hugo][hugh]xstack=inputs=2,
+        [hugh][0:v]xstack=inputs=2,
         drawtext=fontfile=OpenSans-Regular.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
     -s 1920x1080 -r 30 -t "${PLAYBACK_LEN}" \
