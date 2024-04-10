@@ -496,7 +496,7 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "
     [0:a]volume=volume=-${DB_diff}dB[playback];
-    [1:a]acompressor,
+    [1:a]adeclip,alimiter,speechnorm,acompressor,
     aecho=0.88:0.71:84:0.33,treble=g=5,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
