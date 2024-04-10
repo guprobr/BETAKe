@@ -78,7 +78,7 @@ render_display_progress() {
     # Create a dialog box with a progress bar
     (
     while true; do
-        sleep 3;
+        sleep 1;
         # Check if the ffmpeg process is still running
         if ! ps -p "$pid_ffmpeg" >/dev/null 2>&1; then
             break
@@ -484,26 +484,34 @@ zenity --info --text="Gonna now mix vocals and playback into a video with effect
 colorecho "yellow" "Rendering mix avec visuals and playback"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
+seedy=$( fortune | wc -c );
+
+if [ ! "${5}" == "" ]; then
+    OUT_VIDEO=/dev/null;
+fi
 
  if ffmpeg -y  -loglevel info -hide_banner \
-                                               -i "${PLAYBACK_BETA}" \
+                                                                        -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "
     [0:a]volume=volume=-${DB_diff}dB[playback];
-    [1:a]compensationdelay,alimiter,speechnorm,acompressor,
-    aecho=0.98:0.84:56:0.33,treble=g=5,volume=volume=${DB_diff}dB,
+    [1:a]acompressor,
+    aecho=0.88:0.71:84:0.33,treble=g=5,
     aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.25|1.00;
+    [playback][vocals]amix=inputs=2:weights=0.3|1.21;
     
-    gradients=n=8:s=320x240,format=rgba[vscope];
+    gradients=n=8:s=320x240[vscope];
         [0:v]scale=s=320x240[v0];
-        [v0][vscope]xstack=inputs=2;" \
-        -t "${PLAYBACK_LEN}" \
-            -c:v libx264 -movflags faststart \
-            -c:a aac  -preset:v ultrafast  \
-                "${OUT_FILE}" &
+        [v0][vscope]vstack,scale=s=${video_res}[hugh];
+        [2:v]hue=b=$seedy/100:h=PI*t+($seedy*PI/3),lagfun,lumakey[hutz];
+        [hutz][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
+    " \
+    -s 1920x1080 -t "${PLAYBACK_LEN}" \
+            -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
+            -c:a aac -b:a 500k -ar 96000 "${OUT_FILE}" &
                                             ff_pid=$!; then
                 colorecho "cyan" "Started render ffmpeg process";
 else
@@ -515,7 +523,7 @@ fi
     render_display_progress "${OUT_FILE}" $ff_pid;
     check_validity "${OUT_FILE}" "mp4";
 
-zenity --info --text="Visuals video render Done." --title "render MP3" --timeout=10;
+zenity --info --text="Visuals video render Done." --title "next: render MP3" --timeout=10;
 
 
 if ffmpeg -hide_banner -loglevel error -y -i "${OUT_FILE}" "${OUT_FILE%.*}".mp3; then
@@ -525,42 +533,8 @@ else
 fi
 zenity --info --text="MP3 render Done." --title "MP3 Done" --timeout=10;
 
-colorecho "yellow" "Merging final output!" 
-    FINAL_FILE="${OUT_FILE%.*}"ke.mp4
-
-if [ "$5" == "" ]; then
-  if ffmpeg -hide_banner -loglevel info \
-    -ss "$(printf "%0.8f" "$(echo "scale=8; ${diff_ss} * 2 " | bc)")" \
-    -i "${OUT_VIDEO}" \
-    -i "${OUT_FILE}" \
-    -filter_complex "
-        [1:v]scale=s=${video_res}[hugh];
-        [hugh][0:v]overlay=alpha=0.4,
-        drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
-    " \
-    -s 1920x1080 -t "${PLAYBACK_LEN}" \
-            -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac "${FINAL_FILE}" &
-        ff_pid=$!; then
-                    colorecho "cyan" "Started FINAL video merge process";
-  else
-       colorecho "red" "FAIL to start ffmpeg video merge process";
-       kill_parent_and_children $$
-       exit
-  fi
-    
-    render_display_progress "${FINAL_FILE}" $ff_pid;
-    check_validity "${FINAL_FILE}" "mp4";
-
-zenity --info --text="FINAL render Done." --title "Finished!" --timeout=10;
-
-else
-    colorecho "red" "Skipping webcam render per configuration";
-    FINAL_FILE="${OUT_FILE}";
-fi
-
 # display resulting video to user    
-ffplay  -loglevel error -hide_banner -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${FINAL_FILE}";
+ffplay  -loglevel error -hide_banner -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${OUT_FILE}";
 
 colorecho "cyan" "Thank you for having fun!"
 exit;
