@@ -336,10 +336,8 @@ done | zenity --progress --text="GET READY TO SING" \
 
 colorecho "yellow" "Launch lyrics video";
 
-	        ffplay -left -0 \
-                        -top -0 \
+	        ffplay \
 			        -window_title "SING" -loglevel quiet -hide_banner \
-                    -af "volume=0.40" \
                     -vf "scale=800x448" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
             epoch_ffplay=$( get_process_start_time  );
@@ -495,18 +493,15 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "
-    [0:a]volume=volume=-${DB_diff}dB[playback];
-    [1:a]adeclip,alimiter,speechnorm,acompressor,
-    aecho=0.88:0.71:84:0.33,treble=g=5,
-    aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,
-    aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
+    [0:a]dynaudnorm[playback];
+    [1:a]aecho=0.9:0.9:84:0.33[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.3|1.21;
+    [playback][vocals]amix=inputs=2:weights=0.4|0.8;
     
     gradients=n=8:s=320x240[vscope];
         [0:v]scale=s=320x240[v0];
         [v0][vscope]vstack,scale=s=${video_res}[hugh];
-        [2:v]hue=b=$seedy/100:h=PI*t+($seedy*PI/3),lagfun,lumakey[hutz];
+        [2:v]hue=b=$seedy/100:h=PI*t+($seedy*PI/6),lagfun[hutz];
         [hutz][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
     -s 1920x1080 -t "${PLAYBACK_LEN}" \
