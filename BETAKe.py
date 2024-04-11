@@ -124,9 +124,9 @@ class App:
             master, text="Tail Logs", command=self.tail_log)
         self.tail_log_button.place(x=600, y=620)
 
-        self.skip_selfie_button = tk.Button(
-            master, text="Skip Selfie Render", command=self.skip_selfie)
-        self.skip_selfie_button.place(x=600, y=660)
+        #self.skip_selfie_button = tk.Button(
+        #    master, text="Skip Selfie Render", command=self.skip_selfie)
+        #self.skip_selfie_button.place(x=600, y=660)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)

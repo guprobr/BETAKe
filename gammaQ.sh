@@ -484,10 +484,6 @@ export LC_ALL=C;
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 seedy=$( fortune | wc -c );
 
-if [ ! "${5}" == "" ]; then
-    OUT_VIDEO=/dev/null;
-fi
-
  if ffmpeg -y  -loglevel info -hide_banner \
                                                                         -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
