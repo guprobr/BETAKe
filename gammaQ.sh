@@ -496,7 +496,7 @@ fi
     [0:a]dynaudnorm[playback];
     [1:a]aecho=0.9:0.9:84:0.33[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.4|0.8;
+    [playback][vocals]amix=inputs=2:weights=0.444|0.66;
     
     gradients=n=8:s=320x240[vscope];
         [0:v]scale=s=320x240[v0];
