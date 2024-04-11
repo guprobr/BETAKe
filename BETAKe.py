@@ -430,7 +430,7 @@ class App:
         self.start_recording_button.config(state=tk.DISABLED)
         self.video_test_button.config(state=tk.DISABLED)
         self.audio_test_button.config(state=tk.DISABLED)
-        self.skip_selfie_button.config(state=tk.DISABLED)
+        #self.skip_selfie_button.config(state=tk.DISABLED)
 
         karaoke_name = self.karaoke_name_entry.get().strip()
         video_dev = self.video_dev_entry.get().strip()
