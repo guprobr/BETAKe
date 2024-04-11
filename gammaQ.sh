@@ -489,10 +489,10 @@ seedy=$( fortune | wc -c );
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "
-    [0:a]dynaudnorm[playback];
-    [1:a]aecho=0.9:0.9:84:0.33[vocals];
+    [0:a]loudnorm[playback];
+    [1:a]aecho=0.7:0.77:84:0.33[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.444|0.66;
+    [playback][vocals]amix=inputs=2:weights=0.21|0.98;
     
     gradients=n=8:s=320x240[vscope];
         [0:v]scale=s=320x240[v0];
