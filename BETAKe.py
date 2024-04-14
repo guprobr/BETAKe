@@ -126,9 +126,9 @@ class App:
             master, text="Tail Logs", command=self.tail_log)
         self.tail_log_button.place(x=600, y=620)
 
-        self.skip_selfie_button = tk.Button(
+        self.plot_mic_button = tk.Button(
             master, text="PLOT mic", command=self.plot_audio_spectrum)
-        self.skip_selfie_button.place(x=600, y=660)
+        self.plot_mic_button.place(x=600, y=660)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -493,7 +493,7 @@ class App:
         # Get karaoke filename and video URL from entry widgets
         self.start_recording_button.config(state=tk.DISABLED)
         self.video_test_button.config(state=tk.DISABLED)
-        self.audio_test_button.config(state=tk.DISABLED)
+        #self.audio_test_button.config(state=tk.DISABLED)
         #self.skip_selfie_button.config(state=tk.DISABLED)
 
         karaoke_name = self.karaoke_name_entry.get().strip()
@@ -529,8 +529,8 @@ class App:
                 # Enable the button when the subprocess finishes
                 self.master.after(0, lambda: self.start_recording_button.config(state=tk.NORMAL))
                 self.master.after(0, lambda: self.video_test_button.config(state=tk.NORMAL))
-                self.master.after(0, lambda: self.audio_test_button.config(state=tk.NORMAL))
-                self.master.after(0, lambda: self.skip_selfie_button.config(state=tk.NORMAL))
+                #self.master.after(0, lambda: self.audio_test_button.config(state=tk.NORMAL))
+                #self.master.after(0, lambda: self.skip_selfie_button.config(state=tk.NORMAL))
 
         # Start a separate thread to execute the subprocess
         threading.Thread(target=execute_subprocess).start()
