@@ -15,8 +15,10 @@ from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter.font import Font
 import tkinter.filedialog
-import webbrowser
 import numpy as np
+
+import pyaudio
+import matplotlib.pyplot as plt
 
 logfile = f'{betake_path}/script.log'  # Path to the log file
 os.chdir(betake_path)
@@ -109,7 +111,7 @@ class App:
         self.video_test_button.place(x=295, y=685)
 
         self.audio_test_button = tk.Button(
-            master, text="Adjust mic", command=self.test_audio_device)
+            master, text="EasyEffects", command=self.test_audio_device)
         self.audio_test_button.place(x=295, y=715)
 
         self.get_fortune_button = tk.Button(
@@ -124,9 +126,9 @@ class App:
             master, text="Tail Logs", command=self.tail_log)
         self.tail_log_button.place(x=600, y=620)
 
-        #self.skip_selfie_button = tk.Button(
-        #    master, text="Skip Selfie Render", command=self.skip_selfie)
-        #self.skip_selfie_button.place(x=600, y=660)
+        self.skip_selfie_button = tk.Button(
+            master, text="PLOT mic", command=self.plot_audio_spectrum)
+        self.skip_selfie_button.place(x=600, y=660)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -176,8 +178,70 @@ class App:
             if selected_devCam:
                 print(f"Selected video device: {selected_devCam}")
                 self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
-                self.video_dev_entry.delete(0, tk.END)
-                self.video_dev_entry.insert(0, selected_devCam)
+                self.video_dev_canvas.ntry.insert(0, selected_devCam)
+    # Obtém as informações da source padrão do PulseAudio
+    def get_default_source_info(self):
+        p = pyaudio.PyAudio()
+        default_device_index = p.get_default_input_device_info()['index']
+        default_device_info = p.get_device_info_by_index(default_device_index)
+        return default_device_info
+    # Função de encerramento da janela de plot
+    def close_plot(self, event):
+        self.stream.stop_stream()
+        self.stream.close()
+        self.p.terminate()
+        plt.close()
+        #raise SystemExit
+    # Função para plotar o volume do áudio    
+    def plot_audio_spectrum(self):
+        default_source_info = self.get_default_source_info()
+        self.p = pyaudio.PyAudio()
+        self.stream = self.p.open(format=pyaudio.paInt16,
+                        channels=int(default_source_info['maxInputChannels']),
+                        rate=int(default_source_info['defaultSampleRate']),
+                        input=True,
+                        input_device_index=int(default_source_info['index']),
+                        frames_per_buffer=1024)
+        try:
+            plt.ion()  # Modo de interação para atualização contínua do gráfico
+
+            # Cria uma janela para plotagem com o tamanho desejado
+            plt.figure(figsize=(8, 3.6))
+            # Cria o subplot
+            ax = plt.subplot()
+
+            # Conecta o evento de fechamento da janela à função close_program
+            plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
+
+            # Loop infinito para capturar e plotar continuamente o áudio
+            while True:
+                # Lê os dados do fluxo de áudio
+                data = self.stream.read(1024)
+                # Converte os dados em um array numpy
+                data = np.frombuffer(data, dtype=np.int16)
+                # Calcula o nível de volume
+                volume = np.abs(data).mean()
+
+                # Limpa o eixo antes de plotar
+                ax.clear()
+                # Plota o nível de volume
+                ax.bar(0, volume, color='purple', align='center')
+                ax.set_xlabel('')
+                ax.set_ylabel('Volume')
+                ax.set_title('Nível de Volume de Áudio')
+                ax.set_xlim(-0.5, 0.5)
+                ax.set_ylim(0, 669)  # Ajuste conforme necessário para a escala do volume
+                # Atualiza o gráfico
+                plt.pause(0.01)
+
+        except (KeyboardInterrupt, RuntimeError):
+            # Encerra o fluxo e o PyAudio quando a janela for fechada
+            self.stream.stop_stream()
+            self.stream.close()
+            self.p.terminate()
+            plt.close()  # Fecha a janela do gráfico
+            print("Programa encerrado.")
+
 
     def skip_selfie(self):
         if self.selfie_disable == "":
@@ -495,42 +559,43 @@ class App:
         threading.Thread(target=check_video_test_subprocess_status).start()
 
     def test_audio_device(self):
-        self.start_recording_button.config(state=tk.DISABLED)
+        ##self.start_recording_button.config(state=tk.DISABLED)
         self.audio_test_button.config(state=tk.DISABLED)
 
         # Mute the microphone to avoid feedback
-        subprocess.run(['pactl', 'set-source-volume', 'default', '0%'])
+        #subprocess.run(['pactl', 'set-source-volume', 'default', '0%'])
         tkinter.messagebox.showinfo(
-            "Listen to test microphone volume",
-            "Verify mic volume BEFORE clicking ok -- if volume is too high it will loop creating a horrible feedback sound. Set lowest volume BEFORE CLICKING OK and test by increasing it slowly."
+            "test microphone volume and adj effects",
+            "USE HEADPHONES ! EasyEffects apply all effects to its input source, be sure to select it. You can keep EasyEffects open during recording for better monitoring."
         )
         
-        command = [
-            'ffmpeg', '-hide_banner', '-loglevel', 'error',
-            '-f', 'pulse', '-i', 'default',
-            '-filter_complex', '[0:a]asplit[a][b];[a]showwaves=s=200x128:mode=line:rate=10:n=1:colors=green|yellow:scale=0[spec];[b]showcqt=s=100x96[cqt];[cqt][spec]overlay',
-            '-bufsize', '8k', '-maxrate', '284k', '-f', 'nut', '-'
-        ]
-
-        ffplay_command = ['ffplay', '-hide_banner', '-loglevel', 'error', '-autoexit', '-exitonmousedown', '-exitonkeydown', 
-                   '-window_title', 'Press any key or click to close',
-                   '-fast', '-vf', 'scale=1024x768', '-']
-
-        ffmpeg_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        ffplay_process = subprocess.Popen(ffplay_command, stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #command = [
+        #    'ffmpeg', '-hide_banner', '-loglevel', 'error',
+        #    '-f', 'pulse', '-i', 'default',
+        #    '-filter_complex', '[0:a]asplit[a][b];[a]showwaves=s=200x128:mode=line:rate=10:n=1:colors=green|yellow:scale=0[spec];[b]showcqt=s=100x96[cqt];[cqt][spec]overlay',
+        #    '-bufsize', '8k', '-maxrate', '284k', '-f', 'nut', '-'
+        #]
+        #ffplay_command = ['ffplay', '-hide_banner', '-loglevel', 'error', '-autoexit', '-exitonmousedown', '-exitonkeydown', 
+        #           '-window_title', 'Press any key or click to close',
+        #           '-fast', '-vf', 'scale=1024x768', '-']
+        #ffmpeg_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #ffplay_process = subprocess.Popen(ffplay_command, stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
+        command = [ 'easyeffects' ]
+        easy_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
         def check_audio_test_subprocess_status():
             while True:
-                if ffplay_process.poll() is not None or ffmpeg_process.poll() is not None:
-                    # Once ffplay exits, terminate ffmpeg
-                    ffmpeg_process.terminate()
-                    ffplay_process.terminate()
+                if easy_process.poll() is not None: #or ffmpeg_process.poll() is not None:
+                    # Once  exits, terminate thread
+                    easy_process.terminate()
+                    #ffplay_process.terminate()
                     break
                 time.sleep(1)
 
             # Enable the button when the subprocess finishes
             self.audio_test_button.config(state=tk.NORMAL)
-            self.start_recording_button.config(state=tk.NORMAL)
+            #self.start_recording_button.config(state=tk.NORMAL)
 
         # Start a separate thread to check the subprocess status
         threading.Thread(target=check_audio_test_subprocess_status).start()

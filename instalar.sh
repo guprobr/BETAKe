@@ -32,16 +32,17 @@ colorecho() {
 
 # Prompt the user for input
 colorecho "red" "ESSE SCRIPT DEVE RODAR COMO SEU USUARIO NORMAL, POIS PRECISA DETERMINAR QUEM VOCÊ É *ANTES* DO SUDO";
-
-read -rp "Do you want to continue? (yes/no): " response
-
+if [ "$YOU" == "root" ]; then
+    read -rp "What is the user to install? " YOU
+fi
+read -rp "Do you want to continue for user ( $YOU ) ? (yes/no): " response
 # Check the response
 if [[ $response == "yes" ]]; then
     colorecho "green" "You chose to continue.";
-    sudo apt -y install fortunes*  alsa-utils expect \
+    sudo apt install fortunes*  alsa-utils expect \
 	python3-pexpect pulseaudio-utils wmctrl fonts-noto \
-    python3-tk python3-numpy python3-psutil xterm \
-    sox x42-plugins swh-lv2 lv2file v4l-utils git ffmpeg;
+    python3-tk python3-numpy python3-psutil python3-pyaudio python3-matplotlib xterm \
+    sox x42-plugins swh-lv2 lv2file v4l-utils easyeffects git ffmpeg;
 
     sudo cp -ra BETAKe.* /usr/bin/;
     colorecho "blue" "PS: instale qualquer dependencia que porventura faltar do python3";

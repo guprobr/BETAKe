@@ -53,8 +53,7 @@ colorecho "Welcome!";
         local child_pids;
         child_pids=$(pgrep -P "$parent_pid")
 
-                    killall -9 pavumeter;
-                    pactl unload-module module-loopback;
+                    ##pactl unload-module module-loopback;
                     ##pactl unload-module module-echo-cancel;
 
         # Kill the parent process and all its children
@@ -246,10 +245,9 @@ colorecho "yellow" " got sink: $SINK";
 SRC_mic="$( pactl get-default-source )"
 colorecho "green" " got mic src: $SRC_mic";
 
-colorecho "white" "Loopback monitor do audio ON";
-pactl unload-module module-loopback;
-pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
-pavumeter --record &
+##colorecho "white" "Loopback monitor do audio ON";
+##pactl unload-module module-loopback;
+##pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
 ##DOWNLOAD PLAYBACK
 colorecho "red" "Try upd yt-dlp";
@@ -383,9 +381,8 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
             killall -9 ffplay;
             #killall -SIGINT sox;
 
-            colorecho "white" "disable audio loopback monitor"
-            pactl unload-module module-loopback;
-            killall -9 pavumeter;
+            #colorecho "white" "disable audio loopback monitor"
+            #pactl unload-module module-loopback;
 
     sleep 3;
 
@@ -492,12 +489,12 @@ seedy=$( fortune | wc -c );
     [0:a]loudnorm[playback];
     [1:a]aecho=0.7:0.77:84:0.33[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.21|0.98;
+    [playback][vocals]amix=inputs=2:weights=0.62|0.98;
     
     gradients=n=8:s=320x240[vscope];
         [0:v]scale=s=320x240[v0];
         [v0][vscope]vstack,scale=s=${video_res}[hugh];
-        [2:v]hue=b=$seedy/100:h=PI*t+($seedy*PI/6),lagfun[hutz];
+        [2:v]hue=h=PI*t+($seedy*PI/6),lagfun[hutz];
         [hutz][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
     -s 1920x1080 -t "${PLAYBACK_LEN}" \
@@ -525,7 +522,7 @@ fi
 zenity --info --text="MP3 render Done." --title "MP3 Done" --timeout=10;
 
 # display resulting video to user    
-ffplay  -loglevel error -hide_banner -window_title "Obrigado pela participação! sync diff: ${diff_ss}" "${OUT_FILE}";
+vlc "${OUT_FILE}";
 
 colorecho "cyan" "Thank you for having fun!"
 exit;
