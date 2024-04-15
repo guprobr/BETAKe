@@ -470,8 +470,14 @@ ffmpeg -hide_banner -v quiet -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav;
 DB_diff=$( calculate_db_difference "$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" "$( sox "${OUT_VOCAL}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" );
 colorecho "red" "The aprox. difference in dB between the files is ${DB_diff}";
     rm -rf "${PLAYBACK_BETA%.*}".wav;
-    ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff}dB" "${VOCAL_FILE}"
-    colorecho "red" "vocals VOL adjustment applied"
+    if [ "${DB_diff}" -lt 0 ]; then
+        colorecho "red" "Will not adjust vocals vol.";
+        colorecho "yellow" "Vocals Probably clipping, gonna declip.";
+        ffmpeg -y -i "${OUT_VOCAL}" -af "adeclip" "${VOCAL_FILE}";
+    else
+        ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff}dB" "${VOCAL_FILE}"
+        colorecho "red" "vocals VOL adjustment applied"
+    fi
     check_validity "${VOCAL_FILE}" "wav";
 
 zenity --info --text="Gonna now mix vocals and playback into a video with effects" --title "Vocal enhanced" --timeout=10;
@@ -479,23 +485,23 @@ zenity --info --text="Gonna now mix vocals and playback into a video with effect
 colorecho "yellow" "Rendering mix avec visuals and playback"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
-seedy=$( fortune | wc -c );
 
  if ffmpeg -y  -loglevel info -hide_banner \
                                                                         -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "
-    [0:a]loudnorm[playback];
-    [1:a]aecho=0.7:0.77:84:0.33[vocals];
+    [0:a]volume=volume=0.33[playback];   
+    [1:a]adeclip,alimiter,speechnorm,acompressor,
+    aecho=0.8:0.8:84:0.33[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.62|0.98;
+    [playback][vocals]amix=inputs=2:weights=0.48|0.98,volume=volume=5.25;
+
     
-    gradients=n=8:s=320x240[vscope];
+    gradients=n=2:s=320x240[vscope];
         [0:v]scale=s=320x240[v0];
         [v0][vscope]vstack,scale=s=${video_res}[hugh];
-        [2:v]hue=h=PI*t+($seedy*PI/6),lagfun[hutz];
-        [hutz][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
+        [2:v][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
     -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
