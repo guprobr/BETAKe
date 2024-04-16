@@ -180,7 +180,7 @@ calculate_db_difference() {
 }
 
 
-launch_sox() {
+cfg_audio() {
  # we use just to cfg audio
         RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' | sed 's/[[:alpha:]]//g' )"
         CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | sed 's/[[:alpha:]]//g' )"
@@ -194,17 +194,6 @@ launch_sox() {
                 ENC_mic="signed-integer";
             fi
        fi
-############################### START AUDIO RECORDER
-  #     if parec --device="${SRC_mic}" | sox -t raw -r 44100 -b 16 -c 2 -e signed-integer \
-  #                              - -t wav -r "${RATE_mic}" -b "${BITS_mic}" -c "${CH_mic}" -e "${ENC_mic}" "${OUT_VOCAL}" &
-  #                                                                                  sox_pid=$!; then
-  #                                  colorecho "green" "Success: SoX process. Recording started!";
-  #                      else
-  #                          colorecho "red" "FAIL SoX process";
-  #                          kill_parent_and_children $$
-  #                          exit
-  #                      fi
-
 }
 
 launch_ffmpeg_webcam() {
@@ -215,7 +204,7 @@ video_res=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | \
                            sort -k1 -n | tail -n1 );
 video_fmt=$(translate_vid_format "${best_format}")
 
-launch_sox true
+cfg_audio true
 
 colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res}";
@@ -470,14 +459,8 @@ ffmpeg -hide_banner -v quiet -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav;
 DB_diff=$( calculate_db_difference "$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" "$( sox "${OUT_VOCAL}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" );
 colorecho "red" "The aprox. difference in dB between the files is ${DB_diff}";
     rm -rf "${PLAYBACK_BETA%.*}".wav;
-    if [ "${DB_diff}" -lt 0 ]; then
-        colorecho "red" "Will not adjust vocals vol.";
-        colorecho "yellow" "Vocals Probably clipping, gonna declip.";
-        ffmpeg -y -i "${OUT_VOCAL}" -af "adeclip" "${VOCAL_FILE}";
-    else
-        ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff}dB" "${VOCAL_FILE}"
-        colorecho "red" "vocals VOL adjustment applied"
-    fi
+    ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff}dB" "${VOCAL_FILE}"
+    colorecho "red" "vocals VOL adjustment applied"
     check_validity "${VOCAL_FILE}" "wav";
 
 zenity --info --text="Gonna now mix vocals and playback into a video with effects" --title "Vocal enhanced" --timeout=10;
@@ -492,7 +475,7 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "
     [0:a]volume=volume=0.33[playback];   
-    [1:a]adeclip,alimiter,speechnorm,acompressor,
+    [1:a]adeclip,alimiter,speechnorm,acompressor,treble=5,
     aecho=0.8:0.8:84:0.33[vocals];
     
     [playback][vocals]amix=inputs=2:weights=0.48|0.98,volume=volume=5.25;
