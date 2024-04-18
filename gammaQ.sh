@@ -70,6 +70,27 @@ colorecho "Welcome!";
         done
     }
 
+ensure_number_type() {
+    local input="$1"
+    # Check if it's a number
+    if [[ "$input" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+        # Check if it's a float
+        if [[ "$input" =~ \. ]]; then
+            echo "$input"
+        else
+            echo "$input"
+        fi
+        # Check if it's positive or negative
+        if [[ "$input" -gt 0 ]]; then
+            echo "$input"
+        elif [[ "$input" -lt 0 ]]; then
+            echo "$input"
+        fi
+    else
+        echo "0"
+    fi
+}
+
 render_display_progress() {
     local total_duration="${PLAYBACK_LEN}"  # Total duration of the video in seconds
     local pid_ffmpeg="$2"     # PID of the ffmpeg process
@@ -225,9 +246,8 @@ else
 fi
 }
 
-# Define log file path
+# Define log file path and flush lastlog
 LOG_FILE="$betake_path/script.log"
-
 # Load configuration variables and adj volumes
 SINK="$( pactl get-default-sink )"
 colorecho "yellow" " got sink: $SINK";
@@ -380,13 +400,6 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
 
 zenity --info --text="Gonna now apply several vocal enhancements" --title "SoX + LV2 Vocal enhancements" --timeout=10;
 
-cp -ra "${OUT_VOCAL}"  "${VOCAL_FILE}"; # this is tmp
-##POSTprod filtering
-colorecho "yellow" "Applying DECLIPPER";
-lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-        http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
-check_validity "${OUT_VOCAL}" "wav";
 
 colorecho "yellow" "Apply shibata dithering with SoX, also noise reduction...";
 sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
@@ -427,7 +440,6 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
             http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
             colorecho "white" "$( cat lv2.tmp.log )";
             check_validity "${VOCAL_FILE}" "wav";
-            cp -ra "${VOCAL_FILE}" "${OUT_VOCAL}";
             if grep -qi clipping ./lv2.tmp.log ; then
                 colorecho "red" "Still clipping. you should record again with a lower volume!"
                 sleep 5;
@@ -437,58 +449,60 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     rm -f lv2.tmp.log;
 
 colorecho "yellow" "Vocal tuning algorithm Auburn Sound's Graillon...";
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
     -P Younger\ Speech \
-    -p p9:1.00 -p p20:2.00 -p p15:0.515 -p p17:1.000 -p p18:1.00 \
+    -p p9:1.00 -p p20:2.00 -p p15:0.505 -p p17:1.000 -p p18:1.00 \
     https://www.auburnsounds.com/products/Graillon.html40733132#in1out2 > lv2.tmp.log 2>&1
      colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${VOCAL_FILE}" "wav";
+    check_validity "${OUT_VOCAL}" "wav";
 
 colorecho "yellow" "Finnally, Apply SC4 - Steve Harris...";
-lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
-   -p rms_peak:1.0 -p makeup_gain:0.969 \
+lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+   -p rms_peak:1.0 -p makeup_gain:1.696 \
        http://plugin.org.uk/swh-plugins/sc4 > lv2.tmp.log 2>&1
    colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${OUT_VOCAL}" "wav";
+    check_validity "${VOCAL_FILE}" "wav";
 
 
 colorecho "magenta" "Will fix volumes";
 ffmpeg -hide_banner -v quiet -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
                          check_validity "${PLAYBACK_BETA%.*}".wav "wav";
 # Extract volume info and calc diff in dB of each file
-DB_diff=$( calculate_db_difference "$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" "$( sox "${OUT_VOCAL}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" );
+DB_diff=$( calculate_db_difference "$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" "$( sox "${VOCAL_FILE}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" | sed 's/[[:alpha:]]//g');
 colorecho "red" "The aprox. difference in dB between the files is ${DB_diff}";
     rm -rf "${PLAYBACK_BETA%.*}".wav;
-    ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff}dB" "${VOCAL_FILE}"
-    colorecho "red" "vocals VOL adjustment applied"
-    check_validity "${VOCAL_FILE}" "wav";
 
-zenity --info --text="Gonna now mix vocals and playback into a video with effects" --title "Vocal enhanced" --timeout=10;
+    DB_diff=$( ensure_number_type "${DB_diff}" )
 
-colorecho "yellow" "Rendering mix avec visuals and playback"
+   ffmpeg -y -i "${VOCAL_FILE}" -af "volume=volume=${DB_diff}dB" "${OUT_VOCAL}"
+    colorecho "red" "VOL adjustment applied, $DB_diff was applied to vocals volume"
+    check_validity "${OUT_VOCAL}" "wav";
+
+zenity --info --text="now mix vocals and playback into video with effects" --title "Vocal enhanced" --timeout=5;
+
+colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
  if ffmpeg -y  -loglevel info -hide_banner \
                                                                         -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
-    -filter_complex "
-    [0:a]volume=volume=0.33[playback];   
-    [1:a]adeclip,alimiter,speechnorm,acompressor,treble=5,
-    aecho=0.8:0.8:84:0.33[vocals];
+    -filter_complex "  
+    [1:a]alimiter,speechnorm,acompressor,treble=4,
+    aecho=0.7:0.7:48:0.33[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.48|0.98,volume=volume=5.25;
-
+    [0:a][vocals]amix=inputs=2:weights=0.313|0.84,dynaudnorm=p=0.9:m=100:s=12:g=15;
     
-    gradients=n=2:s=320x240[vscope];
-        [0:v]scale=s=320x240[v0];
-        [v0][vscope]vstack,scale=s=${video_res}[hugh];
-        [2:v][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
+    gradients=n=3:s=320x240[vscope];
+        [0:v]scale=320x240[v0];
+        [v0][vscope]vstack,scale=320x240[hugh];
+        [2:v]scale=320x240[hutz];
+        [hutz][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
-    -s 1920x1080 -t "${PLAYBACK_LEN}" \
+    -s 1280x720 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac -b:a 500k -ar 96000 "${OUT_FILE}" &
+            -c:a aac -b:a 1500k -ar 96000 "${OUT_FILE}" &
                                             ff_pid=$!; then
                 colorecho "cyan" "Started render ffmpeg process";
 else
@@ -511,7 +525,7 @@ fi
 zenity --info --text="MP3 render Done." --title "MP3 Done" --timeout=10;
 
 # display resulting video to user    
-vlc "${OUT_FILE}";
+totem "${OUT_FILE}";
 
 colorecho "cyan" "Thank you for having fun!"
 exit;

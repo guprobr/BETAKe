@@ -55,7 +55,7 @@ if [[ $response == "yes" ]]; then
     sudo cp -ra ./Auburn\ Sounds\ Graillon\ 2.lv2/ /usr/lib/lv2/;
     sudo chown -R root:root /usr/lib/lv2/Auburn\ Sounds\ Graillon\ 2.lv2;
     sudo chmod +x /usr/lib/lv2/Auburn\ Sounds\ Graillon\ 2.lv2/AuburnSoundsGraillon2.so;
-
+    
     colorecho "yellow" "vou instalar o atalho .desktop na sua /home";
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
     cp -ra BETAq.desktop /home/"${YOU}"/.local/share/applications/;
