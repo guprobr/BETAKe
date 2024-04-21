@@ -98,7 +98,7 @@ render_display_progress() {
     # Create a dialog box with a progress bar
     (
     while true; do
-        sleep 1;
+        sleep 2.5;
         # Check if the ffmpeg process is still running
         if ! ps -p "$pid_ffmpeg" >/dev/null 2>&1; then
             break
@@ -231,12 +231,13 @@ colorecho "green" "FFmpeg format name: ${video_fmt}";
 colorecho "cyan" "Best resolution: ${video_res}";
 colorecho "green" "params Audio: ${CH_mic}ch ${BITS_mic}bits ${RATE_mic}Hz ${ENC_mic}";
 
-if ffmpeg -loglevel info  -hide_banner -f v4l2 -framerate 30 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
-        -f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -sample_fmt s"${BITS_mic}" -b:a 1000k \
-       -c:v libx264 -preset:v ultrafast -crf:v 23 -g 25 -b:v 10000k -pix_fmt yuv420p -movflags +faststart \
-       -bufsize 3M -rtbufsize 3M  \
+if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
+        -f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -sample_fmt s"${BITS_mic}" \
+       -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
+       -b:a 15000k \
        -map 0:v   "${OUT_VIDEO}"  \
-       -map 1:a   "${OUT_VOCAL}" &
+       -map 1:a   "${OUT_VOCAL}" \
+    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop  -fps 60                                                     - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
 else
@@ -259,8 +260,8 @@ colorecho "green" " got mic src: $SRC_mic";
 ##pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
 ##DOWNLOAD PLAYBACK
-colorecho "red" "Try upd yt-dlp";
-yt-dlp -U;
+#colorecho "red" "Try upd yt-dlp";
+#yt-dlp -U;
 colorecho "white" "fetch the video title";
 PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}" --no-check-certificates --enable-file-urls --no-playlist)";
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
@@ -388,6 +389,7 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
     colorecho "magenta" "Performance Recorded!";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
+            killall -9 mplayer;
             #killall -SIGINT sox;
 
             #colorecho "white" "disable audio loopback monitor"
@@ -489,20 +491,25 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "  
-    [1:a]alimiter,speechnorm,acompressor,treble=4,
-    aecho=0.7:0.7:48:0.33[vocals];
+    [0:a]aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
+    aresample=resampler=soxr:precision=33:dither_method=shibata[playback];
+
+    [1:a]adeclip,afftdn,
+    aecho=0.88:0.71:84:0.33,treble=g=5,
+    aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
+    aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
     
-    [0:a][vocals]amix=inputs=2:weights=0.313|0.84,dynaudnorm=p=0.9:m=100:s=12:g=15;
+    [playback][vocals]amix=inputs=2:weights=0.21|0.84;
     
-    gradients=n=3:s=320x240[vscope];
+    gradients=n=8:s=320x240[vscope];
         [0:v]scale=320x240[v0];
         [v0][vscope]vstack,scale=320x240[hugh];
         [2:v]scale=320x240[hutz];
         [hutz][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
-    -s 1280x720 -t "${PLAYBACK_LEN}" \
+    -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac -b:a 1500k -ar 96000 "${OUT_FILE}" &
+            -c:a aac -b:a 15000k -ar 96000 "${OUT_FILE}" &
                                             ff_pid=$!; then
                 colorecho "cyan" "Started render ffmpeg process";
 else
