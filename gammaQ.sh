@@ -80,12 +80,6 @@ ensure_number_type() {
         else
             echo "$input"
         fi
-        # Check if it's positive or negative
-        if [[ "$input" -gt 0 ]]; then
-            echo "$input"
-        elif [[ "$input" -lt 0 ]]; then
-            echo "$input"
-        fi
     else
         echo "0"
     fi
@@ -487,19 +481,19 @@ export LC_ALL=C;
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 
  if ffmpeg -y  -loglevel info -hide_banner \
-                                                                        -i "${PLAYBACK_BETA}" \
+       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "  
     [0:a]aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
-    aresample=resampler=soxr:precision=33:dither_method=shibata[playback];
+    aresample=resampler=soxr[playback];
 
     [1:a]adeclip,afftdn,
-    aecho=0.88:0.71:84:0.33,treble=g=5,
+    aecho=0.88:0.71:56:0.3,treble=g=3,
     aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.21|0.84;
+    [playback][vocals]amix=inputs=2:weights=0.25|0.98;
     
     gradients=n=8:s=320x240[vscope];
         [0:v]scale=320x240[v0];

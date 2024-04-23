@@ -127,7 +127,7 @@ class App:
         self.tail_log_button.place(x=600, y=620)
 
         self.plot_mic_button = tk.Button(
-            master, text="PLOT mic", command=self.plot_audio_spectrum)
+            master, text="PLOT mic", command=self.plot_audio)
         self.plot_mic_button.place(x=600, y=660)
 
         # Entry for custom karaoke name
@@ -179,68 +179,108 @@ class App:
                 print(f"Selected video device: {selected_devCam}")
                 self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
                 self.video_dev_canvas.ntry.insert(0, selected_devCam)
-    # Obtém as informações da source padrão do PulseAudio
-    def get_default_source_info(self):
-        p = pyaudio.PyAudio()
-        default_device_index = p.get_default_input_device_info()['index']
-        default_device_info = p.get_device_info_by_index(default_device_index)
-        return default_device_info
-    # Função de encerramento da janela de plot
-    def close_plot(self, event):
-        self.stream.stop_stream()
-        self.stream.close()
-        self.p.terminate()
-        plt.close()
-        #raise SystemExit
-    # Função para plotar o volume do áudio    
-    def plot_audio_spectrum(self):
-        default_source_info = self.get_default_source_info()
-        self.p = pyaudio.PyAudio()
-        self.stream = self.p.open(format=pyaudio.paInt16,
-                        channels=int(default_source_info['maxInputChannels']),
-                        rate=int(default_source_info['defaultSampleRate']),
-                        input=True,
-                        input_device_index=int(default_source_info['index']),
-                        frames_per_buffer=1024)
-        try:
-            plt.ion()  # Modo de interação para atualização contínua do gráfico
+    class AudioVisualizer:
+        def __init__(self):
+            self.p = None
+            self.stream = None
+        # Configuração do estilo do gráfico
+        plt.rcParams.update({
+            'figure.facecolor': 'black',  # Cor de fundo do gráfico
+            'axes.facecolor': 'black',  # Cor de fundo do eixo
+            'axes.edgecolor': 'yellow',  # Cor das bordas do eixo
+            'axes.labelcolor': 'yellow',  # Cor das legendas do eixo
+            'xtick.color': 'yellow',  # Cor dos números do eixo x
+            'ytick.color': 'yellow',  # Cor dos números do eixo y
+        })
 
-            # Cria uma janela para plotagem com o tamanho desejado
-            plt.figure(figsize=(8, 3.6))
-            # Cria o subplot
-            ax = plt.subplot()
+        # Obtém as informações da source padrão do PulseAudio
+        def get_default_source_info(self):
+            p = pyaudio.PyAudio()
+            default_device_index = p.get_default_input_device_info()['index']
+            default_device_info = p.get_device_info_by_index(default_device_index)
+            return default_device_info
 
-            # Conecta o evento de fechamento da janela à função close_program
-            plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
-
-            # Loop infinito para capturar e plotar continuamente o áudio
-            while True:
-                # Lê os dados do fluxo de áudio
-                data = self.stream.read(1024)
-                # Converte os dados em um array numpy
-                data = np.frombuffer(data, dtype=np.int16)
-                # Calcula o nível de volume
-                volume = np.abs(data).mean()
-
-                # Limpa o eixo antes de plotar
-                ax.clear()
-                # Plota o nível de volume
-                ax.bar(0, volume, color='purple', align='center')
-                ax.set_xlabel('')
-                ax.set_ylabel('Volume')
-                ax.set_title('Nível de Volume de Áudio')
-                ax.set_xlim(-0.5, 0.5)
-                ax.set_ylim(0, 669)  # Ajuste conforme necessário para a escala do volume
-                # Atualiza o gráfico
-                plt.pause(0.01)
-
-        except (KeyboardInterrupt, RuntimeError):
-            # Encerra o fluxo e o PyAudio quando a janela for fechada
+        # Função de encerramento da janela de plot
+        def close_plot(self, event):
             self.stream.stop_stream()
             self.stream.close()
             self.p.terminate()
-            plt.close()  # Fecha a janela do gráfico
-            print("Programa encerrado.")
+            plt.close()
+
+        # Função para plotar as ondas sonoras
+        def plot_audio_waveform(self):
+            default_source_info = self.get_default_source_info()
+            self.p = pyaudio.PyAudio()
+            self.stream = self.p.open(format=pyaudio.paInt16,
+                            channels=int(default_source_info['maxInputChannels']),
+                            rate=int(default_source_info['defaultSampleRate']),
+                            input=True,
+                            input_device_index=int(default_source_info['index']),
+                            frames_per_buffer=1024)
+            try:
+                plt.ion()  # Modo de interação para atualização contínua do gráfico
+
+                # Cria uma janela para plotagem com o tamanho desejado
+                plt.figure(figsize=(10, 4))
+                # Cria o subplot
+                ax = plt.subplot()
+
+                # Conecta o evento de fechamento da janela à função close_plot
+                plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
+
+                # Inicializa o array para armazenar os dados das ondas sonoras
+                buffer_size = int(default_source_info['defaultSampleRate'] * 5)  # 5 segundos de áudio
+                waveform_buffer = np.zeros(buffer_size, dtype=np.int16)
+
+                # Loop infinito para capturar e plotar continuamente as ondas sonoras
+                while True:
+                    # Lê os dados do fluxo de áudio
+                    data = self.stream.read(1024)
+                    # Converte os dados em um array numpy de int16
+                    data = np.frombuffer(data, dtype=np.int16)
+                    
+                    # Verifica se o tamanho dos dados é menor ou igual ao tamanho do buffer
+                    if len(data) <= len(waveform_buffer):
+                        # Atualiza o buffer de forma circular
+                        waveform_buffer[:-len(data)] = waveform_buffer[len(data):]
+                        waveform_buffer[-len(data):] = data
+                    else:
+                        print("Tamanho dos dados excede o tamanho do buffer. Os dados serão descartados.")
+
+                   # Limpa o eixo antes de plotar
+                    ax.clear()
+                    # Plota as ondas sonoras
+                    ax.plot(waveform_buffer, color='blue', label='Ondas Sonoras')
+                    ax.set_xlabel('Tempo')
+                    ax.set_ylabel('Amplitude')
+                    ax.set_title('Ondas Sonoras em Tempo Real')
+                    ax.set_xlim(0, buffer_size)
+                    ax.set_ylim(-32768, 32768)  # Ajuste conforme necessário para a escala da amplitude
+
+                    # Adiciona legenda
+                    ax.legend(loc='upper right', fontsize='small', facecolor='black', edgecolor='black')
+
+                    # Configura cor de fundo e cor do texto
+                    ax.set_facecolor('black')
+                    ax.xaxis.label.set_color('yellow')
+                    ax.yaxis.label.set_color('yellow')
+                    ax.title.set_color('yellow')
+
+                    # Atualiza o gráfico
+                    plt.pause(0.01)
+
+            except (KeyboardInterrupt, RuntimeError):
+                # Encerra o fluxo e o PyAudio quando a janela for fechada
+                self.stream.stop_stream()
+                self.stream.close()
+                self.p.terminate()
+                plt.close()  # Fecha a janela do gráfico
+                print("Programa encerrado.")
+
+    def plot_audio(self):
+        # Instanciação e execução da classe AudioVisualizer
+        visualizer = self.AudioVisualizer()
+        visualizer.plot_audio_waveform()
 
 
     def skip_selfie(self):
