@@ -229,7 +229,7 @@ class App:
                 plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
 
                 # Inicializa o array para armazenar os dados das ondas sonoras
-                buffer_size = int(default_source_info['defaultSampleRate'] * 5)  # 5 segundos de áudio
+                buffer_size = int(default_source_info['defaultSampleRate'] * 3)  # 3 segundos de áudio
                 waveform_buffer = np.zeros(buffer_size, dtype=np.int16)
 
                 # Loop infinito para capturar e plotar continuamente as ondas sonoras
@@ -253,7 +253,7 @@ class App:
                     ax.plot(waveform_buffer, color='blue', label='Ondas Sonoras')
                     ax.set_xlabel('Tempo')
                     ax.set_ylabel('Amplitude')
-                    ax.set_title('Ondas Sonoras em Tempo Real')
+                    ax.set_title(default_source_info['name'])
                     ax.set_xlim(0, buffer_size)
                     ax.set_ylim(-32768, 32768)  # Ajuste conforme necessário para a escala da amplitude
 

@@ -226,12 +226,12 @@ colorecho "cyan" "Best resolution: ${video_res}";
 colorecho "green" "params Audio: ${CH_mic}ch ${BITS_mic}bits ${RATE_mic}Hz ${ENC_mic}";
 
 if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
-        -f pulse -i "${SRC_mic}" -ar "${RATE_mic}" -ac "${CH_mic}" -sample_fmt s"${BITS_mic}" \
+        -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_s"${BITS_mic}"le  -i "${SRC_mic}" \
        -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
-       -b:a 15000k \
+        \
        -map 0:v   "${OUT_VIDEO}"  \
        -map 1:a   "${OUT_VOCAL}" \
-    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop  -fps 15 -x 320 -y 200                                             - &
+    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop  -fps 90 -x 320 -y 200                                             - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
 else
