@@ -489,7 +489,7 @@ zenity --info --text="now mix vocals and playback into video with effects" --tit
 colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
-seedy=",hue=h=PI*t/$(fortune|wc -l): s=1"
+seedy=",hue=h=PI*t/$(fortune|wc -l):s=1"
 
  if ffmpeg -y  -loglevel info -hide_banner \
        -i "${PLAYBACK_BETA}" \
@@ -500,11 +500,12 @@ seedy=",hue=h=PI*t/$(fortune|wc -l): s=1"
     aresample=resampler=soxr[playback];
 
     [1:a]afftdn,
-    aecho=0.9:0.9:84:0.222,treble=g=3,
+    aecho=0.88:0.84:84:0.21,treble=g=3,adynamicsmooth,
     aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.45|1.44,acompressor,extrastereo;
+    [playback][vocals]amix=inputs=2:weights=0.45|2.2,
+    adynamicequalizer,extrastereo,compand=attacks=0.3:points=-80/-900|-45/-15|-27/-9|0/-7:soft-knee=6;
     
     gradients=n=8:s=640x400[vscope];
         [0:v]scale=640x400[v0];
