@@ -231,7 +231,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
        -b:a 15000k \
        -map 0:v   "${OUT_VIDEO}"  \
        -map 1:a   "${OUT_VOCAL}" \
-    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop  -fps 60                                                     - &
+    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop  -fps 15 -x 320 -y 200                                             - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
 else
@@ -394,7 +394,17 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
    check_validity "${OUT_VIDEO}" "mp4";
    check_validity "${OUT_VOCAL}" "wav";
 
-zenity --info --text="Gonna now apply several vocal enhancements" --title "SoX + LV2 Vocal enhancements" --timeout=10;
+zenity --question --text=" - - Render video and MP3? " --title "Proceed?" --ok-label="RENDER, yes";
+if [ $? == 1 ]; then
+    colorecho "red" "Production aborted.";
+    # Get the PID of the parent process
+    parent_pid=$$
+    # Call the function to kill the parent process and all its children
+    kill_parent_and_children $parent_pid
+    exit;
+fi
+
+zenity --info --text="Gonna first apply several vocal enhancements" --title "SoX + LV2 Vocal enhancements" --timeout=10;
 
 
 colorecho "yellow" "Apply shibata dithering with SoX, also noise reduction...";
@@ -448,7 +458,7 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
 #lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
 #    -P Younger\ Speech \
 #    -p p9:1.00 -p p20:2.00 -p p15:0.505 -p p17:1.000 -p p18:1.00 \
-#    https://www.auburnsounds.com/products/Graillon.html40733132#in1out2 > lv2.tmp.log 2>&1
+#    https://www.auburnsounds.com/products/Graillon.html40733132#  ###in ##1out2 > lv2.tmp.log 2>&1
 #     colorecho "white" "$( cat lv2.tmp.log )";
 #    check_validity "${OUT_VOCAL}" "wav";
 
@@ -479,31 +489,32 @@ zenity --info --text="now mix vocals and playback into video with effects" --tit
 colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
+seedy=",hue=h=PI*t/$(fortune|wc -l): s=1"
 
  if ffmpeg -y  -loglevel info -hide_banner \
        -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "  
-    [0:a]aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
+    [0:a]equalizer=f=50:width_type=q:width=2:g=10,aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
     aresample=resampler=soxr[playback];
 
-    [1:a]adeclip,afftdn,
-    aecho=0.88:0.71:84:0.3,treble=g=4,
+    [1:a]afftdn,
+    aecho=0.9:0.9:84:0.222,treble=g=3,
     aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.42|0.98;
+    [playback][vocals]amix=inputs=2:weights=0.45|1.44,acompressor,extrastereo;
     
-    gradients=n=8:s=320x240[vscope];
-        [0:v]scale=320x240[v0];
-        [v0][vscope]vstack,scale=320x240[hugh];
-        [2:v]scale=320x240[hutz];
+    gradients=n=8:s=640x400[vscope];
+        [0:v]scale=640x400[v0];
+        [v0][vscope]vstack,scale=640x400[hugh];
+        [2:v]scale=640x400 $seedy [hutz];
         [hutz][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
     " \
-    -s 1920x1080 -t "${PLAYBACK_LEN}" \
+    -s 1280x720 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac -b:a 15000k -ar 96000 "${OUT_FILE}" &
+            -c:a aac -ar 96000 "${OUT_FILE}" &
                                             ff_pid=$!; then
                 colorecho "cyan" "Started render ffmpeg process";
 else
