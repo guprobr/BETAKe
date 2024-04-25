@@ -444,20 +444,20 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
     fi
     rm -f lv2.tmp.log;
 
-colorecho "yellow" "Vocal tuning algorithm Auburn Sound's Graillon...";
-lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-    -P Younger\ Speech \
-    -p p9:1.00 -p p20:2.00 -p p15:0.505 -p p17:1.000 -p p18:1.00 \
-    https://www.auburnsounds.com/products/Graillon.html40733132#in1out2 > lv2.tmp.log 2>&1
-     colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${OUT_VOCAL}" "wav";
+#colorecho "yellow" "Vocal tuning algorithm Auburn Sound's Graillon...";
+#lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
+#    -P Younger\ Speech \
+#    -p p9:1.00 -p p20:2.00 -p p15:0.505 -p p17:1.000 -p p18:1.00 \
+#    https://www.auburnsounds.com/products/Graillon.html40733132#in1out2 > lv2.tmp.log 2>&1
+#     colorecho "white" "$( cat lv2.tmp.log )";
+#    check_validity "${OUT_VOCAL}" "wav";
 
-colorecho "yellow" "Finnally, Apply SC4 - Steve Harris...";
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
-   -p rms_peak:1.0 -p makeup_gain:1.696 \
-       http://plugin.org.uk/swh-plugins/sc4 > lv2.tmp.log 2>&1
-   colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${VOCAL_FILE}" "wav";
+#colorecho "yellow" "Finnally, Apply SC4 - Steve Harris...";
+#lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
+#   -p rms_peak:1.0 -p makeup_gain:1.696 \
+#       http://plugin.org.uk/swh-plugins/sc4 > lv2.tmp.log 2>&1
+#   colorecho "white" "$( cat lv2.tmp.log )";
+#    check_validity "${VOCAL_FILE}" "wav";
 
 
 colorecho "magenta" "Will fix volumes";
@@ -489,11 +489,11 @@ OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
     aresample=resampler=soxr[playback];
 
     [1:a]adeclip,afftdn,
-    aecho=0.88:0.71:56:0.3,treble=g=3,
+    aecho=0.88:0.71:84:0.3,treble=g=4,
     aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.25|0.98;
+    [playback][vocals]amix=inputs=2:weights=0.42|0.98;
     
     gradients=n=8:s=320x240[vscope];
         [0:v]scale=320x240[v0];
