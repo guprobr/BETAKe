@@ -199,7 +199,7 @@ cfg_audio() {
  # we use just to cfg audio
         RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' | sed 's/[[:alpha:]]//g' )"
         CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | sed 's/[[:alpha:]]//g' )"
-       BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | sed 's/[[:alpha:]]//g' )"
+       BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' )"; # | sed 's/[[:alpha:]]//g' )"
         if pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | grep -q float; then
             ENC_mic="floating-point";
         else
@@ -226,7 +226,7 @@ colorecho "cyan" "Best resolution: ${video_res}";
 colorecho "green" "params Audio: ${CH_mic}ch ${BITS_mic}bits ${RATE_mic}Hz ${ENC_mic}";
 
 if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
-        -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_s"${BITS_mic}"le  -i "${SRC_mic}" \
+        -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
        -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
         \
        -map 0:v   "${OUT_VIDEO}"  \
