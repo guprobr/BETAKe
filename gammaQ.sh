@@ -199,7 +199,7 @@ cfg_audio() {
  # we use just to cfg audio
         RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' | sed 's/[[:alpha:]]//g' )"
         CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | sed 's/[[:alpha:]]//g' )"
-       BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' )"; # | sed 's/[[:alpha:]]//g' )"
+        BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | sed 's/float/f/g' )"
         if pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | grep -q float; then
             ENC_mic="floating-point";
         else
@@ -231,7 +231,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
         \
        -map 0:v   "${OUT_VIDEO}"  \
        -map 1:a   "${OUT_VOCAL}" \
-    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop  -fps 90 -x 320 -y 200                                             - &
+    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop  -fps 30 -x 320 -y 200                                             - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
 else
@@ -496,7 +496,7 @@ seedy=",hue=h=PI*t/$(fortune|wc -l):s=1"
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -filter_complex "  
-    [0:a]equalizer=f=50:width_type=q:width=2:g=10,aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
+    [0:a]equalizer=f=50:width_type=q:width=2:g=5,aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
     aresample=resampler=soxr[playback];
 
     [1:a]afftdn,
@@ -504,7 +504,7 @@ seedy=",hue=h=PI*t/$(fortune|wc -l):s=1"
     aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
     
-    [playback][vocals]amix=inputs=2:weights=0.45|2.2,
+    [playback][vocals]amix=inputs=2:weights=0.09|0.69,
     adynamicequalizer,extrastereo,compand=attacks=0.3:points=-80/-900|-45/-15|-27/-9|0/-7:soft-knee=6;
     
     gradients=n=8:s=640x400[vscope];

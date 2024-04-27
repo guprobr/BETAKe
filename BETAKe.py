@@ -183,15 +183,16 @@ class App:
         def __init__(self):
             self.p = None
             self.stream = None
-        # Configuração do estilo do gráfico
-        plt.rcParams.update({
-            'figure.facecolor': 'black',  # Cor de fundo do gráfico
-            'axes.facecolor': 'black',  # Cor de fundo do eixo
-            'axes.edgecolor': 'yellow',  # Cor das bordas do eixo
-            'axes.labelcolor': 'yellow',  # Cor das legendas do eixo
-            'xtick.color': 'yellow',  # Cor dos números do eixo x
-            'ytick.color': 'yellow',  # Cor dos números do eixo y
-        })
+            
+            # Configuração do estilo do gráfico
+            plt.rcParams.update({
+                'figure.facecolor': 'black',  # Cor de fundo do gráfico
+                'axes.facecolor': 'black',  # Cor de fundo do eixo
+                'axes.edgecolor': 'yellow',  # Cor das bordas do eixo
+                'axes.labelcolor': 'yellow',  # Cor das legendas do eixo
+                'xtick.color': 'yellow',  # Cor dos números do eixo x
+                'ytick.color': 'yellow',  # Cor dos números do eixo y
+            })
 
         # Obtém as informações da source padrão do PulseAudio
         def get_default_source_info(self):
@@ -211,12 +212,17 @@ class App:
         def plot_audio_waveform(self):
             default_source_info = self.get_default_source_info()
             self.p = pyaudio.PyAudio()
+            
+            # Set the stream's sample rate to match the device's native sample rate
+            sample_rate = int(default_source_info['defaultSampleRate'])
+
             self.stream = self.p.open(format=pyaudio.paInt16,
                             channels=int(default_source_info['maxInputChannels']),
-                            rate=int(default_source_info['defaultSampleRate']),
+                            rate=sample_rate,
                             input=True,
                             input_device_index=int(default_source_info['index']),
                             frames_per_buffer=1024)
+
             try:
                 plt.ion()  # Modo de interação para atualização contínua do gráfico
 
@@ -229,7 +235,7 @@ class App:
                 plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
 
                 # Inicializa o array para armazenar os dados das ondas sonoras
-                buffer_size = int(default_source_info['defaultSampleRate'] * 3)  # 3 segundos de áudio
+                buffer_size = sample_rate * 3  # 3 segundos de áudio
                 waveform_buffer = np.zeros(buffer_size, dtype=np.int16)
 
                 # Loop infinito para capturar e plotar continuamente as ondas sonoras
@@ -247,7 +253,7 @@ class App:
                     else:
                         print("Tamanho dos dados excede o tamanho do buffer. Os dados serão descartados.")
 
-                   # Limpa o eixo antes de plotar
+                # Limpa o eixo antes de plotar
                     ax.clear()
                     # Plota as ondas sonoras
                     ax.plot(waveform_buffer, color='blue', label='Ondas Sonoras')
