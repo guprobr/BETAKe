@@ -1,26 +1,17 @@
 #!/bin/bash
 
-echo "This is gammaQ the new BETAKê by gu.pro.br";
+# Function to check if input is within certain range ( between $2 and $3 )
+check_range() {
+    if (( $(echo "$1 < $2 || $1 > $3 " | bc -l) )); then
+        return 1
+    else
+        return 0
+    fi
+}
 
-karaoke_name="$1";
-video_url="$2";
-betake_path="$3";
-video_dev="$4";
+# function to display colored msgs, also only these show on python console
+#the rest of verbose output lies on script.log ( TAIL LOGS button )
 
-if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
-if [ "${video_url}" == "" ]; then video_url=" --simulate "; fi
-if [ "${betake_path}" == "" ]; then betake_path="$(pwd)"; fi
-if [ "${video_dev}" == "" ]; then video_dev="/dev/video0"; fi
-
-# Configuration
-REC_DIR="$betake_path/playbacks"   # Directory to store downloaded playbacks
-OUT_DIR="$betake_path/outputs"      # Directory to store output files
-
-    cd "${betake_path}" || exit;
-
-    mkdir -p "$REC_DIR" || exit; # It happened once, far far away from these lands,
-    mkdir -p "$OUT_DIR" || exit; # a very recent fact indeed, those directories being erased
-                                ###### goddam, boss!
 colorecho() {
     color=$1;
     message=$2;
@@ -52,8 +43,9 @@ colorecho "Welcome!";
         local parent_pid=$1
         local child_pids;
         child_pids=$(pgrep -P "$parent_pid")
-
-                    ##pactl unload-module module-loopback;
+                    
+                    colorecho "white" "disable audio loopback monitor"
+                    pactl unload-module module-loopback;
                     ##pactl unload-module module-echo-cancel;
 
         # Kill the parent process and all its children
@@ -70,6 +62,7 @@ colorecho "Welcome!";
         done
     }
 
+#function to sanitize when it's expected a number input
 ensure_number_type() {
     local input="$1"
     # Check if it's a number
@@ -85,6 +78,7 @@ ensure_number_type() {
     fi
 }
 
+# function to render a nice progress bar for FFMpeg
 render_display_progress() {
     local total_duration="${PLAYBACK_LEN}"  # Total duration of the video in seconds
     local pid_ffmpeg="$2"     # PID of the ffmpeg process
@@ -124,7 +118,7 @@ render_display_progress() {
 
 }
 
-
+# function to test media file format
 check_validity() {
     local filename;
     filename="${1}";
@@ -164,6 +158,7 @@ time_diff_seconds() {
     echo "$(echo "scale=6; (${end_secs} - ${start_secs}) " | bc)"
 }
 
+# function to return in FFMpeg videos format
 translate_vid_format() {
     case "$1" in
         YUYV) echo "yuyv422";;
@@ -180,23 +175,38 @@ translate_vid_format() {
     esac
 }
 
-# Define the function to calculate dB difference
+# Define the function to calculate dB difference between playback and vocals track
 calculate_db_difference() {
     # Extract RMS amplitude from each file
     RMS1="$1";
     RMS2="$2";
-    
-    # Calculate dB difference
+    # Calculate dB difference and increase a little the result
     dB_difference=$(awk -v RMS1="$RMS1" -v RMS2="$RMS2" 'BEGIN { print 20 * log(RMS1 / RMS2) / log(10) }');
-
     # Print the result
     echo "$dB_difference";
+}
 
+
+# Define the function to adjust vocals to match playback volume, auto adj vol feature
+adjust_vocals_volume() {
+    # Define the fixed target volume level
+    target_volume="-16"
+    # Extract RMS amplitude from each file
+    RMS_playback="$1"
+    RMS_vocals="$2"
+
+    # Calculate dB difference between vocals and playback
+    dB_difference=$( calculate_db_difference "$RMS_playback" "$RMS_vocals" );
+
+  # Calculate the adjustment needed for the vocals as a percentage multiplier
+    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print (10^(target/20 - diff/20)) * 100 }')
+    # Print the adjustment needed as a percentage multiplier
+    echo "$adjustment_percentage"
 }
 
 
 cfg_audio() {
- # we use just to cfg audio
+ # we use just to cfg audio for FFMpeg
         RATE_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $6 }' | sed 's/[[:alpha:]]//g' )"
         CH_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $5 }' | sed 's/[[:alpha:]]//g' )"
         BITS_mic="$(pactl list sources short | grep "${SRC_mic}" |  awk '{ print $4 }' | sed 's/float/f/g' )"
@@ -211,6 +221,8 @@ cfg_audio() {
        fi
 }
 
+# the webcam recorder and pulse/pipewire audio recorder
+# with laggy preview of video
 launch_ffmpeg_webcam() {
 
 best_format=$(v4l2-ctl --list-formats-ext -d "${video_dev}" | grep -e '\[[0-9]\]' | awk '{ print $2 " " $3 }' | sort -k2 -n | tail -n1 | awk '{ print $1 }')
@@ -227,11 +239,10 @@ colorecho "green" "params Audio: ${CH_mic}ch ${BITS_mic}bits ${RATE_mic}Hz ${ENC
 
 if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_format "${video_fmt}" -i "$video_dev" \
         -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
-       -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
-        \
-       -map 0:v   "${OUT_VIDEO}"  \
+         -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
+       -map 0:v "${OUT_VIDEO}"  \
        -map 1:a   "${OUT_VOCAL}" \
-    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop  -fps 30 -x 320 -y 200                                             - &
+    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop -x 640 -y 400 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
 else
@@ -241,22 +252,48 @@ else
 fi
 }
 
-# Define log file path and flush lastlog
+colorecho "green" "This is deltaQ° ŧħ3 n3w B3TAKê© ·v4· by https://gu.pro.br ®";
+SCREEN_WIDTH=$(xdpyinfo | grep dimensions | awk '{print $2}' | cut -d 'x' -f1)
+SCREEN_HEIGHT=$(xdpyinfo | grep dimensions | awk '{print $2}' | cut -d 'x' -f2)
+
+karaoke_name="$1";
+video_url="$2";
+betake_path="$3";
+video_dev="$4";
+opts="$5";
+
+if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
+if [ "${video_url}" == "" ]; then video_url=" --simulate "; fi
+if [ "${betake_path}" == "" ]; then betake_path="$(pwd)"; fi
+if [ "${video_dev}" == "" ]; then video_dev="/dev/video0"; fi
+if [ "${opts}" == "" ]; then opts="default"; fi
+
+# Configuration
+REC_DIR="$betake_path/playbacks"   # Directory to store downloaded playbacks
+OUT_DIR="$betake_path/outputs"      # Directory to store output files
+
+    cd "${betake_path}" || exit;
+
+    mkdir -p "$REC_DIR" || exit;
+    mkdir -p "$OUT_DIR" || exit; 
+
+##########################################################################################################################
+# Define log file path 
 LOG_FILE="$betake_path/script.log"
-# Load configuration variables and adj volumes
+#*******************************************************
+# Load configuration variables and adj volumes #########
 SINK="$( pactl get-default-sink )"
 colorecho "yellow" " got sink: $SINK";
 SRC_mic="$( pactl get-default-source )"
 colorecho "green" " got mic src: $SRC_mic";
-
-##colorecho "white" "Loopback monitor do audio ON";
-##pactl unload-module module-loopback;
-##pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
+########################################################
+colorecho "white" "Loopback monitor audio ON";
+pactl unload-module module-loopback;
+pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
 ##DOWNLOAD PLAYBACK
-#colorecho "red" "Try upd yt-dlp";
-#yt-dlp -U;
-colorecho "white" "fetch the video title";
+
+colorecho "white" "fetch the video title (more logs on TAIL LOGS button)";
 PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}" --no-check-certificates --enable-file-urls --no-playlist)";
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
 colorecho "red" "${video_url}";
@@ -304,7 +341,7 @@ check_validity "${PLAYBACK_BETA}" "mp4";
 colorecho "cyan" "All setup to sing!";
 # Display message to start webcam capture
 export LC_ALL=C;
-zenity --question --text=" - - Let's sing? " --title "Webcam capture" --ok-label="SING";
+zenity --question --text=" - - Let's sing? " --title "Accept song or abort" --ok-label="SING";
 if [ $? == 1 ]; then
     colorecho "red" "Performance aborted.";
     # Get the PID of the parent process
@@ -315,47 +352,51 @@ if [ $? == 1 ]; then
 fi
 
 rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
-# Let's Record with webcam, then Post-production
+
+colorecho "Let's Record with webcam and pulseaudio/pipewire default source"
 OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out.mp4;
 OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"_enhance.wav;
 	
 colorecho "SING!---Launching webcam;";
-colorecho "blue" "Using video device: $video_dev";
-colorecho "yellow" "Using audio source: ${SRC_mic}";
+colorecho "magenta" "Using video device: $video_dev";
+colorecho "magenta" "Using audio source: ${SRC_mic}";
 
 # launch webcam recorder
 launch_ffmpeg_webcam true;
 epoch_ff=$( get_process_start_time );
 renice -n -19 "$ff_pid"
-colorecho "green" "RECORDER start Epoch: $epoch_ff";
+colorecho "red" "RECORDER start Epoch: $epoch_ff";
 
 # Wait for the output file to be created and not empty; only then we run ffplay
 while [ ! -s "${OUT_VIDEO}" ]; do
-  sleep 0.1; # Adjust sleep time as needed
-done | zenity --progress --text="GET READY TO SING" \
-              --title="Starting to tape!" --percentage=50 --pulsate --auto-close --auto-kill
+  sleep 0.0001; # Adjust sleep time as needed
+done | zenity --progress --text="GET RDY TO SING" \
+              --title="Starting playback NOW" --percentage=50 --pulsate --auto-close --auto-kill
 
 colorecho "yellow" "Launch lyrics video";
 
 	        ffplay \
 			        -window_title "SING" -loglevel quiet -hide_banner \
-                    -vf "scale=800x448" "${PLAYBACK_BETA}" &
+                    -vf "scale=1024x768" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
             epoch_ffplay=$( get_process_start_time  );
 
     colorecho "red" "ffplay start Epoch: $epoch_ffplay";
         diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
-        colorecho "magenta" "diff_ss: $diff_ss"; # try to compensate sync brutally
+        colorecho "magenta" "diff_ss: $diff_ss"; # will try to adj sync brutally when rendering
 
 cronos_play=1 
 ### RECORDING PROGRESS! 
 # If FFmpeg or FFplayback quits, or if click cancel, webcam capture stops
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
     sleep 1;
-    
-    wmctrl -r "Recording" -b add,above
 
+    wmctrl -r "MPlayer" -b add,above 
+    wmctrl -r "SING" -e 0,-$(( 1024+(SCREEN_WIDTH/2) )),$(( SCREEN_HEIGHT+768 )),-1,-1
+    wmctrl -r "Recording" -b add,above 
+    wmctrl -r "Recording" -e -1,-1,0,0,0
+    
     cronos_play=$(( "$cronos_play" + 1 ));
     # shellcheck disable=SC2005
     echo $(( ("$cronos_play"*100) / "$PLAYBACK_LEN" ))
@@ -386,15 +427,15 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
             killall -9 mplayer;
             #killall -SIGINT sox;
 
-            #colorecho "white" "disable audio loopback monitor"
-            #pactl unload-module module-loopback;
+            colorecho "white" "disable audio loopback monitor"
+            pactl unload-module module-loopback;
 
     sleep 3;
 
    check_validity "${OUT_VIDEO}" "mp4";
    check_validity "${OUT_VOCAL}" "wav";
 
-zenity --question --text=" - - Render video and MP3? " --title "Proceed?" --ok-label="RENDER, yes";
+zenity --question --text=" - - Render video and MP3? " --title "Proceed, or abort production??" --ok-label="RENDER, yes";
 if [ $? == 1 ]; then
     colorecho "red" "Production aborted.";
     # Get the PID of the parent process
@@ -404,8 +445,7 @@ if [ $? == 1 ]; then
     exit;
 fi
 
-zenity --info --text="Gonna first apply several vocal enhancements" --title "SoX + LV2 Vocal enhancements" --timeout=10;
-
+zenity --warning --text="Gonna apply some vocal enhancements" --title "SoX + LV2 filters" --timeout=3;
 
 colorecho "yellow" "Apply shibata dithering with SoX, also noise reduction...";
 sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
@@ -418,16 +458,16 @@ check_validity "${VOCAL_FILE}" "wav";
 
 colorecho "yellow" "run Aliasing";
 lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
-    -p level:0.69                               \
+    -p level:0.25                               \
         http://plugin.org.uk/swh-plugins/alias > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${OUT_VOCAL}" "wav";
 
 colorecho "yellow" "Execute vocal tuning algorithm Gareus XC42...";
 lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
-    -P Live \
-    -p mode:Auto  \
-    http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
+    -P Live  \
+        http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
+    
     colorecho "white" "$( cat lv2.tmp.log )";
     check_validity "${VOCAL_FILE}" "wav";
 
@@ -435,14 +475,13 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
         colorecho "red" "Will try to FIX clipping with declipper. Perphaps you should record again with a lower volume!";
         
         ffmpeg -y -hide_banner -loglevel info  \
-        -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000,loudnorm;" \
+        -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000;" \
                 "${OUT_VOCAL}";
         check_validity "${OUT_VOCAL}" "wav";
 
         colorecho "red" "Try apply vocal tuning algorithm Gareus XC42 after declipper...";
         lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
             -P Live \
-            -p mode:Auto  \
             http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
             colorecho "white" "$( cat lv2.tmp.log )";
             check_validity "${VOCAL_FILE}" "wav";
@@ -453,6 +492,116 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
             fi
     fi
     rm -f lv2.tmp.log;
+
+colorecho "magenta" "Will use SoX to fix volume discrepancy between vocals and playback";
+ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
+                         check_validity "${PLAYBACK_BETA%.*}".wav "wav";
+# Extract volume info and calc adj in dB by comparing each file RMS
+PLAYBACK_dBs="$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
+VOCALS_dBs="$( sox "${VOCAL_FILE}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
+DB_diff=$( adjust_vocals_volume "${PLAYBACK_dBs}" "${VOCALS_dBs}" | sed 's/[[:alpha:]]//g');
+ DB_diff=$( ensure_number_type "${DB_diff}")
+
+colorecho "red" "The calculated adjustment is: ${DB_diff}";
+                        rm -rf "${PLAYBACK_BETA%.*}".wav;
+
+colorecho "red" "greater than one increases vol, between 0.0 and 1.0 decreases vol"
+# Initialize  default threshold volume
+THRESHOLD_vol="1.0";
+while true; do
+    # Display the dialog interface and sanitize input
+    selection=$(zenity --title "Volume Knob - vocals adj" --text "Adjust volume (0 to 5.5 ) where zero is silence, 1.0 = no change )" --entry --width 300 --height 150 --entry-text "${THRESHOLD_vol}" | sed 's/[^0-9.-]//g')
+
+# Check if selection is within range
+    if check_range "$selection" "0" "5.5"; then
+    # Prompt user for action
+        if zenity --question --title="Preview before or Confirm adjustment" --text="Do you want to preview the VOL adjustment?" --ok-label="Preview" --cancel-label="Confirm and RENDER"; then
+# User chose Preview
+           DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8; ${DB_diff} * ${selection}" | bc)")
+           ffmpeg -y  -loglevel info -hide_banner \
+                                                                      -i "${PLAYBACK_BETA}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
+    -filter_complex "  
+    [0:a]equalizer=f=50:width_type=q:width=2:g=6[playback];
+    [1:a]afftdn,volume=volume=${DB_diff_preview},acompressor,adynamicsmooth,aecho=0.89:0.89:84:0.33,treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.36|0.84,adynamicequalizer,stereowiden[betamix];" \
+      -map "[betamix]" "${VOCAL_FILE%.*}"_tmp.wav; 
+
+           mplayer "${VOCAL_FILE%.*}"_tmp.wav &
+            ffplay_pid=$!
+           zenity --info --title "Preview vocals" --text "Volume change would be: ${DB_diff_preview}. Press OK to stop preview."
+           kill -9 $ffplay_pid
+        else
+ # User chose Confirm
+            colorecho "red" "Confirmed adjustment!";
+            THRESHOLD_vol="${selection}";
+            break
+        fi
+    else
+        # Selection out of range, show warning and repeat dialog
+       zenity --error --title "Warning" --text "Volume must be between 0 and 5.5 -- Please try again."
+   fi
+done
+colorecho "magenta" "Selected threshold volume: ${THRESHOLD_vol}"
+
+    DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${DB_diff} * ${THRESHOLD_vol} " | bc )" )" 
+    
+    colorecho "green" "tuning vocals volume and normalizing.."
+   ffmpeg -y -i "${VOCAL_FILE}" -af "afftdn,volume=volume=${DB_diff},acompressor" "${OUT_VOCAL}"
+    colorecho "yellow" " $DB_diff applied to vocals volume;"
+    check_validity "${OUT_VOCAL}" "wav";
+
+colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
+export LC_ALL=C;  
+OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
+seedy=",hue=h=9*PI*t/$(fortune|wc -l):s=1"
+
+ if ffmpeg -y  -loglevel info -hide_banner \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${OUT_VOCAL}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
+    -i "${PLAYBACK_BETA}" \
+    -filter_complex "  
+    [2:a]equalizer=f=50:width_type=q:width=2:g=6[playback];
+    [0:a]adynamicsmooth,aecho=0.89:0.89:84:0.33,treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.36|0.84,adynamicequalizer,stereowiden[betamix];
+        gradients=n=5:s=640x400[vscope];
+        [2:v]scale=640x400[v2];
+        [v2][vscope]vstack,scale=640x400[hugh];
+        [1:v]scale=640x400 $seedy [hutz];
+        [hutz][hugh]xstack,
+        drawtext=fontfile=Ubuntu-B.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':
+        fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
+        -s 1920x1080 -t "${PLAYBACK_LEN}" \
+            -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
+            -c:a aac -map "[betamix]" -map "[visuals]" "${OUT_FILE}" &
+                             ff_pid=$!; then
+                colorecho "cyan" "Started render ffmpeg process";
+else
+       colorecho "red" "FAIL to start ffmpeg process";
+       kill_parent_and_children $$
+       exit
+fi 
+                
+    render_display_progress "${OUT_FILE}" $ff_pid;
+    check_validity "${OUT_FILE}" "mp4";
+
+zenity --info --text="Video render DONE" --title "Success" --timeout=6;
+
+
+if ffmpeg -hide_banner -loglevel error -y -i "${OUT_FILE}" "${OUT_FILE%.*}".mp3; then
+    colorecho "cyan" "MP3 rendered OK"
+else
+    colorecho "red" "Failed to render MP3. This is not a fatal error.";
+fi
+
+zenity --warning --text="Let's watch your performance video now: ${OUT_FILE}" --title "Ready to watch" --timeout=15;
+
+# display resulting video to user    
+mplayer "${OUT_FILE}";
+
+colorecho "cyan" "Thank you for having fun!"
+exit;
+
 
 #colorecho "yellow" "Vocal tuning algorithm Auburn Sound's Graillon...";
 #lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
@@ -468,77 +617,3 @@ lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
 #       http://plugin.org.uk/swh-plugins/sc4 > lv2.tmp.log 2>&1
 #   colorecho "white" "$( cat lv2.tmp.log )";
 #    check_validity "${VOCAL_FILE}" "wav";
-
-
-colorecho "magenta" "Will fix volumes";
-ffmpeg -hide_banner -v quiet -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
-                         check_validity "${PLAYBACK_BETA%.*}".wav "wav";
-# Extract volume info and calc diff in dB of each file
-DB_diff=$( calculate_db_difference "$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" "$( sox "${VOCAL_FILE}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )" | sed 's/[[:alpha:]]//g');
-colorecho "red" "The aprox. difference in dB between the files is ${DB_diff}";
-    rm -rf "${PLAYBACK_BETA%.*}".wav;
-
-    DB_diff=$( ensure_number_type "${DB_diff}" )
-
-   ffmpeg -y -i "${VOCAL_FILE}" -af "volume=volume=${DB_diff}dB" "${OUT_VOCAL}"
-    colorecho "red" "VOL adjustment applied, $DB_diff was applied to vocals volume"
-    check_validity "${OUT_VOCAL}" "wav";
-
-zenity --info --text="now mix vocals and playback into video with effects" --title "Vocal enhanced" --timeout=5;
-
-colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
-export LC_ALL=C;  
-OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
-seedy=",hue=h=PI*t/$(fortune|wc -l):s=1"
-
- if ffmpeg -y  -loglevel info -hide_banner \
-       -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
-    -filter_complex "  
-    [0:a]equalizer=f=50:width_type=q:width=2:g=5,aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
-    aresample=resampler=soxr[playback];
-
-    [1:a]afftdn,
-    aecho=0.88:0.84:84:0.21,treble=g=3,adynamicsmooth,
-    aformat=sample_fmts=fltp:sample_rates=96000:channel_layouts=stereo,
-    aresample=resampler=soxr:precision=33:dither_method=shibata[vocals];
-    
-    [playback][vocals]amix=inputs=2:weights=0.09|0.69,
-    adynamicequalizer,extrastereo,compand=attacks=0.3:points=-80/-900|-45/-15|-27/-9|0/-7:soft-knee=6;
-    
-    gradients=n=8:s=640x400[vscope];
-        [0:v]scale=640x400[v0];
-        [v0][vscope]vstack,scale=640x400[hugh];
-        [2:v]scale=640x400 $seedy [hutz];
-        [hutz][hugh]xstack,drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':fontcolor=yellow:fontsize=42:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10;
-    " \
-    -s 1280x720 -t "${PLAYBACK_LEN}" \
-            -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac -ar 96000 "${OUT_FILE}" &
-                                            ff_pid=$!; then
-                colorecho "cyan" "Started render ffmpeg process";
-else
-       colorecho "red" "FAIL to start ffmpeg process";
-       kill_parent_and_children $$
-       exit
-fi 
-                
-    render_display_progress "${OUT_FILE}" $ff_pid;
-    check_validity "${OUT_FILE}" "mp4";
-
-zenity --info --text="Visuals video render Done." --title "next: render MP3" --timeout=10;
-
-
-if ffmpeg -hide_banner -loglevel error -y -i "${OUT_FILE}" "${OUT_FILE%.*}".mp3; then
-    colorecho "cyan" "MP3 rendered OK"
-else
-    colorecho "red" "Failed to render MP3. This is not a fatal error.";
-fi
-zenity --info --text="MP3 render Done." --title "MP3 Done" --timeout=10;
-
-# display resulting video to user    
-totem "${OUT_FILE}";
-
-colorecho "cyan" "Thank you for having fun!"
-exit;

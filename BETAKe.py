@@ -75,11 +75,13 @@ def open_device_selection_dialog(parent):
     return dialog.selected_device
 
 class App:
-    
+
     def __init__(self, master):
         self.master = master
         master.title("gammaQ v3")
         master.geometry("1024x777")  # Set window size
+        
+        self.visualizer = self.AudioVisualizer()
 
         # Define instance variables for buttons
         self.test_video_button = None
@@ -87,6 +89,7 @@ class App:
         self.video_dev_dialog_open = False
         self.tail_log_open = None
         self.selfie_disable = ""
+        self.noTOGGLE = True
 
         custom_font = Font(family="Verdana", size=10)
         # Create scrolled text widget for displaying output
@@ -207,6 +210,7 @@ class App:
             self.stream.close()
             self.p.terminate()
             plt.close()
+            self.noTOGGLE = True
 
         # Função para plotar as ondas sonoras
         def plot_audio_waveform(self):
@@ -235,7 +239,7 @@ class App:
                 plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
 
                 # Inicializa o array para armazenar os dados das ondas sonoras
-                buffer_size = sample_rate * 3  # 3 segundos de áudio
+                buffer_size = sample_rate * 10  # 3 segundos de áudio
                 waveform_buffer = np.zeros(buffer_size, dtype=np.int16)
 
                 # Loop infinito para capturar e plotar continuamente as ondas sonoras
@@ -284,10 +288,10 @@ class App:
                 print("Programa encerrado.")
 
     def plot_audio(self):
-        # Instanciação e execução da classe AudioVisualizer
-        visualizer = self.AudioVisualizer()
-        visualizer.plot_audio_waveform()
-
+        if self.noTOGGLE:
+            # execução da classe AudioVisualizer
+            self.visualizer.plot_audio_waveform()
+            self.noTOGGLE = False
 
     def skip_selfie(self):
         if self.selfie_disable == "":
@@ -685,6 +689,7 @@ class App:
         ]
         # Create subprocess with shell=True
         self.subprocess = subprocess.Popen(command, shell=False)
+        self.visualizer.close_plot('close_event')
 
 def main():
     root = tk.Tk()

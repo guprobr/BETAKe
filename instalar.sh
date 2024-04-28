@@ -39,7 +39,7 @@ read -rp "Do you want to continue for user ( $YOU ) ? (yes/no): " response
 # Check the response
 if [[ $response == "yes" ]]; then
     colorecho "green" "You chose to continue.";
-    sudo apt install fortunes*  alsa-utils expect \
+    sudo apt install fortunes alsa-utils expect dialog zenity \
 	python3-pexpect pulseaudio-utils wmctrl fonts-noto \
     python3-tk python3-numpy python3-psutil python3-pyaudio python3-matplotlib xterm \
     sox x42-plugins swh-lv2 lv2file v4l-utils easyeffects git ffmpeg;
@@ -51,10 +51,10 @@ if [[ $response == "yes" ]]; then
     colorecho "blue" "Vou obter o yt-dlp do github"
     git clone  https://github.com/yt-dlp/yt-dlp/ && cd yt-dlp && make && sudo make install;
     
-    colorecho "green" "Vou instalar o incrivel Graillon versao FREE plugin LV2 para vocal enhancement";
-    sudo cp -ra ./Auburn\ Sounds\ Graillon\ 2.lv2/ /usr/lib/lv2/;
-    sudo chown -R root:root /usr/lib/lv2/Auburn\ Sounds\ Graillon\ 2.lv2;
-    sudo chmod +x /usr/lib/lv2/Auburn\ Sounds\ Graillon\ 2.lv2/AuburnSoundsGraillon2.so;
+    #colorecho "green" "Vou instalar o incrivel Graillon versao FREE plugin LV2 para vocal enhancement";
+    #sudo cp -ra ./Auburn\ Sounds\ Graillon\ 2.lv2/ /usr/lib/lv2/;
+    #sudo chown -R root:root /usr/lib/lv2/Auburn\ Sounds\ Graillon\ 2.lv2;
+    #sudo chmod +x /usr/lib/lv2/Auburn\ Sounds\ Graillon\ 2.lv2/AuburnSoundsGraillon2.so;
     
     colorecho "yellow" "vou instalar o atalho .desktop na sua /home";
     echo "cp -ra BETAq.desktop ~/.local/share/applications/;"
