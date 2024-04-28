@@ -42,7 +42,7 @@ if [[ $response == "yes" ]]; then
     sudo apt install fortunes alsa-utils expect dialog zenity \
 	python3-pexpect pulseaudio-utils wmctrl fonts-noto \
     python3-tk python3-numpy python3-psutil python3-pyaudio python3-matplotlib xterm \
-    sox x42-plugins swh-lv2 lv2file v4l-utils easyeffects git ffmpeg;
+    sox x42-plugins swh-lv2 lv2file v4l-utils git ffmpeg;
 
     sudo cp -ra BETAKe.* /usr/bin/;
     colorecho "blue" "PS: instale qualquer dependencia que porventura faltar do python3";

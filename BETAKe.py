@@ -113,9 +113,9 @@ class App:
             master, text="Preview cam", command=self.test_video_device)
         self.video_test_button.place(x=295, y=685)
 
-        self.audio_test_button = tk.Button(
-            master, text="EasyEffects", command=self.test_audio_device)
-        self.audio_test_button.place(x=295, y=715)
+        #self.audio_test_button = tk.Button(
+        #    master, text="EasyEffects", command=self.test_audio_device)
+        #self.audio_test_button.place(x=295, y=715)
 
         self.get_fortune_button = tk.Button(
             master, text="yer Fortunes", command=self.get_fortune)
@@ -143,6 +143,11 @@ class App:
         tk.Label(master, text="Playback Video URL:").place(x=1, y=570)
         self.video_url_entry = tk.Entry(master)
         self.video_url_entry.place(x=160, y=570, width=750)
+
+        # Entry for optional overlay URL
+        tk.Label(master, text="Overlay optional URL:").place(x=1, y=500)
+        self.overlay_url_entry = tk.Entry(master)
+        self.overlay_url_entry.place(x=160, y=500, width=750)
 
         # Start recording button
         self.start_recording_button = tk.Button(
@@ -231,7 +236,7 @@ class App:
                 plt.ion()  # Modo de interação para atualização contínua do gráfico
 
                 # Cria uma janela para plotagem com o tamanho desejado
-                plt.figure(figsize=(10, 4))
+                plt.figure(figsize=(6, 2))
                 # Cria o subplot
                 ax = plt.subplot()
 
@@ -239,7 +244,7 @@ class App:
                 plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
 
                 # Inicializa o array para armazenar os dados das ondas sonoras
-                buffer_size = sample_rate * 10  # 3 segundos de áudio
+                buffer_size = sample_rate * 5  # 5 segundos de áudio
                 waveform_buffer = np.zeros(buffer_size, dtype=np.int16)
 
                 # Loop infinito para capturar e plotar continuamente as ondas sonoras
@@ -260,10 +265,10 @@ class App:
                 # Limpa o eixo antes de plotar
                     ax.clear()
                     # Plota as ondas sonoras
-                    ax.plot(waveform_buffer, color='blue', label='Ondas Sonoras')
+                    ax.plot(waveform_buffer, color='green', label='Sound Waves')
                     ax.set_xlabel('Tempo')
-                    ax.set_ylabel('Amplitude')
-                    ax.set_title(default_source_info['name'])
+                    ax.set_ylabel('Amp')
+                    ax.set_title('Audio source:' + default_source_info['name'])
                     ax.set_xlim(0, buffer_size)
                     ax.set_ylim(-32768, 32768)  # Ajuste conforme necessário para a escala da amplitude
 
@@ -277,7 +282,7 @@ class App:
                     ax.title.set_color('yellow')
 
                     # Atualiza o gráfico
-                    plt.pause(0.01)
+                    plt.pause(0.001)
 
             except (KeyboardInterrupt, RuntimeError):
                 # Encerra o fluxo e o PyAudio quando a janela for fechada
@@ -549,6 +554,7 @@ class App:
         karaoke_name = self.karaoke_name_entry.get().strip()
         video_dev = self.video_dev_entry.get().strip()
         video_url = self.video_url_entry.get().strip()
+        overlay_url = self.overlay_url_entry.get().strip()
 
         # Set default values if input fields are empty
         if not karaoke_name:
@@ -562,7 +568,7 @@ class App:
         # Command to execute betaREC.sh with tee for logging
         command = [
             'bash', '-c', 
-            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{self.selfie_disable}" ' # 2>&1 | tee -a script.log'
+            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" ' # 2>&1 | tee -a script.log'
         ]
 
         # Open script.log file for appending

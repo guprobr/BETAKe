@@ -74,7 +74,7 @@ ensure_number_type() {
             echo "$input"
         fi
     else
-        echo "0"
+        echo "1"
     fi
 }
 
@@ -260,22 +260,23 @@ karaoke_name="$1";
 video_url="$2";
 betake_path="$3";
 video_dev="$4";
-opts="$5";
+overlay_url="$5";
 
 if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
 if [ "${video_url}" == "" ]; then video_url=" --simulate "; fi
 if [ "${betake_path}" == "" ]; then betake_path="$(pwd)"; fi
 if [ "${video_dev}" == "" ]; then video_dev="/dev/video0"; fi
-if [ "${opts}" == "" ]; then opts="default"; fi
 
 # Configuration
 REC_DIR="$betake_path/playbacks"   # Directory to store downloaded playbacks
 OUT_DIR="$betake_path/outputs"      # Directory to store output files
+OVER_DIR="$betake_path/overlays"      # Directory to store optional overlay files
 
     cd "${betake_path}" || exit;
 
     mkdir -p "$REC_DIR" || exit;
     mkdir -p "$OUT_DIR" || exit; 
+    mkdir -p "$OVER_DIR" || exit;
 
 ##########################################################################################################################
 # Define log file path 
@@ -338,6 +339,18 @@ else
 fi
 check_validity "${PLAYBACK_BETA}" "mp4";
 
+
+
+if [ "$overlay_url" != "" ]; then
+colorecho "magenta" "Download overlay video as requested"
+# Download the overlay, it will remain in cache
+    dl_name=$(yt-dlp "${overlay_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --no-playlist);
+    yt-dlp -o "${dl_name}" "${overlay_url}" -P "${OVER_DIR}" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' \
+         --no-check-certificates --no-overwrites --no-playlist;
+    OVERLAY_BETA="${OVER_DIR}"/"${dl_name}";
+fi
+
+
 colorecho "cyan" "All setup to sing!";
 # Display message to start webcam capture
 export LC_ALL=C;
@@ -387,13 +400,13 @@ colorecho "yellow" "Launch lyrics video";
         colorecho "magenta" "diff_ss: $diff_ss"; # will try to adj sync brutally when rendering
 
 cronos_play=1 
+wmctrl -r "SING" -e 0,-$(( 1024+(SCREEN_WIDTH/2) )),$(( SCREEN_HEIGHT+768 )),-1,-1
 ### RECORDING PROGRESS! 
 # If FFmpeg or FFplayback quits, or if click cancel, webcam capture stops
 while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
     sleep 1;
 
     wmctrl -r "MPlayer" -b add,above 
-    wmctrl -r "SING" -e 0,-$(( 1024+(SCREEN_WIDTH/2) )),$(( SCREEN_HEIGHT+768 )),-1,-1
     wmctrl -r "Recording" -b add,above 
     wmctrl -r "Recording" -e -1,-1,0,0,0
     
@@ -445,64 +458,43 @@ if [ $? == 1 ]; then
     exit;
 fi
 
-zenity --warning --text="Gonna apply some vocal enhancements" --title "SoX + LV2 filters" --timeout=3;
+cp -ra "${OUT_VOCAL}" "${VOCAL_FILE}";
+colorecho "yellow" "DEclip..";
+lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
+     http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+    check_validity "${OUT_VOCAL}" "wav";
+    rm -f lv2.tmp.log;
 
-colorecho "yellow" "Apply shibata dithering with SoX, also noise reduction...";
+colorecho "yellow" "Apply dithering & noise reduction with SoX";
 sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
-    noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 \
-                            dither -s -f shibata > lv2.tmp.log 2>&1
+    noisered "$OUT_DIR"/"$karaoke_name".prof 0.3 \
+                            dither -s > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${VOCAL_FILE}" "wav";
 
-colorecho "yellow" "run Aliasing";
-lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" \
-    -p level:0.25                               \
-        http://plugin.org.uk/swh-plugins/alias > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
-check_validity "${OUT_VOCAL}" "wav";
-
 colorecho "yellow" "Execute vocal tuning algorithm Gareus XC42...";
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
-    -P Live  \
-        http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
+lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
+    -P "Live" \
+    -p "mode:Auto" \
+     http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
     
     colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${VOCAL_FILE}" "wav";
-
-    if grep -qi clipping ./lv2.tmp.log ; then
-        colorecho "red" "Will try to FIX clipping with declipper. Perphaps you should record again with a lower volume!";
-        
-        ffmpeg -y -hide_banner -loglevel info  \
-        -i "${VOCAL_FILE}" -filter_complex "adeclip=window=55:w=75:a=8:t=10:n=1000;" \
-                "${OUT_VOCAL}";
-        check_validity "${OUT_VOCAL}" "wav";
-
-        colorecho "red" "Try apply vocal tuning algorithm Gareus XC42 after declipper...";
-        lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
-            -P Live \
-            http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
-            colorecho "white" "$( cat lv2.tmp.log )";
-            check_validity "${VOCAL_FILE}" "wav";
-            if grep -qi clipping ./lv2.tmp.log ; then
-                colorecho "red" "Still clipping. you should record again with a lower volume!"
-                sleep 5;
-                colorecho "yellow" "Will proceed anyway...";
-            fi
-    fi
+    check_validity "${OUT_VOCAL}" "wav";
     rm -f lv2.tmp.log;
 
-colorecho "magenta" "Will use SoX to fix volume discrepancy between vocals and playback";
+colorecho "magenta" "Calculate volume discrepancy between vocals and playback";
 ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
                          check_validity "${PLAYBACK_BETA%.*}".wav "wav";
 # Extract volume info and calc adj in dB by comparing each file RMS
 PLAYBACK_dBs="$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
-VOCALS_dBs="$( sox "${VOCAL_FILE}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
+VOCALS_dBs="$( sox "${OUT_VOCAL}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
 DB_diff=$( adjust_vocals_volume "${PLAYBACK_dBs}" "${VOCALS_dBs}" | sed 's/[[:alpha:]]//g');
  DB_diff=$( ensure_number_type "${DB_diff}")
 
-colorecho "red" "The calculated adjustment is: ${DB_diff}";
+colorecho "red" "The calculated base adjustment is: ${DB_diff}";
                         rm -rf "${PLAYBACK_BETA%.*}".wav;
 
 colorecho "red" "greater than one increases vol, between 0.0 and 1.0 decreases vol"
@@ -510,7 +502,7 @@ colorecho "red" "greater than one increases vol, between 0.0 and 1.0 decreases v
 THRESHOLD_vol="1.0";
 while true; do
     # Display the dialog interface and sanitize input
-    selection=$(zenity --title "Volume Knob - vocals adj" --text "Adjust volume (0 to 5.5 ) where zero is silence, 1.0 = no change )" --entry --width 300 --height 150 --entry-text "${THRESHOLD_vol}" | sed 's/[^0-9.-]//g')
+    selection=$(zenity --title "Volume Knob - vocals adj" --text "Adjust volume (0 to 5.5 ) where zero is silence, 1.0 = no change )" --entry --width 300 --height 150 --cancel-label="Silence vocals" --entry-text "${THRESHOLD_vol}" | sed 's/[^0-9.-]//g')
 
 # Check if selection is within range
     if check_range "$selection" "0" "5.5"; then
@@ -520,14 +512,14 @@ while true; do
            DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8; ${DB_diff} * ${selection}" | bc)")
            ffmpeg -y  -loglevel info -hide_banner \
                                                                       -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${VOCAL_FILE}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
-    [0:a]equalizer=f=50:width_type=q:width=2:g=6[playback];
-    [1:a]afftdn,volume=volume=${DB_diff_preview},acompressor,adynamicsmooth,aecho=0.89:0.89:84:0.33,treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.36|0.84,adynamicequalizer,stereowiden[betamix];" \
-      -map "[betamix]" "${VOCAL_FILE%.*}"_tmp.wav; 
+    [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
+    [1:a]volume=volume=${DB_diff_preview},acompressor,aecho=0.84:0.84:84:0.22,treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2[betamix];" \
+      -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav; 
 
-           mplayer "${VOCAL_FILE%.*}"_tmp.wav &
+           totem "${OUT_VOCAL%.*}"_tmp.wav &
             ffplay_pid=$!
            zenity --info --title "Preview vocals" --text "Volume change would be: ${DB_diff_preview}. Press OK to stop preview."
            kill -9 $ffplay_pid
@@ -547,27 +539,35 @@ colorecho "magenta" "Selected threshold volume: ${THRESHOLD_vol}"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${DB_diff} * ${THRESHOLD_vol} " | bc )" )" 
     
     colorecho "green" "tuning vocals volume and normalizing.."
-   ffmpeg -y -i "${VOCAL_FILE}" -af "afftdn,volume=volume=${DB_diff},acompressor" "${OUT_VOCAL}"
+   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},acompressor" "${VOCAL_FILE}"
     colorecho "yellow" " $DB_diff applied to vocals volume;"
-    check_validity "${OUT_VOCAL}" "wav";
+    check_validity "${VOCAL_FILE}" "wav";
 
 colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 seedy=",hue=h=9*PI*t/$(fortune|wc -l):s=1"
 
+if [ "${OVERLAY_BETA}" == "" ]; then
+    OVERLAY_BETA="nullsrc=size=640x400";
+fi
+
  if ffmpeg -y  -loglevel info -hide_banner \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${OUT_VOCAL}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${VOCAL_FILE}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" \
+    -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]equalizer=f=50:width_type=q:width=2:g=6[playback];
-    [0:a]adynamicsmooth,aecho=0.89:0.89:84:0.33,treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.36|0.84,adynamicequalizer,stereowiden[betamix];
-        gradients=n=5:s=640x400[vscope];
+    [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
+    [0:a]aecho=0.84:0.84:84:0.22,treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2[betamix];
+        gradients=n=3:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
-        [1:v]scale=640x400 $seedy [hutz];
+        [1:v]scale=640x400 $seedy [yikes];
+        [3:v]trim=duration=${PLAYBACK_LEN},scale=640x400,
+        format=rgba,colorchannelmixer=aa=0.84[yeah]; 
+        [yikes][yeah]overlay[hutz];
         [hutz][hugh]xstack,
         drawtext=fontfile=Ubuntu-B.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
