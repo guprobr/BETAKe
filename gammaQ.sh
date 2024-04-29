@@ -538,7 +538,7 @@ while true; do
         if zenity --question --title="Preview before or Confirm adjustment" --text="Do you want to preview the VOL adjustment?" --ok-label="Preview" --cancel-label="Confirm and RENDER"; then
 # User chose Preview
            DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8; ${DB_diff} * ${selection}" | bc)")
-            if [ "${selection}" -eq 0 ]; then
+            if [ "${selection}" == "" ]; then
                 DB_diff_preview=1;
             fi
            ffmpeg -y  -loglevel info -hide_banner \
@@ -547,7 +547,7 @@ while true; do
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
     [1:a]volume=volume=${DB_diff_preview},aecho=0.84:0.84:84:0.33,treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.45|0.98[betamix];" \
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav; 
 
            totem "${OUT_VOCAL%.*}"_tmp.wav &
@@ -605,7 +605,7 @@ fi
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=8[playback];
     [0:a]treble=g=3[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.45|0.98[betamix];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
