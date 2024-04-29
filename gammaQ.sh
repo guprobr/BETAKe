@@ -365,11 +365,15 @@ check_validity "${PLAYBACK_BETA}" "mp4";
 
 if [ "$overlay_url" != "" ]; then
 colorecho "magenta" "Download overlay video as requested"
+    if [[ "${overlay_url}" == file://* ]]; then
+        OVERLAY_BETA="${overlay_url#file://}";
+    else
 # Download the overlay, it will remain in cache
-    dl_name=$(yt-dlp "${overlay_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --no-playlist);
-    yt-dlp -o "${dl_name}" "${overlay_url}" -P "${OVER_DIR}" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' \
+        dl_name=$(yt-dlp "${overlay_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --no-playlist);
+        yt-dlp -o "${dl_name}" "${overlay_url}" -P "${OVER_DIR}" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' \
          --no-check-certificates --no-overwrites --no-playlist;
-    OVERLAY_BETA="${OVER_DIR}"/"${dl_name}";
+        OVERLAY_BETA="${OVER_DIR}"/"${dl_name}";
+    fi
 fi
 
 
@@ -526,7 +530,7 @@ colorecho "red" "greater than one increases vol, between 0.0 and 1.0 decreases v
 THRESHOLD_vol="1.0";
 while true; do
     # Display the dialog interface and sanitize input
-    selection=$(zenity --title "Volume Knob - vocals adj" --text "Adjust volume (0 to 5.5 ) where zero is silence, 1.0 = no change )" --entry --width 300 --height 150 --cancel-label="Do not adj volume" --entry-text "${THRESHOLD_vol}" | sed 's/[^0-9.-]//g')
+    selection=$(zenity --title "Volume Knob - vocals adj" --text "Adjust volume factor multiplier (0 to 5.5 ) where zero is silence, 1.0 = no change )" --entry --width 300 --height 150 --cancel-label="Do not adj volume" --entry-text "${THRESHOLD_vol}" | sed 's/[^0-9.-]//g')
 
 # Check if selection is within range
     if check_range "$selection" "0" "5.5"; then
@@ -542,13 +546,13 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]volume=volume=${DB_diff_preview},aecho=0.84:0.84:84:0.22,treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2[betamix];" \
+    [1:a]volume=volume=${DB_diff_preview},aecho=0.84:0.84:84:0.33,treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.45|0.98[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav; 
 
            totem "${OUT_VOCAL%.*}"_tmp.wav &
             ffplay_pid=$!
-           zenity --info --title "Preview vocals" --text "Volume change would be: ${DB_diff_preview}. Press OK to stop preview."
+           zenity --info --title "Preview vocals" --text "Volume change factor would be: ${DB_diff_preview}. Press OK to stop preview."
            kill -9 $ffplay_pid
         else
  # User chose Confirm
@@ -558,7 +562,7 @@ while true; do
         fi
     else
         # Selection out of range, show warning and repeat dialog
-       zenity --error --title "Warning" --text "Volume must be between 0 and 5.5 -- Please try again."
+       zenity --error --title "Warning" --text "Input must be between 0 and 5.5 -- Please try again."
    fi
 done
 
@@ -573,7 +577,7 @@ colorecho "magenta" "Selected threshold volume: ${THRESHOLD_vol}"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${DB_diff} * ${THRESHOLD_vol} " | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},aecho=0.84:0.84:84:0.22" "${VOCAL_FILE}"
+   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},aecho=0.84:0.84:84:0.33" "${VOCAL_FILE}"
     colorecho "yellow" " $DB_diff applied to vocals volume;"
     check_validity "${VOCAL_FILE}" "wav";
 
@@ -601,7 +605,7 @@ fi
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=8[playback];
     [0:a]treble=g=3[vocals];
-    [playback][vocals]amix=inputs=2[betamix];
+    [playback][vocals]amix=inputs=2:weights=0.45|0.98[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
