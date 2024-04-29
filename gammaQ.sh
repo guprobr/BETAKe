@@ -546,17 +546,15 @@ colorecho "magenta" "Selected threshold volume: ${THRESHOLD_vol}"
 colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
-seedy=",hue=h=9*PI*t/$(fortune|wc -l):s=1"
-
+seedy=",hue=h=9*PI*t/$(fortune|wc -l):s=1";
 if [ "${OVERLAY_BETA}" == "" ]; then
-    OVERLAY_BETA="nullsrc=size=640x400";
+    OVERLAY_BETA="xut.png";
 fi
 
  if ffmpeg -y  -loglevel info -hide_banner \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${VOCAL_FILE}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
-    -i "${PLAYBACK_BETA}" \
-    -i "${OVERLAY_BETA}" \
+    -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
     [0:a]aecho=0.84:0.84:84:0.22,treble=g=5[vocals];
@@ -565,15 +563,14 @@ fi
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
         [1:v]scale=640x400 $seedy [yikes];
-        [3:v]trim=duration=${PLAYBACK_LEN},scale=640x400,
-        format=rgba,colorchannelmixer=aa=0.84[yeah]; 
+        [3:v]trim=duration=${PLAYBACK_LEN},scale=640x400,format=rgba,colorchannelmixer=aa=0.45[yeah];
         [yikes][yeah]overlay[hutz];
         [hutz][hugh]xstack,
         drawtext=fontfile=Ubuntu-B.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac -map "[betamix]" -map "[visuals]" "${OUT_FILE}" &
+            -c:a aac -map "[betamix]" -map "[visuals]" -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render ffmpeg process";
 else
