@@ -520,7 +520,8 @@ ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox can
 PLAYBACK_dBs="$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
 VOCALS_dBs="$( sox "${OUT_VOCAL}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
 DB_diff=$( adjust_vocals_volume "${PLAYBACK_dBs}" "${VOCALS_dBs}" | sed 's/[[:alpha:]]//g');
- DB_diff=$( ensure_number_type "${DB_diff}")
+ DB_diff=$( ensure_number_type "${DB_diff}");
+DB_diff=$(printf "%0.8f" "$(echo "scale=8; ${DB_diff} * 0.69 " | bc)");
 
 colorecho "red" "The calculated base adjustment is: ${DB_diff}";
                         rm -rf "${PLAYBACK_BETA%.*}".wav;
@@ -546,8 +547,8 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]volume=volume=${DB_diff_preview},aecho=0.84:0.84:84:0.33,treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98[betamix];" \
+    [1:a]volume=volume=${DB_diff_preview},speechnorm,acompressor,adynamicsmooth,aecho=0.84:0.84:84:0.33[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav; 
 
            totem "${OUT_VOCAL%.*}"_tmp.wav &
@@ -566,7 +567,7 @@ while true; do
    fi
 done
 
-if [ "${THRESHOLD_vol}" -eq 0 ]; then
+if [ "${THRESHOLD_vol}" == "" ]; then
     colorecho "red" "Selected not to adj original volume!";
     THRESHOLD_vol=1;
     DB_diff=1;
@@ -577,18 +578,9 @@ colorecho "magenta" "Selected threshold volume: ${THRESHOLD_vol}"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${DB_diff} * ${THRESHOLD_vol} " | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},aecho=0.84:0.84:84:0.33" "${VOCAL_FILE}"
+   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},speechnorm,acompressor,adynamicsmooth,aecho=0.84:0.84:84:0.33" "${VOCAL_FILE}"
     colorecho "yellow" " $DB_diff applied to vocals volume;"
     check_validity "${VOCAL_FILE}" "wav";
-
-colorecho "yellow" "DEclip..";
-lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-     http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${OUT_VOCAL}" "wav";
-    rm -f lv2.tmp.log;
-
-cp -ra "${OUT_VOCAL}" "${VOCAL_FILE}";
 
 colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
 export LC_ALL=C;  
@@ -604,8 +596,8 @@ fi
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=8[playback];
-    [0:a]treble=g=3[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98[betamix];
+    [0:a]treble=g=1[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
