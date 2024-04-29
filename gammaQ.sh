@@ -62,6 +62,28 @@ colorecho "Welcome!";
         done
     }
 
+function is_stereo() {
+  # Get the filename passed as an argument
+  file="$1"
+
+  # Check if ffprobe exists
+  if ! command -v ffprobe &> /dev/null; then
+    echo "Error: ffprobe is not installed. Please install ffprobe."
+    return 1
+  fi
+
+  # Use ffprobe to get audio stream information
+  channels=$(ffprobe -show_format -show_streams -print_format json "$file" 2>/dev/null | jq -r '.streams[].channels')
+
+  # Check the number of channels
+  if [[ "$channels" -gt 1 ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+
 #function to sanitize when it's expected a number input
 ensure_number_type() {
     local input="$1"
@@ -470,20 +492,22 @@ colorecho "yellow" "Apply dithering & noise reduction with SoX";
 sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
-    noisered "$OUT_DIR"/"$karaoke_name".prof 0.3 \
+    noisered "$OUT_DIR"/"$karaoke_name".prof 0.1 \
                             dither -s > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${VOCAL_FILE}" "wav";
 
 colorecho "yellow" "Execute vocal tuning algorithm Gareus XC42...";
 lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-    -P "Live" \
-    -p "mode:Auto" \
+    -P Live \
+    -p mode:Auto \
      http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
     
     colorecho "white" "$( cat lv2.tmp.log )";
     check_validity "${OUT_VOCAL}" "wav";
     rm -f lv2.tmp.log;
+
+
 
 colorecho "magenta" "Calculate volume discrepancy between vocals and playback";
 ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
@@ -502,7 +526,7 @@ colorecho "red" "greater than one increases vol, between 0.0 and 1.0 decreases v
 THRESHOLD_vol="1.0";
 while true; do
     # Display the dialog interface and sanitize input
-    selection=$(zenity --title "Volume Knob - vocals adj" --text "Adjust volume (0 to 5.5 ) where zero is silence, 1.0 = no change )" --entry --width 300 --height 150 --cancel-label="Silence vocals" --entry-text "${THRESHOLD_vol}" | sed 's/[^0-9.-]//g')
+    selection=$(zenity --title "Volume Knob - vocals adj" --text "Adjust volume (0 to 5.5 ) where zero is silence, 1.0 = no change )" --entry --width 300 --height 150 --cancel-label="Do not adj volume" --entry-text "${THRESHOLD_vol}" | sed 's/[^0-9.-]//g')
 
 # Check if selection is within range
     if check_range "$selection" "0" "5.5"; then
@@ -510,12 +534,15 @@ while true; do
         if zenity --question --title="Preview before or Confirm adjustment" --text="Do you want to preview the VOL adjustment?" --ok-label="Preview" --cancel-label="Confirm and RENDER"; then
 # User chose Preview
            DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8; ${DB_diff} * ${selection}" | bc)")
+            if [ "${selection}" -eq 0 ]; then
+                DB_diff_preview=1;
+            fi
            ffmpeg -y  -loglevel info -hide_banner \
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]volume=volume=${DB_diff_preview},acompressor,aecho=0.84:0.84:84:0.22,treble=g=5[vocals];
+    [1:a]volume=volume=${DB_diff_preview},aecho=0.84:0.84:84:0.22,treble=g=5[vocals];
     [playback][vocals]amix=inputs=2[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav; 
 
@@ -534,19 +561,35 @@ while true; do
        zenity --error --title "Warning" --text "Volume must be between 0 and 5.5 -- Please try again."
    fi
 done
+
+if [ "${THRESHOLD_vol}" -eq 0 ]; then
+    colorecho "red" "Selected not to adj original volume!";
+    THRESHOLD_vol=1;
+    DB_diff=1;
+fi
+
 colorecho "magenta" "Selected threshold volume: ${THRESHOLD_vol}"
 
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${DB_diff} * ${THRESHOLD_vol} " | bc )" )" 
     
-    colorecho "green" "tuning vocals volume and normalizing.."
-   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},acompressor" "${VOCAL_FILE}"
+    colorecho "green" "tuning vocals volume"
+   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},aecho=0.84:0.84:84:0.22" "${VOCAL_FILE}"
     colorecho "yellow" " $DB_diff applied to vocals volume;"
     check_validity "${VOCAL_FILE}" "wav";
+
+colorecho "yellow" "DEclip..";
+lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
+     http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+    check_validity "${OUT_VOCAL}" "wav";
+    rm -f lv2.tmp.log;
+
+cp -ra "${OUT_VOCAL}" "${VOCAL_FILE}";
 
 colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
 export LC_ALL=C;  
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
-seedy=",hue=h=9*PI*t/$(fortune|wc -l):s=1";
+seedy=",hue=h=7*PI*t/$(fortune|wc -l):s=1";
 if [ "${OVERLAY_BETA}" == "" ]; then
     OVERLAY_BETA="xut.png";
 fi
@@ -556,10 +599,10 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [0:a]aecho=0.84:0.84:84:0.22,treble=g=5[vocals];
+    [2:a]equalizer=f=50:width_type=q:width=2:g=8[playback];
+    [0:a]treble=g=3[vocals];
     [playback][vocals]amix=inputs=2[betamix];
-        gradients=n=3:s=640x400[vscope];
+        gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
         [1:v]scale=640x400 $seedy [yikes];
@@ -601,16 +644,17 @@ exit;
 
 
 #colorecho "yellow" "Vocal tuning algorithm Auburn Sound's Graillon...";
-#lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-#    -P Younger\ Speech \
-#    -p p9:1.00 -p p20:2.00 -p p15:0.505 -p p17:1.000 -p p18:1.00 \
-#    https://www.auburnsounds.com/products/Graillon.html40733132#  ###in ##1out2 > lv2.tmp.log 2>&1
-#     colorecho "white" "$( cat lv2.tmp.log )";
+#if is_stereo "${VOCAL_FILE}"; then
+#    lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
+#        -P Younger\ Speech \
+#        -p p9:1.00 -p p20:2.00 -p p15:0.51255 -p p17:1.000 -p p18:1.00 \
+#        https://www.auburnsounds.com/products/Graillon.html40733132#stereo > lv2.tmp.log 2>&1
+#else
+#    lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
+#        -P Younger\ Speech \
+#        -p p9:1.00 -p p20:2.00 -p p15:0.51255 -p p17:1.000 -p p18:1.00 \
+#        https://www.auburnsounds.com/products/Graillon.html40733132#mono > lv2.tmp.log 2>&1
+#fi
+#    colorecho "white" "$( cat lv2.tmp.log )";
 #    check_validity "${OUT_VOCAL}" "wav";
 
-#colorecho "yellow" "Finnally, Apply SC4 - Steve Harris...";
-#lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" \
-#   -p rms_peak:1.0 -p makeup_gain:1.696 \
-#       http://plugin.org.uk/swh-plugins/sc4 > lv2.tmp.log 2>&1
-#   colorecho "white" "$( cat lv2.tmp.log )";
-#    check_validity "${VOCAL_FILE}" "wav";
