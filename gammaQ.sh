@@ -62,26 +62,26 @@ colorecho "Welcome!";
         done
     }
 
-function is_stereo() {
+#function is_stereo() {
   # Get the filename passed as an argument
-  file="$1"
+#  file="$1"
 
   # Check if ffprobe exists
-  if ! command -v ffprobe &> /dev/null; then
-    echo "Error: ffprobe is not installed. Please install ffprobe."
-    return 1
-  fi
+#  if ! command -v ffprobe &> /dev/null; then
+#    echo "Error: ffprobe is not installed. Please install ffprobe."
+#    return 1
+#  fi
 
   # Use ffprobe to get audio stream information
-  channels=$(ffprobe -show_format -show_streams -print_format json "$file" 2>/dev/null | jq -r '.streams[].channels')
+#  channels=$(ffprobe -show_format -show_streams -print_format json "$file" 2>/dev/null | jq -r '.streams[].channels')
 
   # Check the number of channels
-  if [[ "$channels" -gt 1 ]]; then
-    return 0
-  else
-    return 1
-  fi
-}
+#  if [[ "$channels" -gt 1 ]]; then
+#    return 0
+#  else
+#    return 1
+#  fi
+#}
 
 
 #function to sanitize when it's expected a number input
@@ -220,9 +220,9 @@ adjust_vocals_volume() {
     # Calculate dB difference between vocals and playback
     dB_difference=$( calculate_db_difference "$RMS_playback" "$RMS_vocals" );
 
-  # Calculate the adjustment needed for the vocals as a percentage multiplier
-    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print (10^(target/20 - diff/20)) * 100 }')
-    # Print the adjustment needed as a percentage multiplier
+  # Calculate the adjustment needed for the vocals as a multiplier
+    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print (10^(target/20 - diff/20) * 16)  }')
+    # Print the adjustment needed as a multiplier
     echo "$adjustment_percentage"
 }
 
@@ -274,7 +274,7 @@ else
 fi
 }
 
-colorecho "green" "This is deltaQ° ŧħ3 n3w B3TAKê© ·v4· by https://gu.pro.br ®";
+colorecho "green" "This is deltaQ° ŧħ3 B3TAKê ·v4· by https://gu.pro.br ®";
 SCREEN_WIDTH=$(xdpyinfo | grep dimensions | awk '{print $2}' | cut -d 'x' -f1)
 SCREEN_HEIGHT=$(xdpyinfo | grep dimensions | awk '{print $2}' | cut -d 'x' -f2)
 
@@ -333,6 +333,7 @@ else
     filename="${REC_DIR}"/"${dl_name}";
 fi
 PLAYBACK_BETA="${filename%.*}".mp4;
+
 # Check if a file was found
 if [ -n "$filename" ]; then
     colorecho "blue" "Using file: $filename"
@@ -361,8 +362,6 @@ else
 fi
 check_validity "${PLAYBACK_BETA}" "mp4";
 
-
-
 if [ "$overlay_url" != "" ]; then
 colorecho "magenta" "Download overlay video as requested"
     if [[ "${overlay_url}" == file://* ]]; then
@@ -375,7 +374,6 @@ colorecho "magenta" "Download overlay video as requested"
         OVERLAY_BETA="${OVER_DIR}"/"${dl_name}";
     fi
 fi
-
 
 colorecho "cyan" "All setup to sing!";
 # Display message to start webcam capture
@@ -511,8 +509,6 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
     check_validity "${OUT_VOCAL}" "wav";
     rm -f lv2.tmp.log;
 
-
-
 colorecho "magenta" "Calculate volume discrepancy between vocals and playback";
 ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
                          check_validity "${PLAYBACK_BETA%.*}".wav "wav";
@@ -521,69 +517,68 @@ PLAYBACK_dBs="$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*ampl
 VOCALS_dBs="$( sox "${OUT_VOCAL}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
 DB_diff=$( adjust_vocals_volume "${PLAYBACK_dBs}" "${VOCALS_dBs}" | sed 's/[[:alpha:]]//g');
  DB_diff=$( ensure_number_type "${DB_diff}");
-DB_diff=$(printf "%0.8f" "$(echo "scale=8; ${DB_diff} * 0.69 " | bc)");
+DB_diff=$(printf "%0.0f" "$(echo "scale=0; ${DB_diff} * 100 " | bc)"); # transform in % notation
 
-colorecho "red" "The calculated base adjustment is: ${DB_diff}";
+colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff} % ";
                         rm -rf "${PLAYBACK_BETA%.*}".wav;
 
-colorecho "red" "greater than one increases vol, between 0.0 and 1.0 decreases vol"
-# Initialize  default threshold volume
-THRESHOLD_vol="1.0";
 while true; do
-    # Display the dialog interface and sanitize input
-    selection=$(zenity --title "Volume Knob - vocals adj" --text "Adjust volume factor multiplier (0 to 5.5 ) where zero is silence, 1.0 = no change )" --entry --width 300 --height 150 --cancel-label="Do not adj volume" --entry-text "${THRESHOLD_vol}" | sed 's/[^0-9.-]//g')
+    VALUE=$(zenity --scale --text="Select vocals Boost % (max 10x) (min = vocals silence)" --min-value="0" --max-value="1000" --step="1" --cancel-label="No adj" --value="${DB_diff}" )
+
+    case $? in
+         0)
+		    colorecho "magenta" "You selected $VALUE % ";
+            selection=${VALUE};;
+         1)
+                colorecho "red" "No value selected, keeping original vocal volume!!";
+                selection="100";;
+        -1)
+                colorecho "red" "An unexpected error has occurred!! No adjustment will be made!";
+                selection="100";;
+    esac
 
 # Check if selection is within range
-    if check_range "$selection" "0" "5.5"; then
+    if check_range "$selection" "0" "1000"; then
     # Prompt user for action
-        if zenity --question --title="Preview before or Confirm adjustment" --text="Do you want to preview the VOL adjustment?" --ok-label="Preview" --cancel-label="Confirm and RENDER"; then
+        if zenity --question --title="Preview or Confirm" --text="Do you want to preview the VOL adj of ${selection}% ?" --ok-label="Preview please" --cancel-label="RENDER NOW"; then
 # User chose Preview
-           DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8; ${DB_diff} * ${selection}" | bc)")
-            if [ "${selection}" == "" ]; then
-                DB_diff_preview=1;
-            fi
+           DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8;  ${selection}/100" | bc)")
+
            ffmpeg -y  -loglevel info -hide_banner \
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]volume=volume=${DB_diff_preview},speechnorm,acompressor,adynamicsmooth,aecho=0.84:0.84:84:0.33[vocals];
+    [1:a]volume=volume=${DB_diff_preview},acontrast,adynamicsmooth,aecho=0.84:0.84:84:0.15,treble=g=1[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav; 
 
            totem "${OUT_VOCAL%.*}"_tmp.wav &
             ffplay_pid=$!
-           zenity --info --title "Preview vocals" --text "Volume change factor would be: ${DB_diff_preview}. Press OK to stop preview."
+           zenity --info --title "Preview vocals" --text "Multiplier factor would be: ${DB_diff_preview}x Press ok to STOP preview."
            kill -9 $ffplay_pid
         else
  # User chose Confirm
-            colorecho "red" "Confirmed adjustment!";
-            THRESHOLD_vol="${selection}";
+            THRESH_vol="${selection}";
             break
         fi
     else
         # Selection out of range, show warning and repeat dialog
-       zenity --error --title "Warning" --text "Input must be between 0 and 5.5 -- Please try again."
+       zenity --error --title "Warning" --text "Input must be between 0% and 1000% -- Please try again."
    fi
 done
 
-if [ "${THRESHOLD_vol}" == "" ]; then
-    colorecho "red" "Selected not to adj original volume!";
-    THRESHOLD_vol=1;
-    DB_diff=1;
-fi
+colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
 
-colorecho "magenta" "Selected threshold volume: ${THRESHOLD_vol}"
-
-    DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${DB_diff} * ${THRESHOLD_vol} " | bc )" )" 
+    DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},speechnorm,acompressor,adynamicsmooth,aecho=0.84:0.84:84:0.33" "${VOCAL_FILE}"
+   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},acontrast,adynamicsmooth,aecho=0.84:0.84:84:0.15" "${VOCAL_FILE}"
     colorecho "yellow" " $DB_diff applied to vocals volume;"
     check_validity "${VOCAL_FILE}" "wav";
 
 colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
-export LC_ALL=C;  
+
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 seedy=",hue=h=7*PI*t/$(fortune|wc -l):s=1";
 if [ "${OVERLAY_BETA}" == "" ]; then
@@ -637,20 +632,3 @@ mplayer "${OUT_FILE}";
 
 colorecho "cyan" "Thank you for having fun!"
 exit;
-
-
-#colorecho "yellow" "Vocal tuning algorithm Auburn Sound's Graillon...";
-#if is_stereo "${VOCAL_FILE}"; then
-#    lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-#        -P Younger\ Speech \
-#        -p p9:1.00 -p p20:2.00 -p p15:0.51255 -p p17:1.000 -p p18:1.00 \
-#        https://www.auburnsounds.com/products/Graillon.html40733132#stereo > lv2.tmp.log 2>&1
-#else
-#    lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-#        -P Younger\ Speech \
-#        -p p9:1.00 -p p20:2.00 -p p15:0.51255 -p p17:1.000 -p p18:1.00 \
-#        https://www.auburnsounds.com/products/Graillon.html40733132#mono > lv2.tmp.log 2>&1
-#fi
-#    colorecho "white" "$( cat lv2.tmp.log )";
-#    check_validity "${OUT_VOCAL}" "wav";
-
