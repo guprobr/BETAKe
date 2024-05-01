@@ -94,7 +94,7 @@ class App:
         custom_font = Font(family="Verdana", size=10)
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray", font=custom_font)
-        self.output_text.place(x=0, y=0, width=1024, height=400)
+        self.output_text.place(x=0, y=0, width=1024, height=360)
 
         # Load and display the left-aligned tux.png image
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
@@ -151,7 +151,7 @@ class App:
 
         # Start recording button
         self.start_recording_button = tk.Button(
-            master, text="Start Recording", command=self.start_recording)
+            master, text="Start Performance", command=self.start_recording)
         self.start_recording_button.place(x=10, y=600, width=280, height=166)
 
         # Kill recording button
@@ -191,6 +191,7 @@ class App:
             if selected_devCam:
                 print(f"Selected video device: {selected_devCam}")
                 self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
+                self.video_dev_entry.delete(0, tk.END)
                 self.video_dev_entry.insert(0, selected_devCam)
     class AudioVisualizer:
         def __init__(self):
@@ -220,7 +221,6 @@ class App:
             self.stream.close()
             self.p.terminate()
             plt.close()
-            self.noTOGGLE = True
 
         # Função para plotar as ondas sonoras
         def plot_audio_waveform(self):
@@ -298,18 +298,25 @@ class App:
                 print("Programa encerrado.")
 
     def plot_audio(self):
-        if self.noTOGGLE:
+        if self.noTOGGLE == True:
+            self.noTOGGLE = False
+            self.plot_mic_button.config(text="CLOSE plot")
             # execução da classe AudioVisualizer
             self.visualizer.plot_audio_waveform()
-            self.noTOGGLE = False
+        else:
+            self.noTOGGLE = True
+            self.visualizer.close_plot('close_event')
+            self.plot_mic_button.config(text="PLOT mic")
 
     def just_render(self):
         if self.selfie_disable == "0":
             self.selfie_disable = "1"
             self.output_text.insert(tk.END, "Will not record  video, just render previous performance files exist" + '\n')
+            self.scroll_to_end()
         else:
             self.selfie_disable = "0"
             self.output_text.insert(tk.END, "WILL record a new performance vocals and video;" + '\n')
+            self.scroll_to_end()
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)

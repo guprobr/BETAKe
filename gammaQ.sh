@@ -221,7 +221,7 @@ adjust_vocals_volume() {
     dB_difference=$( calculate_db_difference "$RMS_playback" "$RMS_vocals" );
 
   # Calculate the adjustment needed for the vocals as a multiplier
-    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print (10^(target/20 - diff/20) * 100)  }')
+    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print (10^(target/20 - diff/20) * 35)  }')
     # Print the adjustment needed as a multiplier
     echo "$adjustment_percentage"
 }
@@ -560,10 +560,10 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]afftdn=nr=21:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff_preview},alimiter,dynaudnorm,
-    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.5:0.1:1,
-    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=soft:phase=independent:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
-    acompressor=mode=upward,treble=g=6[vocals];
+    [1:a]afftdn=nr=45:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff_preview},alimiter,speechnorm,
+    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.5:0.5:10,
+    rubberband=tempo=1.0:pitch=0.0:transients=smooth:detector=percussive:phase=laminar:window=short:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+    acompressor=mode=upward,treble=g=3[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -591,9 +591,9 @@ colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn=nr=21:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff},alimiter,dynaudnorm,
-    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.5:0.1:1,
-    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=soft:phase=independent:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn=nr=45:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff},alimiter,speechnorm,
+    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.8:0.8:84:0.5:0.5:10,
+    rubberband=tempo=1.0:pitch=0.0:transients=smooth:detector=percussive:phase=laminar:window=short:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
     acompressor=mode=upward" "${VOCAL_FILE}" &
         ff_pid=$!;
 
@@ -613,8 +613,8 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]equalizer=f=50:width_type=q:width=2:g=8[playback];
-    [0:a]treble=g=6[vocals];
+    [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
+    [0:a]treble=g=3[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
