@@ -562,10 +562,10 @@ while true; do
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
     [1:a]afftdn=nr=45:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff_preview},alimiter,speechnorm,
-    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.1:0.5:2,
-    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=percussive:phase=laminar:window=short:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
-    acompressor=mode=upward,treble=g=3[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];" \
+    aecho=0.89:0.89:84:0.333,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.1:0.1:1,
+    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=percussive:phase=laminar:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+    acompressor=mode=upward,treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.95[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
@@ -593,8 +593,8 @@ colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
     
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn=nr=45:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff},alimiter,speechnorm,
-    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.8:0.8:84:0.1:0.5:2,
-    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=percussive:phase=laminar:window=short:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+    aecho=0.89:0.89:84:0.333,deesser=i=1:f=0:m=1,chorus=0.8:0.8:84:0.1:0.1:1,
+    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=percussive:phase=laminar:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
     acompressor=mode=upward" "${VOCAL_FILE}" &
         ff_pid=$!;
 
@@ -615,8 +615,8 @@ fi
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [0:a]treble=g=3[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];
+    [0:a]treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.95[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
