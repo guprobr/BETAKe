@@ -103,12 +103,12 @@ ensure_number_type() {
 # function to render a nice progress bar for FFMpeg
 render_display_progress() {
     local total_duration="${PLAYBACK_LEN}"  # Total duration of the video in seconds
-    local pid_ffmpeg="$2"     # PID of the ffmpeg process
+    local pid_ffmpeg="${2}"     # PID of the ffmpeg process
 
     # Create a dialog box with a progress bar
     (
     while true; do
-        sleep 2.5;
+        sleep 2;
         # Check if the ffmpeg process is still running
         if ! ps -p "$pid_ffmpeg" >/dev/null 2>&1; then
             break
@@ -136,7 +136,7 @@ render_display_progress() {
         echo "$progress";
 
     done
-    ) | zenity --progress --title="Rendering" --text="Rendering in progress...please wait" --percentage=0 --auto-close
+    ) | zenity --progress --title="Rendering ${3}" --text="Rendering in progress...please wait:  ${1}" --percentage=0 --auto-close
 
 }
 
@@ -465,8 +465,7 @@ if [ "$6" -ne 1 ]; then
             killall -9 mplayer;
             #killall -SIGINT sox;
 
-            colorecho "white" "disable audio loopback monitor"
-            pactl unload-module module-loopback;
+
 
         sleep 3;
     
@@ -477,6 +476,8 @@ else
     diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}".diff_ss );
 fi
 
+            colorecho "white" "disable audio loopback monitor"
+            pactl unload-module module-loopback;
 colorecho "white" "Actual playback duration: ${PLAYBACK_LEN}";
 colorecho "white" "Calculated diff sync: $diff_ss";
 check_validity "${OUT_VIDEO}" "mp4";
@@ -561,14 +562,14 @@ while true; do
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
     [1:a]afftdn=nr=45:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff_preview},alimiter,speechnorm,
-    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.5:0.5:10,
-    rubberband=tempo=1.0:pitch=0.0:transients=smooth:detector=percussive:phase=laminar:window=short:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.1:0.5:2,
+    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=percussive:phase=laminar:window=short:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
     acompressor=mode=upward,treble=g=3[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
-       render_display_progress "${OUT_VOCAL%.*}"_tmp.wav $ff_pid;
+       render_display_progress "${OUT_VOCAL%.*}"_tmp.wav "$ff_pid" "AUDIO PREVIEW";
         check_validity "${OUT_VOCAL%.*}"_tmp.wav "wav";
 
            totem "${OUT_VOCAL%.*}"_tmp.wav &
@@ -592,12 +593,12 @@ colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
     
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn=nr=45:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff},alimiter,speechnorm,
-    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.8:0.8:84:0.5:0.5:10,
-    rubberband=tempo=1.0:pitch=0.0:transients=smooth:detector=percussive:phase=laminar:window=short:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.8:0.8:84:0.1:0.5:2,
+    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=percussive:phase=laminar:window=short:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
     acompressor=mode=upward" "${VOCAL_FILE}" &
         ff_pid=$!;
 
-         render_display_progress "${VOCAL_FILE}" $ff_pid;
+         render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
          colorecho "yellow" " $DB_diff applied to vocals volume;"
         check_validity "${VOCAL_FILE}" "wav";
 
@@ -636,7 +637,7 @@ else
        exit
 fi 
                 
-    render_display_progress "${OUT_FILE}" $ff_pid;
+    render_display_progress "${OUT_FILE}" "$ff_pid" "FINAL VIDEO";
     check_validity "${OUT_FILE}" "mp4";
 
 zenity --info --text="Video render DONE" --title "Success" --timeout=6;
@@ -648,10 +649,10 @@ else
     colorecho "red" "Failed to render MP3. This is not a fatal error.";
 fi
 
-zenity --warning --text="Let's watch your performance video now: ${OUT_FILE}" --title "Ready to watch" --timeout=15;
+zenity --warning --text="Let's watch your performance video now: ${karaoke_name}" --title "Ready to watch" --timeout=15;
 
 # display resulting video to user    
-mplayer "${OUT_FILE}";
+totem "${OUT_FILE}";
 
 colorecho "cyan" "Thank you for having fun!"
 exit;
