@@ -451,22 +451,15 @@ if [ "$6" -ne 1 ]; then
     done | zenity --progress --text="Press to STOP performing and render MP4" \
               --title="Recording" --percentage=0 --auto-close
 
-else
-    diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}".diff_ss );
-fi
+    # Check if the progress dialog was canceled OR completed
+    if [ $? = 1 ]; then
+        colorecho "white" "Recording skipped before end of playback. Will render MP4!";
+    else
+        colorecho "blue" "Entire Progress completed. Will render MP4!";
+    fi
 
-# Check if the progress dialog was canceled OR completed
-if [ $? = 1 ]; then
-    colorecho "white" "Recording skipped before end of playback. Will render MP4!";
-else
-    colorecho "blue" "Entire Progress completed. Will render MP4!";
-fi
-
-colorecho "cyan" "Actual playback duration: ${PLAYBACK_LEN}";
-colorecho "magenta" "Calculated diff sync: $diff_ss";
-
-# give 3 sec for recorder graceful finish, just in case :P
-    colorecho "magenta" "Performance Recorded!";
+    # give 3 sec for recorder graceful finish, just in case :P
+        colorecho "magenta" "Performance Recorded!";
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
             killall -9 mplayer;
@@ -475,13 +468,19 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
             colorecho "white" "disable audio loopback monitor"
             pactl unload-module module-loopback;
 
-    sleep 3;
+        sleep 3;
+    
+    # make a bkp if needed to restore later without enhancements
+    cp -ra "${OUT_VOCAL}" "${VOCAL_ORIG}";
+    
+else
+    diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}".diff_ss );
+fi
 
-   check_validity "${OUT_VIDEO}" "mp4";
-   check_validity "${OUT_VOCAL}" "wav";
-
-   # make a bkp if needed to restore later without enhancements
-   cp -ra "${OUT_VOCAL}" "${VOCAL_ORIG}";
+colorecho "white" "Actual playback duration: ${PLAYBACK_LEN}";
+colorecho "white" "Calculated diff sync: $diff_ss";
+check_validity "${OUT_VIDEO}" "mp4";
+check_validity "${OUT_VOCAL}" "wav";
 
 zenity --question --text=" - - Render video and MP3? " --title "Proceed, or abort production??" --ok-label="RENDER, yes";
 if [ $? == 1 ]; then
@@ -561,10 +560,10 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]afftdn=nr=11:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff_preview},alimiter,speechnorm,
-    aecho=0.89:0.89:84:0.21,treble=g=5,deesser=i=1:f=0:m=1,
+    [1:a]afftdn=nr=21:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff_preview},alimiter,dynaudnorm,
+    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.5:0.1:1,
     rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=soft:phase=independent:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
-    acompressor=mode=upward,aexciter[vocals];
+    acompressor=mode=upward,treble=g=6[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];" \
       -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -592,8 +591,8 @@ colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn=nr=11:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff},alimiter,speechnorm,
-    aecho=0.89:0.89:84:0.21,treble=g=5,deesser=i=1:f=0:m=1,
+   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn=nr=21:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff},alimiter,dynaudnorm,
+    aecho=0.89:0.89:84:0.33,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.5:0.1:1,
     rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=soft:phase=independent:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
     acompressor=mode=upward" "${VOCAL_FILE}" &
         ff_pid=$!;
@@ -615,7 +614,7 @@ fi
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=8[playback];
-    [0:a]aexciter[vocals];
+    [0:a]treble=g=6[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];

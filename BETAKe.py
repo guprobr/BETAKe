@@ -94,7 +94,7 @@ class App:
         custom_font = Font(family="Verdana", size=10)
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray", font=custom_font)
-        self.output_text.place(x=0, y=0, width=1024, height=480)
+        self.output_text.place(x=0, y=0, width=1024, height=400)
 
         # Load and display the left-aligned tux.png image
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
@@ -144,8 +144,8 @@ class App:
         self.video_url_entry = tk.Entry(master)
         self.video_url_entry.place(x=160, y=570, width=750)
 
-        # Entry for optional overlay URL
-        tk.Label(master, text="Overlay optional URL:").place(x=1, y=500)
+        # Entry for optional overlay video URL
+        tk.Label(master, text="Overlay video opt URL:").place(x=1, y=500)
         self.overlay_url_entry = tk.Entry(master)
         self.overlay_url_entry.place(x=160, y=500, width=750)
 
@@ -191,7 +191,7 @@ class App:
             if selected_devCam:
                 print(f"Selected video device: {selected_devCam}")
                 self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
-                self.video_dev_canvas.ntry.insert(0, selected_devCam)
+                self.video_dev_entry.insert(0, selected_devCam)
     class AudioVisualizer:
         def __init__(self):
             self.p = None
