@@ -88,13 +88,13 @@ class App:
         self.audio_loopback_button = None
         self.video_dev_dialog_open = False
         self.tail_log_open = None
-        self.selfie_disable = ""
+        self.selfie_disable = "0"
         self.noTOGGLE = True
 
         custom_font = Font(family="Verdana", size=10)
         # Create scrolled text widget for displaying output
         self.output_text = scrolledtext.ScrolledText(master, wrap=tk.WORD, background="black", foreground="gray", font=custom_font)
-        self.output_text.place(x=0, y=0, width=1024, height=510)
+        self.output_text.place(x=0, y=0, width=1024, height=480)
 
         # Load and display the left-aligned tux.png image
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
@@ -113,9 +113,9 @@ class App:
             master, text="Preview cam", command=self.test_video_device)
         self.video_test_button.place(x=295, y=685)
 
-        #self.audio_test_button = tk.Button(
-        #    master, text="EasyEffects", command=self.test_audio_device)
-        #self.audio_test_button.place(x=295, y=715)
+        self.audio_test_button = tk.Button(
+            master, text="Just render", command=self.just_render)
+        self.audio_test_button.place(x=295, y=715)
 
         self.get_fortune_button = tk.Button(
             master, text="yer Fortunes", command=self.get_fortune)
@@ -303,13 +303,13 @@ class App:
             self.visualizer.plot_audio_waveform()
             self.noTOGGLE = False
 
-    def skip_selfie(self):
-        if self.selfie_disable == "":
-            self.selfie_disable = "TRUE"
-            self.output_text.insert(tk.END, "Will not render webcam video at end of postprocessing." + '\n')
+    def just_render(self):
+        if self.selfie_disable == "0":
+            self.selfie_disable = "1"
+            self.output_text.insert(tk.END, "Will not record  video, just render previous performance files exist" + '\n')
         else:
-            self.selfie_disable = ""
-            self.output_text.insert(tk.END, "WILL render webcam video;" + '\n')
+            self.selfie_disable = "0"
+            self.output_text.insert(tk.END, "WILL record a new performance vocals and video;" + '\n')
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)
@@ -563,6 +563,7 @@ class App:
         video_dev = self.video_dev_entry.get().strip()
         video_url = self.video_url_entry.get().strip()
         overlay_url = self.overlay_url_entry.get().strip()
+        just_render = self.selfie_disable
 
         # Set default values if input fields are empty
         if not karaoke_name:
@@ -576,7 +577,7 @@ class App:
         # Command to execute betaREC.sh with tee for logging
         command = [
             'bash', '-c', 
-            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" ' # 2>&1 | tee -a script.log'
+            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" "{just_render}" ' # 2>&1 | tee -a script.log'
         ]
 
         # Open script.log file for appending

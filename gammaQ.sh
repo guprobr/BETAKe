@@ -221,7 +221,7 @@ adjust_vocals_volume() {
     dB_difference=$( calculate_db_difference "$RMS_playback" "$RMS_vocals" );
 
   # Calculate the adjustment needed for the vocals as a multiplier
-    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print (10^(target/20 - diff/20) * 16)  }')
+    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print (10^(target/20 - diff/20) * 100)  }')
     # Print the adjustment needed as a multiplier
     echo "$adjustment_percentage"
 }
@@ -375,43 +375,45 @@ colorecho "magenta" "Download overlay video as requested"
     fi
 fi
 
-colorecho "cyan" "All setup to sing!";
-# Display message to start webcam capture
-export LC_ALL=C;
-zenity --question --text=" - - Let's sing? " --title "Accept song or abort" --ok-label="SING";
-if [ $? == 1 ]; then
-    colorecho "red" "Performance aborted.";
-    # Get the PID of the parent process
-    parent_pid=$$
-    # Call the function to kill the parent process and all its children
-    kill_parent_and_children $parent_pid
-    exit;
-fi
-
-rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
-
-colorecho "Let's Record with webcam and pulseaudio/pipewire default source"
 OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out.mp4;
 OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
 VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"_enhance.wav;
-	
-colorecho "SING!---Launching webcam;";
-colorecho "magenta" "Using video device: $video_dev";
-colorecho "magenta" "Using audio source: ${SRC_mic}";
+VOCAL_ORIG="${OUT_DIR}"/"${karaoke_name}"_orig.wav;
 
-# launch webcam recorder
-launch_ffmpeg_webcam true;
-epoch_ff=$( get_process_start_time );
-renice -n -19 "$ff_pid"
-colorecho "red" "RECORDER start Epoch: $epoch_ff";
+if [ "$6" -ne 1 ]; then
+    colorecho "cyan" "All setup to sing!";
+    # Display message to start webcam capture
+    export LC_ALL=C;
+    zenity --question --text=" - - Let's sing? " --title "Accept song or abort" --ok-label="SING";
+    if [ $? == 1 ]; then
+        colorecho "red" "Performance aborted.";
+        # Get the PID of the parent process
+        parent_pid=$$
+        # Call the function to kill the parent process and all its children
+        kill_parent_and_children $parent_pid
+        exit;
+    fi
 
-# Wait for the output file to be created and not empty; only then we run ffplay
-while [ ! -s "${OUT_VIDEO}" ]; do
-  sleep 0.0001; # Adjust sleep time as needed
-done | zenity --progress --text="GET RDY TO SING" \
+    rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
+
+    colorecho "Let's Record with webcam and pulseaudio/pipewire default source"
+    colorecho "SING!---Launching webcam;";
+    colorecho "magenta" "Using video device: $video_dev";
+    colorecho "magenta" "Using audio source: ${SRC_mic}";
+
+    # launch webcam recorder
+    launch_ffmpeg_webcam true;
+    epoch_ff=$( get_process_start_time );
+    renice -n -19 "$ff_pid"
+    colorecho "red" "RECORDER start Epoch: $epoch_ff";
+
+    # Wait for the output file to be created and not empty; only then we run ffplay
+    while [ ! -s "${OUT_VIDEO}" ]; do
+        sleep 0.0001; # Adjust sleep time as needed
+    done | zenity --progress --text="GET RDY TO SING" \
               --title="Starting playback NOW" --percentage=50 --pulsate --auto-close --auto-kill
 
-colorecho "yellow" "Launch lyrics video";
+    colorecho "yellow" "Launch lyrics video";
 
 	        ffplay \
 			        -window_title "SING" -loglevel quiet -hide_banner \
@@ -421,22 +423,23 @@ colorecho "yellow" "Launch lyrics video";
 
     colorecho "red" "ffplay start Epoch: $epoch_ffplay";
         diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
+        echo "${diff_ss}" > "${OUT_DIR}"/"${karaoke_name}".diff_ss;
         colorecho "magenta" "diff_ss: $diff_ss"; # will try to adj sync brutally when rendering
 
-cronos_play=1 
-wmctrl -r "SING" -e 0,-$(( 1024+(SCREEN_WIDTH/2) )),$(( SCREEN_HEIGHT+768 )),-1,-1
-### RECORDING PROGRESS! 
-# If FFmpeg or FFplayback quits, or if click cancel, webcam capture stops
-while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
-    sleep 1;
+    cronos_play=1 
+    wmctrl -r "SING" -e 0,-$(( 1024+(SCREEN_WIDTH/2) )),$(( SCREEN_HEIGHT+768 )),-1,-1
+    ### RECORDING PROGRESS! 
+    # If FFmpeg or FFplayback quits, or if click cancel, webcam capture stops
+    while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
+        sleep 1;
 
-    wmctrl -r "MPlayer" -b add,above 
-    wmctrl -r "Recording" -b add,above 
-    wmctrl -r "Recording" -e -1,-1,0,0,0
+        wmctrl -r "MPlayer" -b add,above 
+        wmctrl -r "Recording" -b add,above 
+        wmctrl -r "Recording" -e -1,-1,0,0,0
     
-    cronos_play=$(( "$cronos_play" + 1 ));
-    # shellcheck disable=SC2005
-    echo $(( ("$cronos_play"*100) / "$PLAYBACK_LEN" ))
+        cronos_play=$(( "$cronos_play" + 1 ));
+        # shellcheck disable=SC2005
+        echo $(( ("$cronos_play"*100) / "$PLAYBACK_LEN" ))
             # Check if the webcam recorder process is still running
             if ! ps -p "$ff_pid" >/dev/null 2>&1; then
                 break
@@ -445,8 +448,13 @@ while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN
             if ! ps -p "$ffplay_pid" >/dev/null 2>&1; then
                 break
             fi
-done | zenity --progress --text="Press to STOP performing and render MP4" \
+    done | zenity --progress --text="Press to STOP performing and render MP4" \
               --title="Recording" --percentage=0 --auto-close
+
+else
+    diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}".diff_ss );
+fi
+
 # Check if the progress dialog was canceled OR completed
 if [ $? = 1 ]; then
     colorecho "white" "Recording skipped before end of playback. Will render MP4!";
@@ -472,6 +480,9 @@ colorecho "magenta" "Calculated diff sync: $diff_ss";
    check_validity "${OUT_VIDEO}" "mp4";
    check_validity "${OUT_VOCAL}" "wav";
 
+   # make a bkp if needed to restore later without enhancements
+   cp -ra "${OUT_VOCAL}" "${VOCAL_ORIG}";
+
 zenity --question --text=" - - Render video and MP3? " --title "Proceed, or abort production??" --ok-label="RENDER, yes";
 if [ $? == 1 ]; then
     colorecho "red" "Production aborted.";
@@ -482,6 +493,10 @@ if [ $? == 1 ]; then
     exit;
 fi
 
+# Restore original for post-prod
+cp -ra "${VOCAL_ORIG}" "${OUT_VOCAL}";
+
+### START enhancements
 cp -ra "${OUT_VOCAL}" "${VOCAL_FILE}";
 colorecho "yellow" "DEclip..";
 lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
@@ -523,22 +538,19 @@ colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff} % ";
                         rm -rf "${PLAYBACK_BETA%.*}".wav;
 
 while true; do
-    VALUE=$(zenity --scale --text="Select vocals Boost % (max 10x) (min = vocals silence)" --min-value="0" --max-value="1000" --step="1" --cancel-label="No adj" --value="${DB_diff}" )
+    VALUE=$(zenity --scale --text="Select vocals Boost % (max 10x) (min = vocals silence)" --min-value="0" --max-value="10000" --step="1" --cancel-label="No adj" --value="${DB_diff}" )
 
     case $? in
          0)
-		    colorecho "magenta" "You selected $VALUE % ";
             selection=${VALUE};;
          1)
-                colorecho "red" "No value selected, keeping original vocal volume!!";
-                selection="100";;
+            selection="100";;
         -1)
-                colorecho "red" "An unexpected error has occurred!! No adjustment will be made!";
-                selection="100";;
+            selection="100";;
     esac
 
 # Check if selection is within range
-    if check_range "$selection" "0" "1000"; then
+    if check_range "$selection" "0" "10000"; then
     # Prompt user for action
         if zenity --question --title="Preview or Confirm" --text="Do you want to preview the VOL adj of ${selection}% ?" --ok-label="Preview please" --cancel-label="RENDER NOW"; then
 # User chose Preview
@@ -549,9 +561,16 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]volume=volume=${DB_diff_preview},acontrast,adynamicsmooth,aecho=0.84:0.84:84:0.15,treble=g=1[vocals];
+    [1:a]afftdn=nr=11:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff_preview},alimiter,speechnorm,
+    aecho=0.89:0.89:84:0.21,treble=g=5,deesser=i=1:f=0:m=1,
+    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=soft:phase=independent:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+    acompressor=mode=upward,aexciter[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];" \
-      -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav; 
+      -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav &
+       ff_pid=$!; 
+       
+       render_display_progress "${OUT_VOCAL%.*}"_tmp.wav $ff_pid;
+        check_validity "${OUT_VOCAL%.*}"_tmp.wav "wav";
 
            totem "${OUT_VOCAL%.*}"_tmp.wav &
             ffplay_pid=$!
@@ -564,7 +583,7 @@ while true; do
         fi
     else
         # Selection out of range, show warning and repeat dialog
-       zenity --error --title "Warning" --text "Input must be between 0% and 1000% -- Please try again."
+       zenity --error --title "Warning" --text "Input must be between 0% and 10000% -- Please try again."
    fi
 done
 
@@ -573,12 +592,17 @@ colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "volume=volume=${DB_diff},acontrast,adynamicsmooth,aecho=0.84:0.84:84:0.15" "${VOCAL_FILE}"
-    colorecho "yellow" " $DB_diff applied to vocals volume;"
-    check_validity "${VOCAL_FILE}" "wav";
+   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn=nr=11:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff},alimiter,speechnorm,
+    aecho=0.89:0.89:84:0.21,treble=g=5,deesser=i=1:f=0:m=1,
+    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=soft:phase=independent:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
+    acompressor=mode=upward" "${VOCAL_FILE}" &
+        ff_pid=$!;
 
-colorecho "yellow" "Rendering audio mix avec enhancements plus playback from youtube"
+         render_display_progress "${VOCAL_FILE}" $ff_pid;
+         colorecho "yellow" " $DB_diff applied to vocals volume;"
+        check_validity "${VOCAL_FILE}" "wav";
 
+colorecho "blue" "now will mix playback and vocals enhanced"
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
 seedy=",hue=h=7*PI*t/$(fortune|wc -l):s=1";
 if [ "${OVERLAY_BETA}" == "" ]; then
@@ -591,7 +615,7 @@ fi
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=8[playback];
-    [0:a]treble=g=1[vocals];
+    [0:a]aexciter[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.90[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
