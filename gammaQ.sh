@@ -221,7 +221,7 @@ adjust_vocals_volume() {
     dB_difference=$( calculate_db_difference "$RMS_playback" "$RMS_vocals" );
 
   # Calculate the adjustment needed for the vocals as a multiplier
-    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print ( 10^(target/20 - diff/20) * 25 )  }')
+    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print ( 10^(target/20 - diff/20) * 20 )  }')
     # Print the adjustment needed as a multiplier
     echo "$adjustment_percentage"
 }
@@ -263,8 +263,8 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
         -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
          -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
        -map 0:v "${OUT_VIDEO}"  \
-       -map 1:a -b:a 2000k  "${OUT_VOCAL}" \
-    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop -x 640 -y 400 -nosound - &
+       -map 1:a -b:a 10000k  "${OUT_VOCAL}" \
+    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop -fps 120 -x 320 -y 200 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
 else
@@ -617,7 +617,7 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac -b:a 320k -map "[betamix]" -map "[visuals]" -f mp4 "${OUT_FILE}" &
+            -c:a aac -b:a 10000k -map "[betamix]" -map "[visuals]" -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render ffmpeg process";
 else
