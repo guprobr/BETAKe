@@ -108,7 +108,7 @@ render_display_progress() {
     # Create a dialog box with a progress bar
     (
     while true; do
-        sleep 2;
+        sleep 1.44;
         # Check if the ffmpeg process is still running
         if ! ps -p "$pid_ffmpeg" >/dev/null 2>&1; then
             break
@@ -221,7 +221,7 @@ adjust_vocals_volume() {
     dB_difference=$( calculate_db_difference "$RMS_playback" "$RMS_vocals" );
 
   # Calculate the adjustment needed for the vocals as a multiplier
-    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print (10^(target/20 - diff/20) * 35)  }')
+    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print ( 10^(target/20 - diff/20) * 84 )  }')
     # Print the adjustment needed as a multiplier
     echo "$adjustment_percentage"
 }
@@ -263,7 +263,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
         -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
          -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
        -map 0:v "${OUT_VIDEO}"  \
-       -map 1:a   "${OUT_VOCAL}" \
+       -map 1:a -b:a 2000k  "${OUT_VOCAL}" \
     -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop -x 640 -y 400 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
@@ -509,20 +509,12 @@ colorecho "yellow" "Apply dithering & noise reduction with SoX";
 sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
-    noisered "$OUT_DIR"/"$karaoke_name".prof 0.1 \
+    noisered "$OUT_DIR"/"$karaoke_name".prof 0.3 \
                             dither -s > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${VOCAL_FILE}" "wav";
 
-colorecho "yellow" "Execute vocal tuning algorithm Gareus XC42...";
-lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-    -P Live \
-    -p mode:Auto \
-     http://gareus.org/oss/lv2/fat1 > lv2.tmp.log 2>&1
-    
-    colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${OUT_VOCAL}" "wav";
-    rm -f lv2.tmp.log;
+cp -ra "${VOCAL_FILE}" "${OUT_VOCAL}";
 
 colorecho "magenta" "Calculate volume discrepancy between vocals and playback";
 ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
@@ -561,12 +553,11 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]afftdn=nr=45:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff_preview},alimiter,speechnorm,
-    aecho=0.89:0.89:84:0.333,deesser=i=1:f=0:m=1,chorus=0.7:0.8:84:0.1:0.1:1,
-    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=percussive:phase=laminar:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
-    acompressor=mode=upward,treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.95[betamix];" \
-      -map "[betamix]" "${OUT_VOCAL%.*}"_tmp.wav &
+    [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
+    rubberband=tempo=1.0:pitch=1.01696:transients=crisp:smoothing=on:pitchq=quality,
+    treble=g=4,volume=volume=${DB_diff_preview}[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.84[betamix];" \
+      -map "[betamix]" -b:a 2000k "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
        render_display_progress "${OUT_VOCAL%.*}"_tmp.wav "$ff_pid" "AUDIO PREVIEW";
@@ -592,14 +583,12 @@ colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn=nr=45:gs=50:ad=0:tn=1:tr=1,volume=volume=${DB_diff},alimiter,speechnorm,
-    aecho=0.89:0.89:84:0.333,deesser=i=1:f=0:m=1,chorus=0.8:0.8:84:0.1:0.1:1,
-    rubberband=tempo=1.0:pitch=1.0:transients=smooth:detector=percussive:phase=laminar:window=long:smoothing=on:formant=preserved:pitchq=quality:channels=apart,
-    acompressor=mode=upward" "${VOCAL_FILE}" &
+   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
+    rubberband=tempo=1.0:pitch=1.0696:transients=crisp:smoothing=on:pitchq=quality,
+    treble=g=4" -b:a 2000k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
-         colorecho "yellow" " $DB_diff applied to vocals volume;"
         check_validity "${VOCAL_FILE}" "wav";
 
 colorecho "blue" "now will mix playback and vocals enhanced"
@@ -615,8 +604,8 @@ fi
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [0:a]treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.95[betamix];
+    [0:a]volume=volume=${DB_diff}[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.84[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
@@ -628,7 +617,7 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac -map "[betamix]" -map "[visuals]" -f mp4 "${OUT_FILE}" &
+            -c:a aac -b:a 320k -map "[betamix]" -map "[visuals]" -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render ffmpeg process";
 else
