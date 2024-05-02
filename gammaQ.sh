@@ -136,7 +136,7 @@ render_display_progress() {
         echo "$progress";
 
     done
-    ) | zenity --progress --title="Rendering ${3}" --text="Rendering in progress...please wait:  ${1}" --percentage=0 --auto-close
+    ) | zenity --progress --title="Rendering ${3}" --text="Rendering in progress...please wait" --percentage=0 --auto-close
 
 }
 
@@ -221,7 +221,7 @@ adjust_vocals_volume() {
     dB_difference=$( calculate_db_difference "$RMS_playback" "$RMS_vocals" );
 
   # Calculate the adjustment needed for the vocals as a multiplier
-    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print ( 10^(target/20 - diff/20) * 84 )  }')
+    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print ( 10^(target/20 - diff/20) * 25 )  }')
     # Print the adjustment needed as a multiplier
     echo "$adjustment_percentage"
 }
@@ -530,7 +530,7 @@ colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff} % ";
                         rm -rf "${PLAYBACK_BETA%.*}".wav;
 
 while true; do
-    VALUE=$(zenity --scale --text="Select vocals Boost % (max 10x) (min = vocals silence)" --min-value="0" --max-value="10000" --step="1" --cancel-label="No adj" --value="${DB_diff}" )
+    VALUE=$(zenity --scale --text="Adj vocals?" --min-value="0" --max-value="10000" --step="1" --cancel-label="No adj" --value="${DB_diff}" )
 
     case $? in
          0)
@@ -553,11 +553,11 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
-    rubberband=tempo=1.0:pitch=1.01696:transients=crisp:smoothing=on:pitchq=quality,
+    [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,aecho=0.89:0.89:84:0.25,
+    rubberband=tempo=1.0:pitch=1.001969:transients=crisp:smoothing=on:pitchq=quality,
     treble=g=4,volume=volume=${DB_diff_preview}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.84[betamix];" \
-      -map "[betamix]" -b:a 2000k "${OUT_VOCAL%.*}"_tmp.wav &
+    [playback][vocals]amix=inputs=2[betamix];" \
+      -map "[betamix]" -b:a 10000k "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
        render_display_progress "${OUT_VOCAL%.*}"_tmp.wav "$ff_pid" "AUDIO PREVIEW";
@@ -583,9 +583,9 @@ colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
-    rubberband=tempo=1.0:pitch=1.0696:transients=crisp:smoothing=on:pitchq=quality,
-    treble=g=4" -b:a 2000k "${VOCAL_FILE}" &
+   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,aecho=0.89:0.89:84:0.25,
+    rubberband=tempo=1.0:pitch=1.001969:transients=crisp:smoothing=on:pitchq=quality,
+    treble=g=4" -b:a 10000k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -605,7 +605,7 @@ fi
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
     [0:a]volume=volume=${DB_diff}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.84[betamix];
+    [playback][vocals]amix=inputs=2[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
