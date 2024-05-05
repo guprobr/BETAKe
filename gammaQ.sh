@@ -209,23 +209,29 @@ calculate_db_difference() {
 }
 
 
-# Define the function to adjust vocals to match playback volume, auto adj vol feature
 adjust_vocals_volume() {
-    # Define the fixed target volume level
-    target_volume="-16"
+    target_volume_absolute="8"
     # Extract RMS amplitude from each file
     RMS_playback="$1"
     RMS_vocals="$2"
 
     # Calculate dB difference between vocals and playback
-    dB_difference=$( calculate_db_difference "$RMS_playback" "$RMS_vocals" );
+    dB_difference=$(calculate_db_difference "$RMS_playback" "$RMS_vocals")
 
-  # Calculate the adjustment needed for the vocals as a multiplier
-    adjustment_percentage=$(awk -v target="$target_volume" -v diff="$dB_difference" 'BEGIN { print ( 10^(target/20 - diff/20) * 20 )  }')
+    # Define the fixed target volume level based on the sign of dB difference
+    if (( $(awk 'BEGIN { print ('"$dB_difference"' >= 0) }') )); then
+        target_volume=$(( target_volume_absolute * 2 ));
+    else
+        target_volume="-${target_volume_absolute}"
+    fi
+
+    # Calculate the adjustment needed for the vocals as a multiplier
+    adjustment_multiplier=$(awk -v target="$target_volume" -v diff="$dB_difference" \
+    'BEGIN { print (10 ^ ((target - diff) / 20)) }')
+
     # Print the adjustment needed as a multiplier
-    echo "$adjustment_percentage"
+    echo "$adjustment_multiplier"
 }
-
 
 cfg_audio() {
  # we use just to cfg audio for FFMpeg
@@ -467,9 +473,6 @@ if [ "$6" -ne 1 ]; then
             killall -9 ffplay;
             killall -9 mplayer;
             #killall -SIGINT sox;
-
-
-
         sleep 3;
     
     # make a bkp if needed to restore later without enhancements
@@ -509,10 +512,10 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
     rm -f lv2.tmp.log;
 
 colorecho "yellow" "Apply dithering & noise reduction with SoX";
-sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof > lv2.tmp.log 2>&1
+sox "${OUT_VOCAL}" -n trim 0 15 noiseprof "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
-    noisered "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof 0.3 \
+    noisered "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof 0.1 \
                             dither -s > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${VOCAL_FILE}" "wav";
@@ -524,16 +527,17 @@ ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox can
                          check_validity "${PLAYBACK_BETA%.*}".wav "wav";
 # Extract volume info and calc adj in dB by comparing each file RMS
 PLAYBACK_dBs="$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
-VOCALS_dBs="$( sox "${OUT_VOCAL}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
+VOCALS_dBs="$( sox "${VOCAL_FILE}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
 DB_diff=$( adjust_vocals_volume "${PLAYBACK_dBs}" "${VOCALS_dBs}" | sed 's/[[:alpha:]]//g');
  DB_diff=$( ensure_number_type "${DB_diff}");
-DB_diff=$(printf "%0.0f" "$(echo "scale=0; ${DB_diff} * 100 " | bc)"); # transform in % notation
+DB_diff=$(printf "%0.0f" "$(echo "scale=0; (${DB_diff} * 100) " | bc)"); # transform in % notation
 
-colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff} % ";
+colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff}% ";
                         rm -rf "${PLAYBACK_BETA%.*}".wav;
 
+selection=${DB_diff};
 while true; do
-    VALUE=$(zenity --scale --text="Adj vocals?" --min-value="0" --max-value="10000" --step="1" --cancel-label="No adj" --value="${DB_diff}" )
+    VALUE=$(zenity --scale --text="Adj vocals?" --min-value="0" --max-value="10000" --step="1" --cancel-label="No adj" --value="${selection}" )
 
     case $? in
          0)
@@ -547,7 +551,7 @@ while true; do
 # Check if selection is within range
     if check_range "$selection" "0" "10000"; then
     # Prompt user for action
-        if zenity --question --title="Preview or Confirm" --text="Do you want to preview the VOL adj of ${selection}% ?" --ok-label="Preview please" --cancel-label="RENDER NOW"; then
+        if zenity --question --title="Preview mix or Confirm render?" --text="Do you want to preview the VOL adjustment value of ${selection}% ?" --ok-label="Preview please" --cancel-label="RENDER NOW"; then
 # User chose Preview
            DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8;  ${selection}/100" | bc)")
 
@@ -556,9 +560,9 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
-    [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,aecho=0.89:0.89:84:0.25,
-    rubberband=tempo=1.0:pitch=1.001969:transients=crisp:smoothing=on:pitchq=quality,
-    treble=g=4,volume=volume=${DB_diff_preview}[vocals];
+    [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
+    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
+    aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
     [playback][vocals]amix=inputs=2[betamix];" \
       -map "[betamix]" -b:a 10000k "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -581,14 +585,14 @@ while true; do
    fi
 done
 
-colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
+colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
 
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,aecho=0.89:0.89:84:0.25,
-    rubberband=tempo=1.0:pitch=1.001969:transients=crisp:smoothing=on:pitchq=quality,
-    treble=g=4" -b:a 10000k "${VOCAL_FILE}" &
+   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
+   lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
+   aecho=0.89:0.89:84:0.33,treble=g=4" -b:a 10000k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -603,7 +607,7 @@ fi
 
  if ffmpeg -y  -loglevel info -hide_banner \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${VOCAL_FILE}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
@@ -620,9 +624,9 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-            -c:a aac -b:a 10000k -map "[betamix]" -map "[visuals]" -f mp4 "${OUT_FILE}" &
+           -c:a flac -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
-                colorecho "cyan" "Started render ffmpeg process";
+                colorecho "cyan" "Started render mix video with visuals";
 else
        colorecho "red" "FAIL to start ffmpeg process";
        kill_parent_and_children $$
