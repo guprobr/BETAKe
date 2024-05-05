@@ -111,27 +111,35 @@ class App:
 
         self.video_test_button = tk.Button(
             master, text="Preview cam", command=self.test_video_device)
-        self.video_test_button.place(x=295, y=685)
+        self.video_test_button.place(x=295, y=670)
 
         self.audio_test_button = tk.Button(
-            master, text="Just render", command=self.just_render)
-        self.audio_test_button.place(x=295, y=715)
+            master, text="Just render, no rec", command=self.just_render)
+        self.audio_test_button.place(x=295, y=700)
 
         self.get_fortune_button = tk.Button(
-            master, text="yer Fortunes", command=self.get_fortune)
-        self.get_fortune_button.place(x=600, y=595)
+            master, text="Get Fortune!", command=self.get_fortune)
+        self.get_fortune_button.place(x=500, y=450)
 
         self.select_mp4_button = tk.Button(
-            master, text="Select MP4", command=self.select_mp4_file)
-        self.select_mp4_button.place(x=600, y=700, height=69)
+            master, text="Select saved playback", command=self.select_mp4_file)
+        self.select_mp4_button.place(x=560, y=700, height=55)
+
+        self.select_overlay_button = tk.Button(
+            master, text="Select saved overlay", command=self.select_overlay_file)
+        self.select_overlay_button.place(x=560, y=640, height=55)
+
+        self.select_dir_button = tk.Button(
+            master, text="Select saved proj", command=self.select_proj_dir)
+        self.select_dir_button.place(x=565, y=580, height=55)
 
         self.tail_log_button = tk.Button(
             master, text="FuLL Logs", command=self.tail_log)
-        self.tail_log_button.place(x=600, y=620)
+        self.tail_log_button.place(x=200, y=450)
 
         self.plot_mic_button = tk.Button(
-            master, text="PLOT mic", command=self.plot_audio)
-        self.plot_mic_button.place(x=600, y=660)
+            master, text="Microphone meter", command=self.plot_audio)
+        self.plot_mic_button.place(x=295, y=740)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -151,7 +159,7 @@ class App:
 
         # Start recording button
         self.start_recording_button = tk.Button(
-            master, text="Start Performance", command=self.start_recording)
+            master, text="START Performance", command=self.start_recording)
         self.start_recording_button.place(x=10, y=600, width=280, height=166)
 
         # Kill recording button
@@ -311,11 +319,11 @@ class App:
     def just_render(self):
         if self.selfie_disable == "0":
             self.selfie_disable = "1"
-            self.output_text.insert(tk.END, "Will not record  video, just render previous performance files exist" + '\n')
+            self.output_text.insert(tk.END, "Will not record vocals or  video, just render previous performance (if  files exist!!)" + '\n')
             self.scroll_to_end()
         else:
             self.selfie_disable = "0"
-            self.output_text.insert(tk.END, "WILL record a new performance vocals and video;" + '\n')
+            self.output_text.insert(tk.END, "WILL record a new performance, recording vocals and video; old files will be overwritten!!!!!!" + '\n')
             self.scroll_to_end()
 
     def scroll_to_end(self):
@@ -545,19 +553,42 @@ class App:
 
         return default_video_url
     
+    def select_proj_dir(self):
+        # Open a directory dialog to select a karaoke project directory
+        proj_dir = tkinter.filedialog.askdirectory(
+            initialdir=betake_path + "/outputs/",
+            title="Select an existing karaoke project directory"
+        )
+
+        if proj_dir:
+            self.karaoke_name_entry.delete(0, tk.END)
+            # Extract the directory name from the full path
+            dir_name = os.path.basename(proj_dir)
+            self.karaoke_name_entry.insert(0, f"{dir_name}")
+
     def select_mp4_file(self):
         # Open a file dialog to select an MP4 file
         mp4_file = tkinter.filedialog.askopenfilename(
             initialdir=betake_path + "/playbacks/",
-            title="Select an MP4 file",
-            filetypes=(("MP4 files", "*.mp4"), ("All files", "*.*"))
-        )
+            title="Select any MP4 file for playback",
+            filetypes=(("MP4 files", "*.mp4"), ("All files", "*.*"))        )
 
         if mp4_file:
             ### Open the selected MP4 file with the default web browser
             ###webbrowser.open(f"file://{mp4_file}")
             self.video_url_entry.delete(0, tk.END)
             self.video_url_entry.insert(0, f"file://{mp4_file}")
+    
+    def select_overlay_file(self):
+        # Open a file dialog to select an MP4 file
+        overlay_file = tkinter.filedialog.askopenfilename(
+            initialdir=betake_path + "/overlays/",
+            title="Select any MP4 file for overlay",
+            filetypes=(("MP4 files", "*.mp4"), ("All files", "*.*"))        )
+
+        if overlay_file:
+            self.overlay_url_entry.delete(0, tk.END)
+            self.overlay_url_entry.insert(0, f"file://{overlay_file}")
 
     def start_recording(self):
         # Get karaoke filename and video URL from entry widgets
@@ -715,6 +746,7 @@ class App:
 
 def main():
     root = tk.Tk()
+    root.resizable(False, False)
     app = App(root)
 
     root.mainloop()

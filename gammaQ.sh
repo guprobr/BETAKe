@@ -300,6 +300,9 @@ OVER_DIR="$betake_path/overlays"      # Directory to store optional overlay file
     mkdir -p "$OUT_DIR" || exit; 
     mkdir -p "$OVER_DIR" || exit;
 
+# create performance directory
+    mkdir -p "$OUT_DIR"/"${karaoke_name}";
+
 ##########################################################################################################################
 # Define log file path 
 LOG_FILE="$betake_path/script.log"
@@ -375,10 +378,10 @@ colorecho "magenta" "Download overlay video as requested"
     fi
 fi
 
-OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"_out.mp4;
-OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"_out.wav;
-VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"_enhance.wav;
-VOCAL_ORIG="${OUT_DIR}"/"${karaoke_name}"_orig.wav;
+OUT_VIDEO="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_out.mp4;
+OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_out.wav;
+VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_enhance.wav;
+VOCAL_ORIG="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_orig.wav;
 
 if [ "$6" -ne 1 ]; then
     colorecho "cyan" "All setup to sing!";
@@ -394,7 +397,7 @@ if [ "$6" -ne 1 ]; then
         exit;
     fi
 
-    rm -rf "${OUT_DIR}"/"${karaoke_name}"_*.*;
+    rm -rf "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_*.*;
 
     colorecho "Let's Record with webcam and pulseaudio/pipewire default source"
     colorecho "SING!---Launching webcam;";
@@ -423,7 +426,7 @@ if [ "$6" -ne 1 ]; then
 
     colorecho "red" "ffplay start Epoch: $epoch_ffplay";
         diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
-        echo "${diff_ss}" > "${OUT_DIR}"/"${karaoke_name}".diff_ss;
+        echo "${diff_ss}" > "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}".diff_ss;
         colorecho "magenta" "diff_ss: $diff_ss"; # will try to adj sync brutally when rendering
 
     cronos_play=1 
@@ -473,7 +476,7 @@ if [ "$6" -ne 1 ]; then
     cp -ra "${OUT_VOCAL}" "${VOCAL_ORIG}";
     
 else
-    diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}".diff_ss );
+    diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}".diff_ss );
 fi
 
             colorecho "white" "disable audio loopback monitor"
@@ -506,10 +509,10 @@ lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
     rm -f lv2.tmp.log;
 
 colorecho "yellow" "Apply dithering & noise reduction with SoX";
-sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof > lv2.tmp.log 2>&1
+sox "${OUT_VOCAL}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
-    noisered "$OUT_DIR"/"$karaoke_name".prof 0.3 \
+    noisered "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof 0.3 \
                             dither -s > lv2.tmp.log 2>&1
     colorecho "white" "$( cat lv2.tmp.log )";
 check_validity "${VOCAL_FILE}" "wav";
@@ -592,7 +595,7 @@ colorecho "magenta" "Selected threshold volume: ${THRESH_vol}%"
         check_validity "${VOCAL_FILE}" "wav";
 
 colorecho "blue" "now will mix playback and vocals enhanced"
-OUT_FILE="${OUT_DIR}"/"${karaoke_name}"_beta.mp4;
+OUT_FILE="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_beta.mp4;
 seedy=",hue=h=7*PI*t/$(fortune|wc -l):s=1";
 if [ "${OVERLAY_BETA}" == "" ]; then
     OVERLAY_BETA="xut.png";
