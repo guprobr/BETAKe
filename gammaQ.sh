@@ -33,7 +33,7 @@ colorecho() {
         "white") coding="\e[37m" ;;
         *) message="$1"; coding="\e[37m" ;;
     esac
-    echo -e "${coding}${message}♪\e[0m";
+    echo -e "${coding}${message} ♪\e[0m";
 }
 
 colorecho "Welcome!";
