@@ -365,7 +365,7 @@ class App:
 
         while True:
             line = process.stdout.readline().decode('utf-8').rstrip()
-            if line and '🎼' in line:
+            if line and '♪' in line:
                 self.colorize_line(line)
                 self.scroll_to_end()
 
