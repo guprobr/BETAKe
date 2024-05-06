@@ -563,7 +563,7 @@ while true; do
     [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-    aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
+    aecho=0.89:0.89:84:0.13,treble=g=2,volume=volume=${DB_diff_preview}[vocals];
     [playback][vocals]amix=inputs=2,stereowiden,
     loudnorm=I=-16:LRA=11:TP=-1.5,aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
       -map "[betamix]" -b:a 2500k "${OUT_VOCAL%.*}"_tmp.wav &
@@ -594,7 +594,7 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-   aecho=0.89:0.89:84:0.33,treble=g=4" -b:a 2500k "${VOCAL_FILE}" &
+   aecho=0.89:0.89:84:0.13,treble=g=2" -b:a 2500k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
