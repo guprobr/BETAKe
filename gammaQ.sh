@@ -560,11 +560,12 @@ while true; do
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
-    [0:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
+    [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
     aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
-    [playback][vocals]amix=inputs=2,crystalizer=c=0:i=3.0,stereowiden[betamix];" \
+    [playback][vocals]amix=inputs=2,stereowiden,
+    loudnorm=I=-16:LRA=11:TP=-1.5,aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
       -map "[betamix]" -b:a 2500k "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
@@ -619,7 +620,8 @@ fi
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
     [0:a]volume=volume=${DB_diff}[vocals];
-    [playback][vocals]amix=inputs=2,crystalizer=c=0:i=3.0,stereowiden[betamix];
+    [playback][vocals]amix=inputs=2,stereowiden,
+    loudnorm=I=-16:LRA=11:TP=-1.5,aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
@@ -631,7 +633,7 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-           -c:a flac -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
+           -c:a aac -b:a 256k -ar 44100 -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render mix video with visuals";
 else
