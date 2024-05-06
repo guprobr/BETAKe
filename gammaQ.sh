@@ -33,7 +33,7 @@ colorecho() {
         "white") coding="\e[37m" ;;
         *) message="$1"; coding="\e[37m" ;;
     esac
-    echo -e "${coding}${message}🎼\e[0m";
+    echo -e "${coding}${message}♪\e[0m";
 }
 
 colorecho "Welcome!";
@@ -269,7 +269,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
         -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
          -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
        -map 0:v "${OUT_VIDEO}"  \
-       -map 1:a -b:a 10000k  "${OUT_VOCAL}" \
+       -map 1:a -b:a 2500k  "${OUT_VOCAL}" \
     -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop -fps 120 -x 320 -y 200 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
@@ -289,6 +289,7 @@ video_url="$2";
 betake_path="$3";
 video_dev="$4";
 overlay_url="$5";
+optout_fun="$6";
 
 if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
 if [ "${video_url}" == "" ]; then video_url=" --simulate "; fi
@@ -537,7 +538,7 @@ colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff}% ";
 
 selection=${DB_diff};
 while true; do
-    VALUE=$(zenity --scale --text="Adj vocals?" --min-value="0" --max-value="10000" --step="1" --cancel-label="No adj" --value="${selection}" )
+    VALUE=$(zenity --scale --text="Adj vocals?" --min-value="0" --max-value="2500" --step="1" --cancel-label="No adj" --value="${selection}" )
 
     case $? in
          0)
@@ -549,7 +550,7 @@ while true; do
     esac
 
 # Check if selection is within range
-    if check_range "$selection" "0" "10000"; then
+    if check_range "$selection" "0" "2500"; then
     # Prompt user for action
         if zenity --question --title="Preview mix or Confirm render?" --text="Do you want to preview the VOL adjustment value of ${selection}% ?" --ok-label="Preview please" --cancel-label="RENDER NOW"; then
 # User chose Preview
@@ -563,8 +564,8 @@ while true; do
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
     aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
-    [playback][vocals]amix=inputs=2[betamix];" \
-      -map "[betamix]" -b:a 10000k "${OUT_VOCAL%.*}"_tmp.wav &
+    [playback][vocals]amix=inputs=2,crystalizer=c=0:i=3.0,stereowiden[betamix];" \
+      -map "[betamix]" -b:a 2500k "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
        render_display_progress "${OUT_VOCAL%.*}"_tmp.wav "$ff_pid" "AUDIO PREVIEW";
@@ -581,7 +582,7 @@ while true; do
         fi
     else
         # Selection out of range, show warning and repeat dialog
-       zenity --error --title "Warning" --text "Input must be between 0% and 10000% -- Please try again."
+       zenity --error --title "Warning" --text "Input must be between 0% and 2500% -- Please try again."
    fi
 done
 
@@ -592,7 +593,7 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-   aecho=0.89:0.89:84:0.33,treble=g=4" -b:a 10000k "${VOCAL_FILE}" &
+   aecho=0.89:0.89:84:0.33,treble=g=4" -b:a 2500k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -600,19 +601,25 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
 
 colorecho "blue" "now will mix playback and vocals enhanced"
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_beta.mp4;
-seedy=",hue=h=7*PI*t/$(fortune|wc -l):s=1";
+
+if [ "${optout_fun}" == "" ]; then
+    seedy=",hue=h=7*PI*t/$(fortune|wc -l):s=1,lagfun";
+else
+    seedy="";
+fi
+
 if [ "${OVERLAY_BETA}" == "" ]; then
     OVERLAY_BETA="xut.png";
 fi
 
  if ffmpeg -y  -loglevel info -hide_banner \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${VOCAL_FILE}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${OUT_VIDEO}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
     [0:a]volume=volume=${DB_diff}[vocals];
-    [playback][vocals]amix=inputs=2[betamix];
+    [playback][vocals]amix=inputs=2,crystalizer=c=0:i=3.0,stereowiden[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];

@@ -89,6 +89,7 @@ class App:
         self.video_dev_dialog_open = False
         self.tail_log_open = None
         self.selfie_disable = "0"
+        self.funny_disable = ""
         self.noTOGGLE = True
 
         custom_font = Font(family="Verdana", size=10)
@@ -119,7 +120,7 @@ class App:
 
         self.get_fortune_button = tk.Button(
             master, text="Get Fortune!", command=self.get_fortune)
-        self.get_fortune_button.place(x=500, y=450)
+        self.get_fortune_button.place(x=550, y=450)
 
         self.select_mp4_button = tk.Button(
             master, text="Select saved playback", command=self.select_mp4_file)
@@ -135,11 +136,15 @@ class App:
 
         self.tail_log_button = tk.Button(
             master, text="FuLL Logs", command=self.tail_log)
-        self.tail_log_button.place(x=200, y=450)
+        self.tail_log_button.place(x=400, y=450)
+
+        self.optout_fun_button = tk.Button(
+            master, text="OPT-out fun effects", command=self.optout_fun)
+        self.optout_fun_button.place(x=100, y=450)
 
         self.plot_mic_button = tk.Button(
             master, text="Microphone meter", command=self.plot_audio)
-        self.plot_mic_button.place(x=295, y=740)
+        self.plot_mic_button.place(x=710, y=450)
 
         # Entry for custom karaoke name
         tk.Label(master, text="Karaoke OUTPUT Name:").place(x=1, y=530)
@@ -319,11 +324,21 @@ class App:
     def just_render(self):
         if self.selfie_disable == "0":
             self.selfie_disable = "1"
-            self.output_text.insert(tk.END, "Will not record vocals or  video, just render previous performance (if  files exist!!)" + '\n')
+            self.output_text.insert(tk.END, "Will *NOT* record vocals or  video, just render previous performance (if  files exist!!)" + '\n')
             self.scroll_to_end()
         else:
             self.selfie_disable = "0"
-            self.output_text.insert(tk.END, "WILL record a new performance, recording vocals and video; old files will be overwritten!!!!!!" + '\n')
+            self.output_text.insert(tk.END, "WILL record a *NEW* performance, will OVERWRITE old files!!!!!!" + '\n')
+            self.scroll_to_end()
+    
+    def optout_fun(self):
+        if self.funny_disable == "":
+            self.funny_disable = "True"
+            self.output_text.insert(tk.END, "Will disable funny effects on webcam video" + '\n')
+            self.scroll_to_end()
+        else:
+            self.funny_disable = ""
+            self.output_text.insert(tk.END, "ENABLE funny effects on recorded video" + '\n')
             self.scroll_to_end()
 
     def scroll_to_end(self):
@@ -602,6 +617,7 @@ class App:
         video_url = self.video_url_entry.get().strip()
         overlay_url = self.overlay_url_entry.get().strip()
         just_render = self.selfie_disable
+        funney = self.funny_disable
 
         # Set default values if input fields are empty
         if not karaoke_name:
@@ -615,7 +631,7 @@ class App:
         # Command to execute betaREC.sh with tee for logging
         command = [
             'bash', '-c', 
-            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" "{just_render}" ' # 2>&1 | tee -a script.log'
+            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" "{just_render}" "{funney}"' # 2>&1 | tee -a script.log'
         ]
 
         # Open script.log file for appending
@@ -660,48 +676,6 @@ class App:
 
         # Start a separate thread to check the subprocess status
         threading.Thread(target=check_video_test_subprocess_status).start()
-
-    def test_audio_device(self):
-        ##self.start_recording_button.config(state=tk.DISABLED)
-        self.audio_test_button.config(state=tk.DISABLED)
-
-        # Mute the microphone to avoid feedback
-        #subprocess.run(['pactl', 'set-source-volume', 'default', '0%'])
-        tkinter.messagebox.showinfo(
-            "test microphone volume and adj effects",
-            "USE HEADPHONES ! EasyEffects apply all effects to its input source, be sure to select it. You can keep EasyEffects open during recording for better monitoring."
-        )
-        
-        #command = [
-        #    'ffmpeg', '-hide_banner', '-loglevel', 'error',
-        #    '-f', 'pulse', '-i', 'default',
-        #    '-filter_complex', '[0:a]asplit[a][b];[a]showwaves=s=200x128:mode=line:rate=10:n=1:colors=green|yellow:scale=0[spec];[b]showcqt=s=100x96[cqt];[cqt][spec]overlay',
-        #    '-bufsize', '8k', '-maxrate', '284k', '-f', 'nut', '-'
-        #]
-        #ffplay_command = ['ffplay', '-hide_banner', '-loglevel', 'error', '-autoexit', '-exitonmousedown', '-exitonkeydown', 
-        #           '-window_title', 'Press any key or click to close',
-        #           '-fast', '-vf', 'scale=1024x768', '-']
-        #ffmpeg_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #ffplay_process = subprocess.Popen(ffplay_command, stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        
-        command = [ 'easyeffects' ]
-        easy_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        def check_audio_test_subprocess_status():
-            while True:
-                if easy_process.poll() is not None: #or ffmpeg_process.poll() is not None:
-                    # Once  exits, terminate thread
-                    easy_process.terminate()
-                    #ffplay_process.terminate()
-                    break
-                time.sleep(1)
-
-            # Enable the button when the subprocess finishes
-            self.audio_test_button.config(state=tk.NORMAL)
-            #self.start_recording_button.config(state=tk.NORMAL)
-
-        # Start a separate thread to check the subprocess status
-        threading.Thread(target=check_audio_test_subprocess_status).start()
 
     def tail_log(self):
         self.tail_log_button.config(state=tk.DISABLED)
