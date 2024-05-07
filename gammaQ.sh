@@ -210,24 +210,25 @@ calculate_db_difference() {
 
 
 adjust_vocals_volume() {
-    target_volume_absolute="8"
+    target_volume_absolute="11"
     # Extract RMS amplitude from each file
     RMS_playback="$1"
     RMS_vocals="$2"
 
     # Calculate dB difference between vocals and playback
-    dB_difference=$(calculate_db_difference "$RMS_playback" "$RMS_vocals")
+    dB_calc=$(calculate_db_difference "$RMS_playback" "$RMS_vocals")
 
-    # Define the fixed target volume level based on the sign of dB difference
-    if (( $(awk 'BEGIN { print ('"$dB_difference"' >= 0) }') )); then
-        target_volume=$(( target_volume_absolute * 2 ));
+    # Define the fixed target volume level
+    if [ "$(echo "$dB_calc < 0" | bc)" -eq 1 ]; then
+        target_volume=$(echo "$target_volume_absolute * -1" | bc);  # Set negative adjustment for LOUD vocals
+    elif [ "$(echo "$dB_calc > 0" | bc)" -eq 1 ]; then
+        target_volume="$target_volume_absolute";
     else
-        target_volume="-${target_volume_absolute}"
+        target_volume=0;
     fi
 
     # Calculate the adjustment needed for the vocals as a multiplier
-    adjustment_multiplier=$(awk -v target="$target_volume" -v diff="$dB_difference" \
-    'BEGIN { print (10 ^ ((target - diff) / 20)) }')
+    adjustment_multiplier=$(awk -v target="$target_volume" -v diff="$dB_calc" 'BEGIN { print (10 ^ ((target - diff) / 20) ) }');
 
     # Print the adjustment needed as a multiplier
     echo "$adjustment_multiplier"
@@ -560,13 +561,13 @@ while true; do
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
-    [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
+    [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0,loudnorm=I=-16:LRA=11:TP=-1.5[playback];
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-    aecho=0.89:0.89:84:0.13,treble=g=2,volume=volume=${DB_diff_preview}[vocals];
-    [playback][vocals]amix=inputs=2,stereowiden,
-    loudnorm=I=-16:LRA=11:TP=-1.5,aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
-      -map "[betamix]" -b:a 2500k "${OUT_VOCAL%.*}"_tmp.wav &
+    aecho=0.89:0.89:84:0.13,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.3|0.9,stereowiden,
+    aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
+      -map "[betamix]" -b:a 2500k -ar 44100 "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
        render_display_progress "${OUT_VOCAL%.*}"_tmp.wav "$ff_pid" "AUDIO PREVIEW";
@@ -594,7 +595,7 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-   aecho=0.89:0.89:84:0.13,treble=g=2" -b:a 2500k "${VOCAL_FILE}" &
+   aecho=0.89:0.89:84:0.13,treble=g=4" -b:a 2500k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -618,10 +619,10 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]equalizer=f=50:width_type=q:width=2:g=10[playback];
+    [2:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0,loudnorm=I=-16:LRA=11:TP=-1.5[playback];
     [0:a]volume=volume=${DB_diff}[vocals];
-    [playback][vocals]amix=inputs=2,stereowiden,
-    loudnorm=I=-16:LRA=11:TP=-1.5,aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
+    [playback][vocals]amix=inputs=2:weights=0.3|0.9,stereowiden,
+    aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
