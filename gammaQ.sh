@@ -107,8 +107,10 @@ render_display_progress() {
 
     # Create a dialog box with a progress bar
     (
+
     while true; do
-        sleep 1.44;
+    export LC_ALL=C;
+        sleep 2;
         # Check if the ffmpeg process is still running
         if ! ps -p "$pid_ffmpeg" >/dev/null 2>&1; then
             break
@@ -136,7 +138,8 @@ render_display_progress() {
         echo "$progress";
 
     done
-    ) | zenity --progress --title="Rendering ${3}" --text="Rendering in progress...please wait" --percentage=0 --auto-close
+    ) | yad --progress --progress-text="Rendering ${3} .. Please wait.." \
+              --buttons-layout=center --button="Abort!gtk-close!Cancel Render":"killall -9 ffmpeg" --escape-ok --borders=5 --auto-close --splash
 
 }
 
@@ -210,7 +213,7 @@ calculate_db_difference() {
 
 
 adjust_vocals_volume() {
-    target_volume_absolute="11"
+    target_volume_absolute="16"
     # Extract RMS amplitude from each file
     RMS_playback="$1"
     RMS_vocals="$2"
@@ -220,7 +223,7 @@ adjust_vocals_volume() {
 
     # Define the fixed target volume level
     if [ "$(echo "$dB_calc < 0" | bc)" -eq 1 ]; then
-        target_volume=$(echo "$target_volume_absolute * -1" | bc);  # Set negative adjustment for LOUD vocals
+        target_volume="$(echo "$target_volume_absolute * -1" | bc)";  # Set negative adjustment for LOUD vocals
     elif [ "$(echo "$dB_calc > 0" | bc)" -eq 1 ]; then
         target_volume="$target_volume_absolute";
     else
@@ -271,7 +274,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
          -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
        -map 0:v "${OUT_VIDEO}"  \
        -map 1:a -b:a 2500k  "${OUT_VOCAL}" \
-    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop -fps 120 -x 320 -y 200 -nosound - &
+    -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop  -x 320 -y 200 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
 else
@@ -315,18 +318,8 @@ OVER_DIR="$betake_path/overlays"      # Directory to store optional overlay file
 # Define log file path 
 LOG_FILE="$betake_path/script.log"
 #*******************************************************
-# Load configuration variables and adj volumes #########
-SINK="$( pactl get-default-sink )"
-colorecho "yellow" " got sink: $SINK";
-SRC_mic="$( pactl get-default-source )"
-colorecho "green" " got mic src: $SRC_mic";
-########################################################
-colorecho "white" "Loopback monitor audio ON";
-pactl unload-module module-loopback;
-pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
 ##DOWNLOAD PLAYBACK
-
 colorecho "white" "fetch the video title (more logs on TAIL LOGS button)";
 PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}" --no-check-certificates --enable-file-urls --no-playlist)";
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
@@ -392,6 +385,17 @@ VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_enhance.wav;
 VOCAL_ORIG="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_orig.wav;
 
 if [ "$6" -ne 1 ]; then
+
+SINK="$( pactl get-default-sink )"
+colorecho "yellow" " got sink: $SINK";
+SRC_mic="$( pactl get-default-source )"
+colorecho "green" " got mic src: $SRC_mic";
+
+########################################################
+colorecho "white" "Loopback monitor audio ON";
+pactl unload-module module-loopback;
+pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
+
     colorecho "cyan" "All setup to sing!";
     # Display message to start webcam capture
     export LC_ALL=C;
@@ -420,9 +424,9 @@ if [ "$6" -ne 1 ]; then
 
     # Wait for the output file to be created and not empty; only then we run ffplay
     while [ ! -s "${OUT_VIDEO}" ]; do
-        sleep 0.0001; # Adjust sleep time as needed
-    done | zenity --progress --text="GET RDY TO SING" \
-              --title="Starting playback NOW" --percentage=50 --pulsate --auto-close --auto-kill
+        sleep 0.00001; # Adjust sleep time as needed
+    done | yad --progress --progress-text="GET RDY TO SING" \
+               --pulsate --auto-close --no-buttons --escape-ok --borders=5 --splash
 
     colorecho "yellow" "Launch lyrics video";
 
@@ -441,7 +445,9 @@ if [ "$6" -ne 1 ]; then
     wmctrl -r "SING" -e 0,-$(( 1024+(SCREEN_WIDTH/2) )),$(( SCREEN_HEIGHT+768 )),-1,-1
     ### RECORDING PROGRESS! 
     # If FFmpeg or FFplayback quits, or if click cancel, webcam capture stops
+
     while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
+    export LC_ALL=C;
         sleep 1;
 
         wmctrl -r "MPlayer" -b add,above 
@@ -459,8 +465,8 @@ if [ "$6" -ne 1 ]; then
             if ! ps -p "$ffplay_pid" >/dev/null 2>&1; then
                 break
             fi
-    done | zenity --progress --text="Press to STOP performing and render MP4" \
-              --title="Recording" --percentage=0 --auto-close
+    done | yad --progress --progress-text="CANCEL finishes performance" \
+              --buttons-layout=center --button="Finish!gtk-close!End Performance":"killall -SIGTERM ffmpeg" --escape-ok --borders=5 --auto-close --splash
 
     # Check if the progress dialog was canceled OR completed
     if [ $? = 1 ]; then
@@ -474,20 +480,21 @@ if [ "$6" -ne 1 ]; then
             killall -SIGTERM ffmpeg;
             killall -9 ffplay;
             killall -9 mplayer;
-            #killall -SIGINT sox;
-        sleep 3;
-    
-    # make a bkp if needed to restore later without enhancements
+            killall -SIGINT sox;
+        sleep 1;
+    # make a bkp if needed to restore later the original without enhancements
     cp -ra "${OUT_VOCAL}" "${VOCAL_ORIG}";
     
 else
+# else, ${6} == 1 , skipped performance, restore diff_ss
     diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}".diff_ss );
 fi
 
             colorecho "white" "disable audio loopback monitor"
             pactl unload-module module-loopback;
-colorecho "white" "Actual playback duration: ${PLAYBACK_LEN}";
-colorecho "white" "Calculated diff sync: $diff_ss";
+            colorecho "white" "Actual playback duration: ${PLAYBACK_LEN}";
+            colorecho "white" "Calculated diff sync: $diff_ss";
+
 check_validity "${OUT_VIDEO}" "mp4";
 check_validity "${OUT_VOCAL}" "wav";
 
@@ -561,11 +568,11 @@ while true; do
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
-    [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0,loudnorm=I=-16:LRA=11:TP=-1.5[playback];
-    [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
+    [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
+    [1:a]afftdn,alimiter,speechnorm,acompressor,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-    aecho=0.89:0.89:84:0.13,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.3|0.9,stereowiden,
+    aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.51|0.84,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
       -map "[betamix]" -b:a 2500k -ar 44100 "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -593,9 +600,9 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
+   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,acompressor,deesser=i=1:f=0:m=1,
    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-   aecho=0.89:0.89:84:0.13,treble=g=4" -b:a 2500k "${VOCAL_FILE}" &
+   aecho=0.89:0.89:84:0.33,treble=g=4" -b:a 2500k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -619,9 +626,9 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0,loudnorm=I=-16:LRA=11:TP=-1.5[playback];
+    [2:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [0:a]volume=volume=${DB_diff}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.3|0.9,stereowiden,
+    [playback][vocals]amix=inputs=2:weights=0.51|0.84,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];

@@ -39,7 +39,7 @@ read -rp "Do you want to continue for user ( $YOU ) ? (yes/no): " response
 # Check the response
 if [[ $response == "yes" ]]; then
     colorecho "green" "You chose to continue.";
-    sudo apt install fortunes alsa-utils expect dialog zenity \
+    sudo apt install fortunes alsa-utils expect dialog zenity yad \
 	python3-pexpect pulseaudio-utils wmctrl  \
     python3-tk python3-numpy python3-psutil python3-pyaudio python3-matplotlib xterm \
     sox x42-plugins swh-lv2 lv2file v4l-utils git ffmpeg;
