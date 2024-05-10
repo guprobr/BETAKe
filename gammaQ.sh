@@ -573,7 +573,7 @@ while true; do
     [1:a]afftdn,alimiter,speechnorm,acompressor,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
     aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.84,
+    [playback][vocals]amix=inputs=2:weights=0.69|0.84,extrastereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
       -map "[betamix]" -b:a 2500k -ar 44100 "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -631,7 +631,7 @@ fi
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [0:a]volume=volume=${DB_diff}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.84,
+    [playback][vocals]amix=inputs=2:weights=0.69|0.84,extrastereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
