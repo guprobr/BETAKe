@@ -138,8 +138,8 @@ render_display_progress() {
         echo "$progress";
 
     done
-    ) | yad --progress --progress-text="Rendering ${3} .. Please wait.." \
-              --buttons-layout=center --button="Abort!gtk-close!Cancel Render":"killall -9 ffmpeg" --escape-ok --borders=5 --auto-close --splash
+    ) | yad --progress --image=gtk-execute --progress-text="Rendering ${3} .. Please wait.." \
+              --buttons-layout=center --button='Abort!gtk-close!Cancel Render':"killall -9 ffmpeg" --escape-ok --borders=5 --auto-close --splash
 
 }
 
@@ -399,7 +399,10 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" &
     colorecho "cyan" "All setup to sing!";
     # Display message to start webcam capture
     export LC_ALL=C;
-    zenity --question --text=" - - Let's sing? " --title "Accept song or abort" --ok-label="SING";
+    yad --text-entry --image=sound --text=" - - Let's sing? " \
+    --title="Accept song or abort" --width=640 --button='ABORT!gtk-cancel!Cancel':1 \
+    --button='SING!gtk-yes!Perform':0;   
+    
     if [ $? == 1 ]; then
         colorecho "red" "Performance aborted.";
         # Get the PID of the parent process
@@ -425,7 +428,7 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" &
     # Wait for the output file to be created and not empty; only then we run ffplay
     while [ ! -s "${OUT_VIDEO}" ]; do
         sleep 0.00001; # Adjust sleep time as needed
-    done | yad --progress --progress-text="GET RDY TO SING" \
+    done | yad --image=view-refresh --progress --progress-text="Waiting webcam (ESC to cancel)" \
                --pulsate --auto-close --no-buttons --escape-ok --borders=5 --splash
 
     colorecho "yellow" "Launch lyrics video";
@@ -465,8 +468,8 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" &
             if ! ps -p "$ffplay_pid" >/dev/null 2>&1; then
                 break
             fi
-    done | yad --progress --progress-text="CANCEL finishes performance" \
-              --buttons-layout=center --button="Finish!gtk-close!End Performance":"killall -SIGTERM ffmpeg" --escape-ok --borders=5 --auto-close --splash
+    done | yad --progress --image=redhat-sound_video --progress-text="CANCEL finishes performance" \
+              --buttons-layout=center --button='Finish!gtk-close!End Performance':"killall -SIGTERM ffmpeg" --escape-ok --borders=5 --auto-close --splash
 
     # Check if the progress dialog was canceled OR completed
     if [ $? = 1 ]; then
@@ -498,7 +501,8 @@ fi
 check_validity "${OUT_VIDEO}" "mp4";
 check_validity "${OUT_VOCAL}" "wav";
 
-zenity --question --text=" - - Render video and MP3? " --title "Proceed, or abort production??" --ok-label="RENDER, yes";
+yad --text-entry --image=go-next --text=" Let's enhance vocals and render video now? " --title="Accept render or abort" --width=640 --button='ABORT!gtk-cancel!Cancel':1 --button='RENDER!gtk-yes!Render enhanced video':0;
+
 if [ $? == 1 ]; then
     colorecho "red" "Production aborted.";
     # Get the PID of the parent process
@@ -546,7 +550,7 @@ colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff}% ";
 
 selection=${DB_diff};
 while true; do
-    VALUE=$(zenity --scale --text="Adj vocals?" --min-value="0" --max-value="2500" --step="1" --cancel-label="No adj" --value="${selection}" )
+    VALUE=$(yad --scale --text="Vocals Volume Adjustment" --min-value="0" --max-value="2500" --step="1" --button='No Adj!gtk-cancel!Do not adjust original volume':1 --value="${selection}" --button='Preview!gtk-ok!Apply new volume':0 )
 
     case $? in
          0)
@@ -559,9 +563,6 @@ while true; do
 
 # Check if selection is within range
     if check_range "$selection" "0" "2500"; then
-    # Prompt user for action
-        if zenity --question --title="Preview mix or Confirm render?" --text="Do you want to preview the VOL adjustment value of ${selection}% ?" --ok-label="Preview please" --cancel-label="RENDER NOW"; then
-# User chose Preview
            DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8;  ${selection}/100" | bc)")
 
            ffmpeg -y  -loglevel info -hide_banner \
@@ -572,7 +573,7 @@ while true; do
     [1:a]afftdn,alimiter,speechnorm,acompressor,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
     aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.51|0.84,
+    [playback][vocals]amix=inputs=2:weights=0.69|0.84,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
       -map "[betamix]" -b:a 2500k -ar 44100 "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -582,16 +583,18 @@ while true; do
 
            totem "${OUT_VOCAL%.*}"_tmp.wav &
             ffplay_pid=$!
-           zenity --info --title "Preview vocals" --text "Multiplier factor would be: ${DB_diff_preview}x Press ok to STOP preview."
+           yad --width=800 --height=640 --image=sound-card --title "Previewing vocals" --button='RENDER!gtk-ok!Accept changes':0 --button='Go back!gtk-cancel!Cancel changes':1 --text "Multiplier factor would be: ${DB_diff_preview}x Press ok to RENDER, back to go back;"
+            opt_vol=$?;
            kill -9 $ffplay_pid
-        else
+        
+        if [ "$opt_vol" == 0 ]; then
  # User chose Confirm
             THRESH_vol="${selection}";
             break
         fi
     else
         # Selection out of range, show warning and repeat dialog
-       zenity --error --title "Warning" --text "Input must be between 0% and 2500% -- Please try again."
+       yad --image=error --title "Warning" --text "Input must be between 0% and 2500% -- Please try again."
    fi
 done
 
@@ -628,7 +631,7 @@ fi
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [0:a]volume=volume=${DB_diff}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.51|0.84,
+    [playback][vocals]amix=inputs=2:weights=0.69|0.84,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
@@ -653,7 +656,7 @@ fi
     render_display_progress "${OUT_FILE}" "$ff_pid" "FINAL VIDEO";
     check_validity "${OUT_FILE}" "mp4";
 
-zenity --info --text="Video render DONE" --title "Success" --timeout=6;
+yad --image=drive-harddisk --text="Video render DONE, will render mp3 and display resulting video..." --title "Success" --button='OK!gtk-ok!Done' --timeout=8;
 
 
 if ffmpeg -hide_banner -loglevel error -y -i "${OUT_FILE}" "${OUT_FILE%.*}".mp3; then
@@ -661,8 +664,6 @@ if ffmpeg -hide_banner -loglevel error -y -i "${OUT_FILE}" "${OUT_FILE%.*}".mp3;
 else
     colorecho "red" "Failed to render MP3. This is not a fatal error.";
 fi
-
-zenity --warning --text="Let's watch your performance video now: ${karaoke_name}" --title "Ready to watch" --timeout=15;
 
 # display resulting video to user    
 totem "${OUT_FILE}";
