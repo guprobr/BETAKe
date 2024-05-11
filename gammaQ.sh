@@ -139,7 +139,7 @@ render_display_progress() {
 
     done
     ) | yad --progress --image=gtk-execute --progress-text="Rendering ${3} .. Please wait.." \
-              --buttons-layout=center --button='Abort!gtk-close!Cancel Render':"killall -9 ffmpeg" --escape-ok --borders=5 --auto-close --splash
+              --buttons-layout=center --button='Abort!gtk-close!Cancel Render':"killall -9 ffmpeg" --escape-ok --borders=5 --auto-close 
 
 }
 
@@ -273,7 +273,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
         -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
          -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
        -map 0:v "${OUT_VIDEO}"  \
-       -map 1:a -b:a 2500k  "${OUT_VOCAL}" \
+       -map 1:a -b:a 5000k  "${OUT_VOCAL}" \
     -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop  -x 320 -y 200 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
@@ -320,7 +320,8 @@ LOG_FILE="$betake_path/script.log"
 #*******************************************************
 
 ##DOWNLOAD PLAYBACK
-colorecho "white" "fetch the video title (more logs on TAIL LOGS button)";
+colorecho "white" "First fetching the video title";
+colorecho "red" "See complete logs on FULL LOGS button";
 PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}" --no-check-certificates --enable-file-urls --no-playlist)";
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
 colorecho "red" "${video_url}";
@@ -332,7 +333,8 @@ else
     # Download the video, it will remain in cache
     dl_name=$(yt-dlp "${video_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --no-playlist);
     yt-dlp -o "${dl_name}" "${video_url}" -P "${REC_DIR}" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' \
-         --no-check-certificates --no-overwrites --no-playlist;
+         --no-check-certificates --no-overwrites --no-playlist | grep '%' | awk '{ print $2 }' | yad --progress --image=folder-download --progress-text="Fetching playback from streaming" \
+              --buttons-layout=center --button='ABORT FETCH!gtk-close!Cancel playback fetch':"killall -9 yt-dlp" --borders=5 --auto-close;
     # perphaps convert
     filename="${REC_DIR}"/"${dl_name}";
 fi
@@ -429,7 +431,7 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" &
     while [ ! -s "${OUT_VIDEO}" ]; do
         sleep 0.00001; # Adjust sleep time as needed
     done | yad --image=view-refresh --progress --progress-text="Waiting webcam (ESC to cancel)" \
-               --pulsate --auto-close --no-buttons --escape-ok --borders=5 --splash
+               --pulsate --auto-close --no-buttons --escape-ok --borders=5 
 
     colorecho "yellow" "Launch lyrics video";
 
@@ -468,8 +470,8 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" &
             if ! ps -p "$ffplay_pid" >/dev/null 2>&1; then
                 break
             fi
-    done | yad --progress --image=redhat-sound_video --progress-text="CANCEL finishes performance" \
-              --buttons-layout=center --button='Finish!gtk-close!End Performance':"killall -SIGTERM ffmpeg" --escape-ok --borders=5 --auto-close --splash
+    done | yad --progress --image=audio-headphones --progress-text="CANCEL finishes performance" \
+              --buttons-layout=center --button='Finish!gtk-close!End Performance':"killall -SIGTERM ffmpeg" --escape-ok --borders=5 --auto-close 
 
     # Check if the progress dialog was canceled OR completed
     if [ $? = 1 ]; then
@@ -550,7 +552,7 @@ colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff}% ";
 
 selection=${DB_diff};
 while true; do
-    VALUE=$(yad --scale --text="Vocals Volume Adjustment" --min-value="0" --max-value="2500" --step="1" --button='No Adj!gtk-cancel!Do not adjust original volume':1 --value="${selection}" --button='Preview!gtk-ok!Apply new volume':0 )
+    VALUE=$(yad --image=gnome-mixer --scale --text="Vocals Volume Adjustment" --min-value="0" --max-value="2500" --step="1" --button='No Adj!gtk-cancel!Do not adjust original volume':1 --value="${selection}" --button='Preview!gtk-ok!Apply new volume':0 )
 
     case $? in
          0)
@@ -570,10 +572,11 @@ while true; do
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
-    [1:a]afftdn,alimiter,speechnorm,acompressor,deesser=i=1:f=0:m=1,
-    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-    aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.84,extrastereo,
+    [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
+    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.001|bendrange=0,
+    aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview},
+    ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
       -map "[betamix]" -b:a 2500k -ar 44100 "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -603,9 +606,9 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
     colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,acompressor,deesser=i=1:f=0:m=1,
-   lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.01|bendrange=0,
-   aecho=0.89:0.89:84:0.33,treble=g=4" -b:a 2500k "${VOCAL_FILE}" &
+   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
+   lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.001|bendrange=0,
+   aecho=0.89:0.89:84:0.33,treble=g=4" -b:a 5000k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -614,7 +617,7 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
 colorecho "blue" "now will mix playback and vocals enhanced"
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_beta.mp4;
 
-if [ "${optout_fun}" == "" ]; then
+if [ "${optout_fun}" == "0" ]; then
     seedy=",hue=h=7*PI*t/$(fortune|wc -l):s=1,lagfun";
 else
     seedy="";
@@ -630,8 +633,9 @@ fi
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
-    [0:a]volume=volume=${DB_diff}[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.84,extrastereo,
+    [0:a]volume=volume=${DB_diff},
+     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
@@ -644,7 +648,7 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-           -c:a aac -b:a 256k -ar 44100 -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
+           -c:a aac -b:a 512k -ar 96000 -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render mix video with visuals";
 else

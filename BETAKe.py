@@ -89,7 +89,7 @@ class App:
         self.video_dev_dialog_open = False
         self.tail_log_open = None
         self.selfie_disable = "0"
-        self.funny_disable = ""
+        self.funny_disable = "0"
         self.noTOGGLE = True
 
         custom_font = Font(family="Verdana", size=10)
@@ -332,12 +332,12 @@ class App:
             self.scroll_to_end()
     
     def optout_fun(self):
-        if self.funny_disable == "":
-            self.funny_disable = "True"
+        if self.funny_disable == "0":
+            self.funny_disable = "1"
             self.output_text.insert(tk.END, "Will disable funny effects on webcam video" + '\n')
             self.scroll_to_end()
         else:
-            self.funny_disable = ""
+            self.funny_disable = "0"
             self.output_text.insert(tk.END, "ENABLE funny effects on recorded video" + '\n')
             self.scroll_to_end()
 
