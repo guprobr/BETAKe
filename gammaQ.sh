@@ -376,7 +376,9 @@ colorecho "magenta" "Download overlay video as requested"
 # Download the overlay, it will remain in cache
         dl_name=$(yt-dlp "${overlay_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --no-playlist);
         yt-dlp -o "${dl_name}" "${overlay_url}" -P "${OVER_DIR}" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' \
-         --no-check-certificates --no-overwrites --no-playlist;
+         --no-check-certificates --no-overwrites --no-playlist | grep '%' | awk '{ print $2 }' | yad --progress --image=folder-download --progress-text="Fetching playback from streaming" \
+              --buttons-layout=center --button='ABORT FETCH!gtk-close!Cancel playback fetch':"killall -9 yt-dlp" --borders=5 --auto-close;
+              
         OVERLAY_BETA="${OVER_DIR}"/"${dl_name}";
     fi
 fi
@@ -576,7 +578,7 @@ while true; do
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.001|bendrange=0,
     aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview},
     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98,
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98,compand,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
       -map "[betamix]" -b:a 2500k -ar 44100 "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -635,7 +637,7 @@ fi
     [2:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [0:a]volume=volume=${DB_diff},
      ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98,
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98,compand,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];

@@ -18,6 +18,7 @@ import tkinter.filedialog
 import numpy as np
 
 import pyaudio
+import pulsectl
 import matplotlib.pyplot as plt
 
 logfile = f'{betake_path}/script.log'  # Path to the log file
@@ -219,6 +220,7 @@ class App:
                 'axes.labelcolor': 'yellow',  # Cor das legendas do eixo
                 'xtick.color': 'yellow',  # Cor dos números do eixo x
                 'ytick.color': 'yellow',  # Cor dos números do eixo y
+                 'font.size': 7                  # Tamanho da fonte
             })
 
         # Obtém as informações da source padrão do PulseAudio
@@ -227,8 +229,10 @@ class App:
             default_device_index = p.get_default_input_device_info()['index']
             default_device_info = p.get_device_info_by_index(default_device_index)
             return default_device_info
+        
+        
+                # Função de encerramento da janela de plot
 
-        # Função de encerramento da janela de plot
         def close_plot(self, event):
             self.stream.stop_stream()
             self.stream.close()
@@ -239,6 +243,10 @@ class App:
         def plot_audio_waveform(self):
             default_source_info = self.get_default_source_info()
             self.p = pyaudio.PyAudio()
+
+            with pulsectl.Pulse('get-default-source-info') as pulse:
+                default_source_name = pulse.server_info().default_source_name
+                default_source_info['name'] = default_source_name
             
             # Set the stream's sample rate to match the device's native sample rate
             sample_rate = int(default_source_info['defaultSampleRate'])
@@ -262,7 +270,7 @@ class App:
                 plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
 
                 # Inicializa o array para armazenar os dados das ondas sonoras
-                buffer_size = sample_rate * 5  # 5 segundos de áudio
+                buffer_size = sample_rate * 10  # 25 segundos de áudio
                 waveform_buffer = np.zeros(buffer_size, dtype=np.int16)
 
                 # Loop infinito para capturar e plotar continuamente as ondas sonoras
@@ -280,13 +288,29 @@ class App:
                     else:
                         print("Tamanho dos dados excede o tamanho do buffer. Os dados serão descartados.")
 
+                    if self.detect_default_source_change(default_source_info['name']) == True:
+                        default_source_info = self.get_default_source_info()
+                        self.p = pyaudio.PyAudio()
+                        with pulsectl.Pulse('get-default-source-info') as pulse:
+                            default_source_name = pulse.server_info().default_source_name
+                            default_source_info['name'] = default_source_name
+                        # Set the stream's sample rate to match the device's native sample rate
+                        sample_rate = int(default_source_info['defaultSampleRate'])
+
+                        self.stream = self.p.open(format=pyaudio.paInt16,
+                                channels=int(default_source_info['maxInputChannels']),
+                                rate=sample_rate,
+                                input=True,
+                                input_device_index=int(default_source_info['index']),
+                                frames_per_buffer=1024)
+
                 # Limpa o eixo antes de plotar
                     ax.clear()
                     # Plota as ondas sonoras
                     ax.plot(waveform_buffer, color='green', label='Sound Waves')
                     ax.set_xlabel('Tempo')
                     ax.set_ylabel('Amp')
-                    ax.set_title('Audio source:' + default_source_info['name'])
+                    ax.set_title( default_source_info['name'] )
                     ax.set_xlim(0, buffer_size)
                     ax.set_ylim(-32768, 32768)  # Ajuste conforme necessário para a escala da amplitude
 
@@ -300,7 +324,7 @@ class App:
                     ax.title.set_color('yellow')
 
                     # Atualiza o gráfico
-                    plt.pause(0.001)
+                    plt.pause(0.069)
 
             except (KeyboardInterrupt, RuntimeError):
                 # Encerra o fluxo e o PyAudio quando a janela for fechada
@@ -309,6 +333,22 @@ class App:
                 self.p.terminate()
                 plt.close()  # Fecha a janela do gráfico
                 print("Programa encerrado.")
+
+        def get_default_input_device_index(self):
+            p = pyaudio.PyAudio()
+            return p.get_default_input_device_info()['index']
+
+        def detect_default_source_change(self, prev_device_name):
+            
+            if True:
+                #time.sleep(interval)
+                with pulsectl.Pulse('get-default-source-info') as pulse:
+                    current_device_name = pulse.server_info().default_source_name
+
+                    if current_device_name != prev_device_name:
+                        print("Default input source has been changed!")
+                        # You can perform any action or notify the user here
+                        return True
 
     def plot_audio(self):
         if self.noTOGGLE == True:
