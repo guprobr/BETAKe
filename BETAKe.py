@@ -49,7 +49,7 @@ class DeviceSelectionDialog:
             self.selected_device = self.devices[selected_index[0]]
             self.dialog.destroy()
 #########################################################
-def list_video_devices():
+def list_video_devices(self):
     devices = []
     try:
         output = subprocess.check_output(['v4l2-ctl', '--list-devices'], text=True)
@@ -59,20 +59,20 @@ def list_video_devices():
                 devices.append(line.strip())
     except subprocess.CalledProcessError:
         print("Error: Failed to list video devices using v4l2-ctl.")
-        App.output_text.insert(tk.END, "Error: Failed to list video devices using v4l2-ctl." + '\n')
-        App.kill_recording()
+        self.colorize_line("\033[31mError: Failed to list video devices using v4l2-ctl.♪\033[0m" + '\n')
+        #self.kill_recording()
     return devices
 
-def open_device_selection_dialog(parent):
-    devices = list_video_devices()
+def open_device_selection_dialog(self):
+    devices = list_video_devices(self)
     if not devices:
         print("No video devices found.")
-        parent.output_text.insert(tk.END, "No video devices found." + '\n')
-        App.kill_recording()
+        self.colorize_line("\033[31mNo video devices found.♪\033[0m" + '\n')
+        #self.kill_recording()
         return
 
-    dialog = DeviceSelectionDialog(parent, devices)
-    parent.wait_window(dialog.dialog)
+    dialog = DeviceSelectionDialog(self, devices)
+    self.wait_window(dialog.dialog)
     return dialog.selected_device
 
 class App:
@@ -204,7 +204,7 @@ class App:
             self.video_dev_dialog_open = False
             if selected_devCam:
                 print(f"Selected video device: {selected_devCam}")
-                self.output_text.insert(tk.END, f"Selected video device: {selected_devCam} " + '\n')
+                self.colorize_line(f"\033[33mSelected video device: {selected_devCam}\033[0m" + '\n')
                 self.video_dev_entry.delete(0, tk.END)
                 self.video_dev_entry.insert(0, selected_devCam)
     class AudioVisualizer:
@@ -421,14 +421,14 @@ class App:
 
         # Define a mapping of escape codes to tag names and corresponding colors
         tag_color_map = {
-            '30': ('color_0', '#000000'),  # Black
-            '31': ('color_1', '#FF0000'),  # Red
-            '32': ('color_2', '#00FF00'),  # Green
-            '33': ('color_3', '#FFFF00'),  # Yellow
-            '34': ('color_4', '#0000FF'),  # Blue
-            '35': ('color_5', '#FF00FF'),  # Magenta
-            '36': ('color_6', '#00FFFF'),  # Cyan
-            '37': ('color_7', '#FFFFFF')   # White
+            '30': ('black', '#000000'),  # Black
+            '31': ('red', '#FF0000'),  # Red
+            '32': ('green', '#00FF00'),  # Green
+            '33': ('yellow', '#FFFF00'),  # Yellow
+            '34': ('blue', '#0000FF'),  # Blue
+            '35': ('magenta', '#FF00FF'),  # Magenta
+            '36': ('cyan', '#00FFFF'),  # Cyan
+            '37': ('white', '#FFFFFF')   # White
         }
 
         # Apply tags to the entire line
