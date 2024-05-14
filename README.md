@@ -19,6 +19,7 @@ lv2file
 mplayer
 v4l-utils``
 
+No ubuntu é fácil:
 ### Faça o clone do repositório e rode como SEU USUARIO NORMAL o arquivo ./instalar.sh
 #### Um icone no gnome-shell vai surgir chamado BETAKe - gammaQ
 #### para efeito de debug, existe um log pormenorizado script.log criado no diretório onde está o programa
