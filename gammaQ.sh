@@ -301,6 +301,14 @@ else
     echo_factor="0.33";
 fi
 
+if [ "${9}" == "UP" ]; then
+    bend_it="0.69";
+elif [ "${9}" == "DOWN" ]; then
+    bend_it="-0.69";
+else
+    bend_it="0.01";
+fi
+
 if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
 if [ "${video_url}" == "" ]; then video_url=" --simulate "; fi
 if [ "${betake_path}" == "" ]; then betake_path="$(pwd)"; fi
@@ -581,7 +589,7 @@ while true; do
     -filter_complex "  
     [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
-    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.001|bendrange=0,
+    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=$bend_it|bendrange=0,
     aecho=0.89:0.89:84:$echo_factor,treble=g=4,volume=volume=${DB_diff_preview},
     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
     [playback][vocals]amix=inputs=2:weights=0.69|0.98,compand,extrastereo,
@@ -615,7 +623,7 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
-   lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.001|bendrange=0,
+   lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=$bend_it|bendrange=0,
    aecho=0.89:0.89:84:$echo_factor,treble=g=4" -b:a 5000k "${VOCAL_FILE}" &
         ff_pid=$!;
 

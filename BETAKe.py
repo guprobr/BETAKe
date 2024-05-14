@@ -93,6 +93,7 @@ class App:
         self.funny_disable = "0"
         self.noTOGGLE = True
         self.echo_factor = "false"
+        self.bend_it = "0"
 
         custom_font = Font(family="Verdana", size=10)
         # Create scrolled text widget for displaying output
@@ -144,9 +145,17 @@ class App:
             master, text="OPT-out fun effects", command=self.optout_fun)
         self.optout_fun_button.place(x=100, y=450)
 
+        self.bend_DOWN_button = tk.Button(
+            master, text="pitch bend -2", command=self.bend_DOWN)
+        self.bend_DOWN_button.place(x=250, y=420)
+
         self.echo_factor_button = tk.Button(
             master, text="double ECHO", command=self.double_echo_factor)
-        self.echo_factor_button.place(x=250, y=450)
+        self.echo_factor_button.place(x=250, y=445)
+
+        self.bend_UP_button = tk.Button(
+            master, text="pitch bend +2", command=self.bend_UP)
+        self.bend_UP_button.place(x=250, y=475)
 
         self.plot_mic_button = tk.Button(
             master, text="Microphone meter", command=self.plot_audio)
@@ -395,6 +404,28 @@ class App:
             self.echo_factor = "false"
             self.output_text.insert(tk.END, "NORMAL echo effect on vocals!!" + '\n')
             self.scroll_to_end()
+    
+    def bend_UP(self):
+        if self.bend_it == "0" or self.bend_it == "DOWN":
+            self.bend_it = "UP"
+            self.output_text.insert(tk.END, "bend vocals UP +0.69 (Gareus Offset)" + '\n')
+            self.scroll_to_end()
+        else:
+            self.bend_it = "0" 
+            self.output_text.insert(tk.END, "do not BEND IT!!" + '\n')
+            self.scroll_to_end()
+
+    def bend_DOWN(self):
+        if self.bend_it == "0" or self.bend_it == "UP":
+            self.bend_it = "DOWN"
+            self.output_text.insert(tk.END, "bend vocals DOWN -0.69 (Gareus Offset)" + '\n')
+            self.scroll_to_end()
+        else:
+            self.bend_it = "0"
+            self.output_text.insert(tk.END, "do not BEND IT!!" + '\n')
+            self.scroll_to_end()
+
+
 
     def scroll_to_end(self):
         self.output_text.see(tk.END)
@@ -686,7 +717,7 @@ class App:
         # Command to execute betaREC.sh with tee for logging
         command = [
             'bash', '-c', 
-            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" "{just_render}" "{funney}" "{self.echo_factor}"' # 2>&1 | tee -a script.log'
+            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" "{just_render}" "{funney}" "{self.echo_factor}" "{self.bend_it}" ' # 2>&1 | tee -a script.log'
         ]
 
         # Open script.log file for appending
