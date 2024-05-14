@@ -293,7 +293,13 @@ video_url="$2";
 betake_path="$3";
 video_dev="$4";
 overlay_url="$5";
-optout_fun="$6";
+optout_fun="$7";
+
+if [ "${8}" == "true" ]; then
+    echo_factor="0.69";
+else
+    echo_factor="0.33";
+fi
 
 if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
 if [ "${video_url}" == "" ]; then video_url=" --simulate "; fi
@@ -388,7 +394,7 @@ OUT_VOCAL="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_out.wav;
 VOCAL_FILE="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_enhance.wav;
 VOCAL_ORIG="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_orig.wav;
 
-if [ "$6" -ne 1 ]; then
+if [ "$6" == "0" ]; then
 
 SINK="$( pactl get-default-sink )"
 colorecho "yellow" " got sink: $SINK";
@@ -493,7 +499,7 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" &
     cp -ra "${OUT_VOCAL}" "${VOCAL_ORIG}";
     
 else
-# else, ${6} == 1 , skipped performance, restore diff_ss
+# else, ${7} == 1 , skipped performance, restore diff_ss
     diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}".diff_ss );
 fi
 
@@ -576,9 +582,9 @@ while true; do
     [0:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.001|bendrange=0,
-    aecho=0.89:0.89:84:0.33,treble=g=4,volume=volume=${DB_diff_preview},
+    aecho=0.89:0.89:84:$echo_factor,treble=g=4,volume=volume=${DB_diff_preview},
     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98,compand,
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98,compand,extrastereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
       -map "[betamix]" -b:a 2500k -ar 44100 "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
@@ -610,7 +616,7 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=0.001|bendrange=0,
-   aecho=0.89:0.89:84:0.33,treble=g=4" -b:a 5000k "${VOCAL_FILE}" &
+   aecho=0.89:0.89:84:$echo_factor,treble=g=4" -b:a 5000k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -637,7 +643,7 @@ fi
     [2:a]equalizer=f=50:width_type=q:width=2:g=10,crystalizer=c=0:i=3.0[playback];
     [0:a]volume=volume=${DB_diff},
      ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98,compand,
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98,compand,extrastereo,
     aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];

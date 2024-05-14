@@ -92,6 +92,7 @@ class App:
         self.selfie_disable = "0"
         self.funny_disable = "0"
         self.noTOGGLE = True
+        self.echo_factor = "false"
 
         custom_font = Font(family="Verdana", size=10)
         # Create scrolled text widget for displaying output
@@ -142,6 +143,10 @@ class App:
         self.optout_fun_button = tk.Button(
             master, text="OPT-out fun effects", command=self.optout_fun)
         self.optout_fun_button.place(x=100, y=450)
+
+        self.echo_factor_button = tk.Button(
+            master, text="double ECHO", command=self.double_echo_factor)
+        self.echo_factor_button.place(x=250, y=450)
 
         self.plot_mic_button = tk.Button(
             master, text="Microphone meter", command=self.plot_audio)
@@ -379,6 +384,16 @@ class App:
         else:
             self.funny_disable = "0"
             self.output_text.insert(tk.END, "ENABLE funny effects on recorded video" + '\n')
+            self.scroll_to_end()
+
+    def double_echo_factor(self):
+        if self.echo_factor == "false":
+            self.echo_factor = "true"
+            self.output_text.insert(tk.END, "DOUBLE echo effect on vocals!!!!" + '\n')
+            self.scroll_to_end()
+        else:
+            self.echo_factor = "false"
+            self.output_text.insert(tk.END, "NORMAL echo effect on vocals!!" + '\n')
             self.scroll_to_end()
 
     def scroll_to_end(self):
@@ -671,7 +686,7 @@ class App:
         # Command to execute betaREC.sh with tee for logging
         command = [
             'bash', '-c', 
-            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" "{just_render}" "{funney}"' # 2>&1 | tee -a script.log'
+            f'unbuffer {betake_path}/gammaQ.sh "{karaoke_name}" "{video_url}" "{betake_path}" "{video_dev}" "{overlay_url}" "{just_render}" "{funney}" "{self.echo_factor}"' # 2>&1 | tee -a script.log'
         ]
 
         # Open script.log file for appending
