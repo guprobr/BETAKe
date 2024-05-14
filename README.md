@@ -86,6 +86,22 @@ ffmpeg -i ... -filter_complex ... -map ... "${OUT_FILE}"
 
 * após isso é gerada uma MP3 e o display do resultado final. 
 
+![Screenshot from 2024-05-14 14-52-43](https://github.com/guprobr/BETAKe/assets/40776097/de09601a-8e7f-47c1-b5ad-d2f02ce1367f)
+
+* Karaoke OUTPUT name: o nome do projeto, vai ser o nome do diretorio criado onde serao criados os sssets
+* Playback Video URL: uma URL do Youtube, por exemplo, ou varios streamings suportados pelo *yt-dlp*. Ela sera baixada e armazenada, será disponibilizada na tela para o usuario cantar e depois no video final em um box separado.
+* Overlay video: (opcional) um outro video para fetch que será sobreposto ao video do usuario, para efitos visuais.
+* cfg /dev/videoX - seletor de *arquivo de dispositivo v4l2* para a webcam
+* NOTA: o microfone da gravação é selecionado pela *source DEFAULT pulse/pipewire atual* no launch do script,
+* Just render, no rec: pula a gravação da performance e renderiza novamente o arquivo de projeto que estiver escrito na caixa de texto *Karaoke Name*
+* SELECT: *saved proj, overlay, playback*: preenche as 3 caixas respectivamente com arquivos que ja existem no sistema de arquivos. Evita download.
+* Get Fortune! - para efeito de descontrair, o programa pode falar mensagens do */usr/bin/fortunes* UNIX no console da interface python.
+* OPT-out fun effects: deixa o video do usuario na webcam cru, sem efeitos psicodélicos (que sáo meio exagerados por default)
+* DOUBLE echo: normalmente o mix vai com um *echo leve*, nesse caso ele fica bem forçado. Ideal para músicas do Moby, etc.
+* Pitch BEND up ou DOWN: faz um *shift para cima ou para baixo da tonalidade dos vocais* usando o XC 42
+* FULL logs: para ver exatamente o que *apareceria no console e não os logs simples* da interface python3
+* PLOT mic / CLOSE plot: um *visualizador para testar o nivel em decibeis do vocal*, ou seja, ajustar o microfone com precisão. Uma janela se abre e vc pode durante o karaoke tbm observar isso.
+* Karaoke KILL: nao só um Quit mas tbm força matar caso algum processo fique preso. Talvez seja necessario apertar diversas vezes, nesses casos. Força na peruca.
 
 ## Opções do Script
 * Simula a execução do script sem realizar a gravação ou aprimoramento de áudio. Isso serve para não ter que cantar de novo apenas para ajustar algum parametro, assim rendereizando novamente com outros efeitos, ou overlays, ou até mesmo playbacks. Basta colocar o nome do projeto igual ao diretorio onde foi gravado (há um botao na interface para Saved PRoject)
@@ -99,6 +115,8 @@ Pacotes mencionados acima instalados``
 
 Sinta-se à vontade para contribuir com melhorias, relatar problemas ou propor novos recursos através de problemas e solicitações pull.
 Sinta-se à vontade para ajustar ou expandir esta documentação de acordo com as necessidades do seu projeto. Se precisar de mais alguma coisa ou tiver dúvidas, estou aqui para ajudar!
+
+
 
 # OPERA SUMMARY
 
