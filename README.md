@@ -1,4 +1,4 @@
-(docs em pt_BR seguem após)
+(+ docs em pt_BR seguem após as britânicas)
 
 
 a Karaoke video PLAYER with performance RECORDER for Linux. 
@@ -6,9 +6,146 @@ a Karaoke video PLAYER with performance RECORDER for Linux.
 * based on FFMpeg + LV2 plugins
 *AlphaQ - BETAke - now gammaQ v3*
 
+# DeltaQ° ŧħ3 B3TAKê ·v4·
+Este é um script de shell para gravar e aprimorar performances de karaokê. Ele é usado para capturar a performance de karaokê de um usuário usando uma webcam e um microfone, combinar a performance com a faixa de áudio original e, em seguida, aplicar várias melhorias de áudio, como ajuste de volume e remoção de ruído.
+
+## Como usar
+Configuração: Antes de usar o script, certifique-se de ter os seguintes requisitos instalados no seu sistema:
+
+``ffmpeg
+sox
+yad
+lv2file
+mplayer
+v4l-utils``
+
+### Faça o clone do repositório e rode como SEU USUARIO NORMAL o arquivo ./instalar.sh
+#### Um icone no gnome-shell vai surgir chamado BETAKe - gammaQ
+#### para efeito de debug, existe um log pormenorizado script.log criado no diretório onde está o programa
+##### na interface python há logs menos verbose.
+
+Execução do Script: Execute o script PYTHON *BETAKe.py* no terminal, se precisar debugar, ou no gnome-shell, pois o instalar.sh cria um .desktop como dito. 
+O script python3 é que vai fornecendo os seguintes argumentos para o shell principal  *gammaQ.sh*:
+
+* Nome da performance de karaokê
+* URL do vídeo de karaokê
+* Diretório do projeto
+* Dispositivo de vídeo
+* URL da sobreposição (opcional)
+* Opção para pular a performance (0 ou 1)
+* Outra opção (opcional) - duplicar ECHO
+* Outra opção (opcional) - Pitch bend UP ou DOWN
+
+Portanto um launcher, uma interface grafica para manipular o comando "gammaQ.sh"
+
+## Gravação da Performance: 
+
+O script inicia a gravação da performance de karaokê usando a webcam e o microfone especificados.
+
+## Melhorias de Áudio: 
+
+Após a gravação, o script aplica várias melhorias de áudio, como remoção de ruído, ajuste de volume e equalização.
+
+## Visualização e Renderização: 
+O usuário pode visualizar a performance aprimorada e, se estiver satisfeito, renderizar o vídeo final. 
+
+## detecção de volume ideal
+
+O script compara o volume dos vocais com o playback e sugere uma porcentagem de alteração. O usuário pode fazer um preview do mix inteiro e alterar conforme o volume de 0 a 100% para diminuir ou mais para aumentar.
+* Converte o arquivo de playback para o formato WAV usando o ffmpeg.
+* Verifica a validade do arquivo WAV convertido.
+* Extrai as informações de volume (amplitude RMS) de ambos os arquivos de playback e de vocais.
+* Calcula a diferença de volume em decibéis (dB) entre os arquivos de playback e de vocais.
+* Transforma a diferença de volume em uma porcentagem para fornecer uma recomendação de ajuste base.
+
+# Filtros SoX (Sound eXchange):
+
+## Geração de perfil de ruído:
+sox "${OUT_VOCAL}" -n trim 0 15 noiseprof "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof > lv2.tmp.log 2>&1
+
+## Redução de ruído:
+sox "${OUT_VOCAL}" "${VOCAL_FILE}" noisered "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof 0.1 dither -s > lv2.tmp.log 2>&1
+
+# Filtros LV2 (LADSPA):
+
+## Aplicação do plugin de desclipping:
+lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
+
+# Filtros ffmpeg:
+
+## Conversão de vídeo para áudio WAV:
+ffmpeg -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav
+
+## Processamento de áudio com filtros:
+ffmpeg -i "${OUT_VOCAL}" -af ... "${VOCAL_FILE}"
+
+## Combinação de áudio e vídeo:
+ffmpeg -i ... -filter_complex ... -map ... "${OUT_FILE}"
+
+* uma série de filtros de video são aplicados, para criar boxes com o video do playback, a imagem do usuario cantando, efeitos visuais e mais alguns ajustes vocais, além do mix propriamente dito.
+
+* após isso é gerada uma MP3 e o display do resultado final. 
+
+
+## Opções do Script
+* Simula a execução do script sem realizar a gravação ou aprimoramento de áudio. Isso serve para não ter que cantar de novo apenas para ajustar algum parametro, assim rendereizando novamente com outros efeitos, ou overlays, ou até mesmo playbacks. Basta colocar o nome do projeto igual ao diretorio onde foi gravado (há um botao na interface para Saved PRoject)
+* Duplicar o efeito de eco durante a gravação da performance. 
+* Pitch [UP|DOWN]: Define a direção do ajuste de tom durante a renderização do vídeo final.
+
+Requisitos do Sistema
+``Linux
+Bash
+Pacotes mencionados acima instalados``
+
+Sinta-se à vontade para contribuir com melhorias, relatar problemas ou propor novos recursos através de problemas e solicitações pull.
+Sinta-se à vontade para ajustar ou expandir esta documentação de acordo com as necessidades do seu projeto. Se precisar de mais alguma coisa ou tiver dúvidas, estou aqui para ajudar!
+
 # OPERA SUMMARY
 
-Tonal correction algorithms in general aim to adjust the pitch or pitch of musical notes in an audio recording to ensure that they conform to a particular scale or tonal pattern. These algorithms are often used in audio editing software to correct pitch problems in vocal or instrumental performances.
+Karaoke Bash Script - Turn Your Machine into a Karaoke Machine!
+This Bash script allows you to create your own karaoke videos with enhanced vocals!
+
+Here's what you can do:
+
+* Download a karaoke video (playback) from a URL or use a local file.
+* Optionally include an overlay video for additional effects.
+* Capture your singing performance using your webcam and microphone.
+* Create a combined MP4 video with your performance, the playback video (with adjusted volume), and the overlay video (if used).
+* Enhance the captured audio to make your vocals stand out (functionality currently commented out).
+
+## Technical Details:
+
+* The script utilizes FFmpeg for video processing and audio manipulation.
+* It interacts with the user through colored messages and dialog boxes using the yad tool (installation required).
+* PulseAudio or PipeWire is used for capturing audio from your microphone.
+
+## Getting Started:
+
+Requirements:
+* Bash shell
+* FFmpeg (https://ffmpeg.org/download.html)
+* yad (https://sourceforge.net/projects/yad-dialog/)
+* PulseAudio or PipeWire (https://wiki.archlinux.org/title/PipeWire)
+
+### How it Works:
+
+The script will guide you through a series of steps:
+
+* Enter a name for your karaoke video (defaults to "BETA").
+* Provide the URL of the karaoke video or the path to a local video file.
+* Specify where you want to save the final karaoke video.
+* Select your webcam device.
+* (Optional) Enter the URL of an overlay video.
+* Choose whether to skip webcam capture (useful for editing existing recordings).
+* (Optional) Choose whether to restore vocals from a previously saved audio file.
+* Select if you want the vocals to be "bent", shift pitch UP or DOWN.
+* The script will then download the videos (if necessary), process the audio, and guide you through recording your performance. Finally, it combines everything into a finished karaoke video with your singing in the spotlight!
+
+Note: The functionality for more enhanced vocals is currently commented out but can be potentially enabled in the future.
+
+This script provides a fun and customizable way to create your own karaoke videos. Feel free to tinker with the code and explore its possibilities!
+
+* Tonal correction algorithms in general aim to adjust the pitch or pitch of musical notes in an audio recording to ensure that they conform to a particular scale or tonal pattern. These algorithms are often used in audio editing software to correct pitch problems in vocal or instrumental performances.
 
 The mathematical principle underlying tonal correction algorithms involves detecting the fundamental frequencies of musical notes in the audio recording and then applying transformations to adjust these frequencies to match a desired tonal scale. Here is a detailed explanation of the process:
 
@@ -78,48 +215,7 @@ The XC 42 is designed to provide accurate and efficient tonal correction, with c
 ### Graillon:
 
 Graillon is a machine learning-based tonal correction tool developed by Grzegorz Ptasinski. It uses advanced audio signal processing algorithms and machine learning techniques to perform tonal correction on high-quality audio recordings.
-The Graillon is known for its ability to correct pitches precisely and naturally, adapting to the vocal style and nuances of the singer's performance.
-
-# v3.0 - gammaQ.sh
-
-
-* Receiving Parameters: The script now receives 4 parameters: the karaoke name, the video URL and the beta directory path, now the device v4l2 /dev/video configured in *python launcher*;
-
-* Directory Configuration: Defines directories to store recordings and output files, creating them if they do not exist.
-
-* Colorecho function: Defines a function to print colored messages on the terminal.
-
-* kill_parent_and_children function: Defines a function to kill the parent process and all its children.
-
-* render_display_progress function: Defines a function to display progress using the estimated file size.
-
-* generate_mp3 function: Defines a function to generate an MP3 file from an MP4 file.
-
-* Obtaining Audio Information: Obtains standard system audio and microphone information.
-
-* Updating and Downloading YouTube Video: Updates the YouTube video downloader program (yt-dlp) and downloads the specified YouTube video, saving it to the recordings directory.
-
-* Video Format Check and Conversion: Checks and converts the downloaded video format to ensure compatibility.
-
-* Recording Confirmation Message: Displays a message to confirm karaoke recording.
-
-* Video and Audio Recording: Start recording video and audio from the system's default device.
-
-* Recording Progress Display: Displays a progress bar indicating recording progress.
-
-* Audio Post-Production: Apply filters and audio adjustments, such as dithering, noise reduction and vocal adjustment.
-
-* Final Video Rendering: Combines the post-produced audio with the original video, applying necessary filters and adjustments.
-
-* Generating MP3 File: Generates an MP3 file from the final rendered video.
-
-* Final Video Display: Displays the finished video in the media player.
-
-The script performs several steps to process and produce a complete karaoke from a YouTube video, including downloading, recording, audio post-production, and rendering the final video.
-
-## mastering with SoX, LV2 and FFMpeg complex filter
-
-Before rendering the video that has already been mixed and mastered, some filters are applied through *stand-alone* binaries to the file with the recorded vocals. Over time I noticed that it was more advantageous to divide and conquer, that is, not trying to solve everything in the same FFMpeg pipeline as there would be no compatibility or availability of complex filters to achieve the quality with the desired efficiency.
+The Graillon is known for its ability to correct pitches precisely and naturally, adapting to the vocal style and nuances of the singer's performance. I've decided to remove Graillon for a moment, because it is proprietary.
 
 ### Shibata Dithering and Noise Reduction via SoX:
 
@@ -146,15 +242,6 @@ The line
 
 applies this algorithm to the vocal audio file, generating a new, enhanced audio file.
 
-### Auburn Sound's Graillon Vocal Tuning Algorithm:
-
-Graillon is an audio processing plugin developed by Auburn Sounds used to adjust and modify voices.
-
-The line
-```
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Younger\ Speech -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 -c 1 :input_38 -c 2:input_39 https://www.auburnsounds.com/products/Graillon.html40733132#in1out2
-```
-applies the Graillon plugin to the vocal audio file, with different adjustment parameters specified, also using the *lv2file* tool.
 
 * These algorithms are applied to improve vocal audio quality, reduce noise and adjust specific characteristics of the voice to produce a more pleasant and professional end result.
 * Each algorithm has its own function and settings that can be adjusted to meet the specific needs of a karaoke recording. A generic balance was sought that could maintain the naturalness of the result but also serve the purpose of improving the original recording.
@@ -163,72 +250,7 @@ applies the Graillon plugin to the vocal audio file, with different adjustment p
 
 Here the last filters are applied to clean the audio and finally mix with the downloaded playback. Synchronization is guaranteed from recording, where there is a mechanism to only trigger playback for the user when the file is confirmed to be written by FFMpeg. There is also a *diff_ss* variable that guarantees a forced synchronization adjustment in terms of nanoseconds. It is calculated by the difference in value in Unix Epoch nanoseconds at the start of execution of each process, *$epoch_ff* and *$epoch_ffplay*, using the date format *%s*.*%N*
 
-### Audio Configuration:
 
-```
-[0:a]volume=volume=0.35, aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, aresample=resampler=soxr:osf=s16[playback];
-```
-This part of the code is responsible for configuring the audio coming from the first input (index [0:a]), the downloaded playback;
-```
-volume=0.35
-```
-Sets the audio volume to 35% of the original volume. Absolutely all playbacks from the karaoke communities on You Tube have an unnecessary volume boost that we compensate for in this forced way;
-
-```
-aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo
-```
-
-Sets the sampling format (fltp), sample rate (44100 Hz), and channel layout (stereo), for standardization and to mix the two tracks compatible.
-
-```
-aresample=resampler=soxr:osf=s16
-```
-
-Applies a sample resize using the SoX Resampler (soxr) resampler to convert the audio to a 16-bit sample format.
-
-### Vocal Audio Processing:
-```
-[1:a] adeclip, compensationdelay, alimiter, speechnorm, acompressor, aecho=0.8:0.8:56:0.33, treble=g=4, aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, aresample=resampler=soxr :osf=s16:precision=33[vocals];
-```
-This part processes the audio coming from the second input (index [1:a]), which is the vocal audio.
-
-* adeclip, compensationdelay, alimiter, speechnorm, acompressor: Apply a series of filters and audio effects, such as distortion removal, delay compensation, limiting, volume normalization and compression.
-
-* aecho=0.8:0.8:56:0.33: Adds a very slight echo to the audio with the specified parameters.
-* treble=g=4: Adjusts the treble level of the audio.
-
-```
-aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo
-```
-
-Sets the sampling format, sample rate, and channel layout of vocal audio.
-
-```
-aresample=resampler=soxr:osf=s16:precision=33
-```
-
-Applies sample resizing to vocal audio using SoX Resampler.
-
-### Audio Merging:
-```
-[playback][vocals] amix=inputs=2:weights=0.45|0.56;
-```
-Merges the processed playback and vocal audios (defined previously) using the amix function, where inputs=2 indicates that there are two inputs to be merged and weights=0.45|0.56 specifies the weights of each input in the final merge.
-
-### Video Generation:
-```
-waveform, scale=s=640x360[v1]; gradients=n=7:s=640x360, format=rgba[vscope]; [0:v] scale=s=640x360[v0]; [v1][vscope] xstack=inputs=2, scale=s=640x360[badcoffee]; [v0][badcoffee] vstack=inputs=2, scale=s=640x480;
-```
-This part sets up the video.
-
-* waveform: Generates an audio waveform. In the final MP4 it is the monochrome frame in the lower left corner.
-* gradients: Creates visual gradients. In the final MP4 it is the colored frame to the right of the waveforms.
-* [0:v] scale=s=640x360[v0]: Resizes the original video recording of the user singing, to a resolution of 640x360.
-* [v1][vscope] xstack=inputs=2: Stacks waveform and gradient videos horizontally, along with playback.
-* [v0][badcoffee] vstack=inputs=2: Stacks the resized original video and the xstack result vertically.
-* scale=s=640x480: Scales the final video to a resolution of 640x480.
-
-These settings combine audio and video processing to produce a final result that includes audio adjustments, blending of different audio sources, and visual effects applied to the video.
 
 ### preview and mp3
 
@@ -321,158 +343,6 @@ Em termos de qualidade da abordagem, este script shell apresenta uma série de t
 
 O XC 42 é outro algoritmo de correção tonal, desenvolvido por Joshua Reiss e Andrew McLeod. Ele usa técnicas avançadas de processamento de sinais de áudio para realizar correção tonal em gravações vocais.
 O XC 42 é projetado para oferecer correção tonal precisa e eficiente, com controle sobre parâmetros como a extensão de correção e a suavização de transições entre notas musicais.
-
-### Graillon:
-
-O Graillon é uma ferramenta de correção tonal baseada em aprendizado de máquina, desenvolvida por Grzegorz Ptasinski. Ele usa algoritmos avançados de processamento de sinais de áudio e técnicas de aprendizado de máquina para realizar correção tonal em gravações de áudio de alta qualidade.
-O Graillon é conhecido por sua capacidade de corrigir afinações de forma precisa e natural, adaptando-se ao estilo vocal e às nuances da performance do cantor.
-
-# v3.0 - gammaQ.sh
-
-
-* Recebendo Parâmetros: O script recebe agora 4 parâmetros: o nome do karaokê, a URL do vídeo e o caminho do diretório beta, agora o dispositivo v4l2 /dev/video configurado no *python launcher*;
-
-* Configuração de Diretórios: Define diretórios para armazenar gravações e arquivos de saída, criando-os se não existirem.
-
-* Função colorecho: Define uma função para imprimir mensagens coloridas no terminal.
-
-* Função kill_parent_and_children: Define uma função para encerrar o processo pai e todos os seus filhos.
-
-* Função render_display_progress: Define uma função para exibir o progresso usando o tamanho estimado do arquivo.
-
-* Função generate_mp3: Define uma função para gerar um arquivo MP3 a partir de um arquivo MP4.
-
-* Obtendo Informações de Áudio: Obtém informações padrão de áudio e microfone do sistema.
-
-* Atualizando e Baixando Vídeo do YouTube: Atualiza o programa de download de vídeos do YouTube (yt-dlp) e baixa o vídeo do YouTube especificado, salvando-o no diretório de gravações.
-
-* Verificação e Conversão de Formato do Vídeo: Verifica e converte o formato do vídeo baixado para garantir compatibilidade.
-
-* Mensagem de Confirmação de Gravação: Exibe uma mensagem para confirmar a gravação do karaokê.
-
-* Gravação de Vídeo e Áudio: Inicia a gravação de vídeo e áudio a partir do dispositivo padrão do sistema.
-
-* Exibição do Progresso da Gravação: Exibe uma barra de progresso indicando o progresso da gravação.
-
-* Pós-Produção de Áudio: Aplica filtros e ajustes de áudio, como dithering, redução de ruído e ajuste vocal.
-
-* Renderização do Vídeo Final: Combina o áudio pós-produzido com o vídeo original, aplicando filtros e ajustes necessários.
-
-* Gerando Arquivo MP3: Gera um arquivo MP3 a partir do vídeo final renderizado.
-
-* Exibição do Vídeo Final: Exibe o vídeo finalizado no player de mídia.
-
-O script realiza várias etapas para processar e produzir um karaokê completo a partir de um vídeo do YouTube, incluindo download, gravação, pós-produção de áudio e renderização do vídeo final.
-
-## masterização com SoX, LV2 e FFMpeg complex filter
-
-Antes de renderizar o vídeo que já mixa e masteriza, alguns filtros são aplicados por meio de binários *stand-alone* no arquivo com os vocais gravados. Com o tempo notei que era mais vantajoso dividir para conquistar, ou seja, não tentar resolver tudo na mesma pipeline de FFMpeg pois não haveria compatibilidade ou disponibilidade de filtros complexos para alcançar a qualidade com a eficiência desejada.
-
-### Shibata Dithering e Redução de Ruído via SoX:
-
-O Shibata Dithering é um método de dithering usado para melhorar a qualidade de áudio digital. No contexto do script, é aplicado usando o SoX (Sound eXchange), uma poderosa ferramenta de processamento de áudio.
-A linha 
-```sox "${VOCAL_FILE}" -n trim 0 5 noiseprof "$OUT_DIR"/"$karaoke_name".prof``` 
-cria um perfil de ruído a partir dos primeiros 5 segundos do arquivo de áudio gerado anteriormente.
-Em seguida, 
-```
-sox "${VOCAL_FILE}" "${OUT_VOCAL}" noisered "$OUT_DIR"/"$karaoke_name".prof 0.2 dither -s -f shibata 
-```
-aplica a redução de ruído usando o perfil de ruído criado e aplica o Shibata Dithering para melhorar a qualidade do áudio.
-
-### Algoritmo de Ajuste Vocal Gareus XC42:
-
-O Gareus XC42 é um algoritmo de ajuste vocal desenvolvido por Robin Gareus. Ele é usado para ajustar e aprimorar a qualidade das vozes nas gravações de áudio. Usamos a ferramenta lv2file para aplicar com eficiência e flexibilidade o filtro, separadamente.
-
-A linha 
-```
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Live http://gareus.org/oss/lv2/fat1 
-```
-aplica esse algoritmo ao arquivo de áudio vocal, gerando um novo arquivo de áudio aprimorado.
-
-### Algoritmo de Ajuste Vocal Auburn Sound's Graillon:
-
-O Graillon é um plugin de processamento de áudio desenvolvido pela Auburn Sounds, usado para ajustar e modificar vozes.
-
-A linha 
-```
-lv2file -i "${OUT_VOCAL}" -o "${VOCAL_FILE}" -P Younger\ Speech -p p9:1.00 -p p20:2.00 -p p15:0.509 -p p17:1.000 -p p18:1.00 -c 1:input_38 -c 2:input_39 https://www.auburnsounds.com/products/Graillon.html40733132#in1out2 
-```
-aplica o plugin Graillon ao arquivo de áudio vocal, com diferentes parâmetros de ajuste especificados, também utilizando a ferramenta *lv2file*.
-
-* Esses algoritmos são aplicados para melhorar a qualidade do áudio vocal, reduzir o ruído e ajustar características específicas da voz para produzir um resultado final mais agradável e profissional.
-* Cada algoritmo tem sua própria função e configurações que podem ser ajustadas para atender às necessidades específicas de uma gravação de karaokê. Buscou-se um equilibrio genérico que pudesse manter a naturalidade do resultado mas também atendesse o propósito de aperfeiçoar a gravação original.
-
-## pós produção com FFMpeg
-
-Aqui se aplicam os últimos filtros para limpeza do audio e finalmente a mixagem com o playback baixado. A sincronia é garantida desde a gravação, onde existe um mecanismo de somente disparar o playback para o usuário quando o arquivo está confirmadamente sendo escrito pelo FFMpeg. Existe ainda uma variável *diff_ss* que garante em termos de nanosegundos um ajuste forçado de sincronia. Ela é calculada pela diferença de valor em nanosegundos do Unix Epoch do início de execução de cada processo, *$epoch_ff* e *$epoch_ffplay*, usando o formato de data *%s*.*%N*
-
-### Configuração do Áudio:
-
-```
-[0:a]volume=volume=0.35, aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, aresample=resampler=soxr:osf=s16[playback];
-```
-Esta parte do código é responsável por configurar o áudio proveniente da primeira entrada (índice [0:a]), o playback baixado;
-```
-volume=0.35
-```
-Define o volume do áudio para 35% do volume original. Absolutamente todos os playbacks das comunidades de karaoke no You Tube tem um boost desnecessário de volume que compensamos dessa forma forçada;
-
-```
-aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo
-```
-
-Define o formato de amostragem (fltp), a taxa de amostragem (44100 Hz) e o layout de canal (estéreo), para padronização e para mixar as duas faixas de forma compatível.
-
-```
-aresample=resampler=soxr:osf=s16 
-```
-
-Aplica um redimensionamento de amostra usando o resampler SoX Resampler (soxr) para converter o áudio para um formato de amostra de 16 bits.
-
-### Processamento do Áudio Vocal:
-```
-[1:a] adeclip, compensationdelay, alimiter, speechnorm, acompressor, aecho=0.8:0.8:56:0.33, treble=g=4, aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo, aresample=resampler=soxr:osf=s16:precision=33[vocals];
-```
-Esta parte processa o áudio proveniente da segunda entrada (índice [1:a]), que é o áudio vocal.
-
-* adeclip, compensationdelay, alimiter, speechnorm, acompressor: Aplicam uma série de filtros e efeitos de áudio, como remoção de distorção, atraso de compensação, limitação, normalização de volume e compressão.
-
-* aecho=0.8:0.8:56:0.33: Adiciona um eco bem leve ao áudio com os parâmetros especificados.
-* treble=g=4: Ajusta o nível de agudos do áudio.
-
-```
-aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo
-```
-
-Define o formato de amostragem, taxa de amostragem e layout de canal do áudio vocal.
-
-```
-aresample=resampler=soxr:osf=s16:precision=33
-```
-
-Aplica o redimensionamento de amostra ao áudio vocal usando o SoX Resampler.
-
-### Mesclagem de Áudio:
-```
-[playback][vocals] amix=inputs=2:weights=0.45|0.56;
-```
-Mescla os áudios processados do playback e dos vocais (definidos anteriormente) usando a função amix, onde inputs=2 indica que há duas entradas a serem mescladas e weights=0.45|0.56 especifica os pesos de cada entrada na mesclagem final.
-
-### Geração de Vídeo:
-```
-waveform, scale=s=640x360[v1]; gradients=n=7:s=640x360, format=rgba[vscope]; [0:v] scale=s=640x360[v0]; [v1][vscope] xstack=inputs=2, scale=s=640x360[badcoffee]; [v0][badcoffee] vstack=inputs=2, scale=s=640x480;
-```
-Esta parte configura o vídeo.
-
-* waveform: Gera uma forma de onda do áudio. No MP4 final ele é o quadro monocromático do canto inferior esquerdo.
-* gradients: Cria gradientes visuais. No MP4 final ele é o quadro colorido ao lado direito dos waveforms.
-* [0:v] scale=s=640x360[v0]: Redimensiona o vídeo original da gravação do usuário cantando, para uma resolução de 640x360.
-* [v1][vscope] xstack=inputs=2: Empilha os vídeos da forma de onda e dos gradientes horizontalmente, junto com o playback.
-* [v0][badcoffee] vstack=inputs=2: Empilha o vídeo original redimensionado e o resultado do xstack verticalmente.
-* scale=s=640x480: Redimensiona o vídeo final para uma resolução de 640x480.
-
-Essas configurações combinam processamento de áudio e vídeo para produzir um resultado final que inclui ajustes de áudio, mesclagem de diferentes fontes de áudio e efeitos visuais aplicados ao vídeo.
 
 ### preview e mp3
 
