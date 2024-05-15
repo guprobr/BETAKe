@@ -109,6 +109,7 @@ render_display_progress() {
     (
 
     while true; do
+    # shellcheck disable=SC2030
     export LC_ALL=C;
         sleep 2;
         # Check if the ffmpeg process is still running
@@ -273,7 +274,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
         -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
          -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
        -map 0:v "${OUT_VIDEO}"  \
-       -map 1:a -b:a 5000k  "${OUT_VOCAL}" \
+       -map 1:a -b:a 1500k  "${OUT_VOCAL}" \
     -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop  -x 320 -y 200 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
@@ -340,6 +341,7 @@ PLAYBACK_TITLE="$(yt-dlp --get-title "${video_url}" --no-check-certificates --en
 colorecho "magenta" "Found video: ${PLAYBACK_TITLE}";
 colorecho "red" "${video_url}";
 
+# shellcheck disable=SC2031
 export LC_ALL=C;
 if [[ "${video_url}" == file://* ]]; then
     filename="${video_url#file://}";
@@ -587,14 +589,13 @@ while true; do
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
-    [0:a]crystalizer=c=0:i=3.0[playback];
+    [0:a]crystalizer=c=0:i=1.0[playback];
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=$bend_it|bendrange=0,
     aecho=0.89:0.89:84:$echo_factor,treble=g=5,volume=volume=${DB_diff_preview},
     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98,
-    aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];" \
-      -map "[betamix]" -b:a 2500k -ar 44100 "${OUT_VOCAL%.*}"_tmp.wav &
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98[betamix];" \
+      -map "[betamix]" -b:a 1500k "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
        render_display_progress "${OUT_VOCAL%.*}"_tmp.wav "$ff_pid" "AUDIO PREVIEW";
@@ -624,7 +625,7 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=$bend_it|bendrange=0,
-   aecho=0.89:0.89:84:$echo_factor,treble=g=5" -b:a 5000k "${VOCAL_FILE}" &
+   aecho=0.89:0.89:84:$echo_factor,treble=g=5" -b:a 1500k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -648,11 +649,10 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]crystalizer=c=0:i=3.0[playback];
+    [2:a]crystalizer=c=0:i=1.0[playback];
     [0:a]volume=volume=${DB_diff},
      ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98,
-    aresample=resampler=soxr:precision=33:dither_method=shibata[betamix];
+    [playback][vocals]amix=inputs=2:weights=0.69|0.98[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
@@ -664,7 +664,7 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-           -c:a aac -b:a 360k -ar 96000 -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
+           -c:a aac -b:a 360k -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render mix video with visuals";
 else
