@@ -299,7 +299,7 @@ optout_fun="$7";
 if [ "${8}" == "true" ]; then
     echo_factor="0.69";
 else
-    echo_factor="0.33";
+    echo_factor="0.22";
 fi
 
 if [ "${9}" == "UP" ]; then
