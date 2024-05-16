@@ -722,6 +722,8 @@ class App:
         if not video_url:
             default_video_url = self.get_default_video_url()
             video_url = default_video_url
+        if not overlay_url:
+            overlay_url = "STUB"
         if not video_dev:
             video_dev = "/dev/video0"
         

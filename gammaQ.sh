@@ -640,7 +640,7 @@ else
     seedy="";
 fi
 
-if [ "${OVERLAY_BETA}" == "" ]; then
+if [ "${OVERLAY_BETA}" == "STUB" ]; then
     OVERLAY_BETA="xut.png";
 fi
 
