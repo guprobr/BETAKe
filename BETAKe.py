@@ -102,6 +102,17 @@ class App:
 
         # Load and display the left-aligned tux.png image
         self.left_image = tk.PhotoImage(file=betake_path + "/tux.png")
+        self.cam_image = tk.PhotoImage(file=betake_path + "/cam.png")
+        self.cfgcam_image = tk.PhotoImage(file=betake_path + "/cfg_cam.png")
+        self.joy_image = tk.PhotoImage(file=betake_path + "/joy.png")
+        self.mic_image = tk.PhotoImage(file=betake_path + "/mic.png")
+        self.overlay_image = tk.PhotoImage(file=betake_path + "/overlay.png")
+        self.play_image = tk.PhotoImage(file=betake_path + "/play.png")
+        self.proj_image = tk.PhotoImage(file=betake_path + "/proj.png")
+        self.quit_image = tk.PhotoImage(file=betake_path + "/quit.png")
+        self.run_image = tk.PhotoImage(file=betake_path + "/run.png")
+        self.trash_image = tk.PhotoImage(file=betake_path + "/trash.png")
+
         self.left_image_label = tk.Label(master, image=self.left_image)
         self.left_image_label.place(x=400, y=580) 
 
@@ -114,7 +125,7 @@ class App:
         self.video_dev_entry.insert(0, "/dev/video0")
 
         self.video_test_button = tk.Button(
-            master, text="Preview cam", command=self.test_video_device)
+            master, text="Preview cam", image=self.cam_image, command=self.test_video_device, compound=tk.BOTTOM)
         self.video_test_button.place(x=295, y=670)
 
         self.audio_test_button = tk.Button(
@@ -126,15 +137,15 @@ class App:
         self.get_fortune_button.place(x=550, y=450)
 
         self.select_mp4_button = tk.Button(
-            master, text="Select saved playback", command=self.select_mp4_file)
+            master, text="Select saved playback", image=self.play_image, command=self.select_mp4_file, compound=tk.BOTTOM)
         self.select_mp4_button.place(x=560, y=700, height=55)
 
         self.select_overlay_button = tk.Button(
-            master, text="Select saved overlay", command=self.select_overlay_file)
+            master, text="Select saved overlay", image=self.overlay_image, command=self.select_overlay_file, compound=tk.BOTTOM)
         self.select_overlay_button.place(x=560, y=640, height=55)
 
         self.select_dir_button = tk.Button(
-            master, text="Select saved proj", command=self.select_proj_dir)
+            master, text="Select saved proj", image=self.proj_image, command=self.select_proj_dir, compound=tk.BOTTOM)
         self.select_dir_button.place(x=565, y=580, height=55)
 
         self.tail_log_button = tk.Button(
@@ -142,7 +153,7 @@ class App:
         self.tail_log_button.place(x=400, y=450)
 
         self.optout_fun_button = tk.Button(
-            master, text="OPT-out fun effects", command=self.optout_fun)
+            master, text="OPT-out fun effects", image=self.joy_image, command=self.optout_fun, compound=tk.BOTTOM)
         self.optout_fun_button.place(x=100, y=450)
 
         self.bend_DOWN_button = tk.Button(
@@ -158,7 +169,7 @@ class App:
         self.bend_UP_button.place(x=250, y=475)
 
         self.plot_mic_button = tk.Button(
-            master, text="Microphone meter", command=self.plot_audio)
+            master, text="Microphone meter", image=self.mic_image, command=self.plot_audio, compound=tk.BOTTOM)
         self.plot_mic_button.place(x=710, y=450)
 
         # Entry for custom karaoke name
@@ -179,27 +190,27 @@ class App:
 
         # Start recording button
         self.start_recording_button = tk.Button(
-            master, text="START Performance", command=self.start_recording)
+            master, text="START Performance", image=self.run_image, command=self.start_recording, compound=tk.BOTTOM)
         self.start_recording_button.place(x=10, y=600, width=280, height=166)
 
         # Kill recording button
         self.kill_button = tk.Button(
-            master, text="KaraoKe KiLL", command=self.kill_recording)
+            master, text="KaraoKe KiLL", image=self.quit_image, command=self.kill_recording, compound=tk.BOTTOM)
         self.kill_button.place(x=730, y=600, width=300, height=166)
 
         # clear playback URL
         self.clear_url_button = tk.Button(
-            master, text="clear URL", command=self.clear_video_url)
-        self.clear_url_button.place(x=900, y=570)
+            master, text="clear URL", image=self.trash_image, command=self.clear_video_url, compound=tk.BOTTOM)
+        self.clear_url_button.place(x=900, y=580)
 
         # clear overlay URL
         self.overlay_url_button = tk.Button(
-            master, text="clear URL", command=self.clear_overlay_url)
-        self.overlay_url_button.place(x=900, y=500)
+            master, text="clear URL",  image=self.trash_image, command=self.clear_overlay_url, compound=tk.BOTTOM)
+        self.overlay_url_button.place(x=900, y=470)
 
         # clear karaoke name
         self.clear_karaoke_name_button = tk.Button(
-            master, text="clear FILENAME", command=self.clear_karaoke_name)
+            master, text="clear FILENAME",  image=self.trash_image,  command=self.clear_karaoke_name, compound=tk.BOTTOM)
         self.clear_karaoke_name_button.place(x=900, y=530)
 
         #First, truncate last log
