@@ -384,7 +384,7 @@ else
 fi
 check_validity "${PLAYBACK_BETA}" "mp4";
 
-if [ "$overlay_url" != "" ]; then
+if [ "$overlay_url" != "STUB" ]; then
 colorecho "magenta" "Download overlay video as requested"
     if [[ "${overlay_url}" == file://* ]]; then
         OVERLAY_BETA="${overlay_url#file://}";
@@ -640,7 +640,7 @@ else
     seedy="";
 fi
 
-if [ "${OVERLAY_BETA}" == "STUB" ]; then
+if [ "${OVERLAY_BETA}" == "" ]; then
     OVERLAY_BETA="xut.png";
 fi
 
