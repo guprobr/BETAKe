@@ -297,9 +297,9 @@ overlay_url="$5";
 optout_fun="$7";
 
 if [ "${8}" == "true" ]; then
-    echo_factor="0.69";
+    echo_factor="0.60";
 else
-    echo_factor="0.22";
+    echo_factor="0.28";
 fi
 
 if [ "${9}" == "UP" ]; then
@@ -307,7 +307,7 @@ if [ "${9}" == "UP" ]; then
 elif [ "${9}" == "DOWN" ]; then
     bend_it="-0.69";
 else
-    bend_it="0.01";
+    bend_it="0.21";
 fi
 
 if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
@@ -349,8 +349,9 @@ else
     # Download the video, it will remain in cache
     dl_name=$(yt-dlp "${video_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --no-playlist);
     yt-dlp -o "${dl_name}" "${video_url}" -P "${REC_DIR}" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' \
-         --no-check-certificates --no-overwrites --no-playlist | grep '%' | awk '{ print $2 }' | yad --progress --image=folder-download --progress-text="Fetching playback from streaming" \
-              --buttons-layout=center --button='ABORT FETCH!gtk-close!Cancel playback fetch':"killall -9 yt-dlp" --borders=5 --auto-close;
+         --no-check-certificates --no-overwrites --no-playlist \
+          | yad --progress --image=folder-download --progress-text="Fetching playback from streaming" \
+              --buttons-layout=center --button='ABORT FETCH!gtk-close!Cancel fetch':"killall -9 yt-dlp" --borders=5 --pulsate --auto-close;
     # perphaps convert
     filename="${REC_DIR}"/"${dl_name}";
 fi
@@ -392,8 +393,9 @@ colorecho "magenta" "Download overlay video as requested"
 # Download the overlay, it will remain in cache
         dl_name=$(yt-dlp "${overlay_url}" --get-filename --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' --no-check-certificates --no-playlist);
         yt-dlp -o "${dl_name}" "${overlay_url}" -P "${OVER_DIR}" --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' \
-         --no-check-certificates --no-overwrites --no-playlist | grep '%' | awk '{ print $2 }' | yad --progress --image=folder-download --progress-text="Fetching playback from streaming" \
-              --buttons-layout=center --button='ABORT FETCH!gtk-close!Cancel playback fetch':"killall -9 yt-dlp" --borders=5 --auto-close;
+         --no-check-certificates --no-overwrites --no-playlist \
+          | yad --progress --image=folder-download --progress-text="Fetching overlay from streaming" \
+              --buttons-layout=center --button='ABORT FETCH!gtk-close!Cancel fetch':"killall -9 yt-dlp" --borders=5 --pulsate --auto-close;
               
         OVERLAY_BETA="${OVER_DIR}"/"${dl_name}";
     fi
@@ -412,17 +414,15 @@ SRC_mic="$( pactl get-default-source )"
 colorecho "green" " got mic src: $SRC_mic";
 
 ########################################################
-colorecho "white" "Loopback monitor audio ON";
-pactl unload-module module-loopback;
-pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
+
 
     colorecho "cyan" "All setup to sing!";
     # Display message to start webcam capture
     export LC_ALL=C;
-    yad --text-entry --image=sound --text=" - - Let's sing? " \
-    --title="Accept song or abort" --width=640 --button='ABORT!gtk-cancel!Cancel':1 \
+    yad --text-entry --image=audio-headphones --text=" - -WARNING: Please put HEADPHONES! Let's sing? " \
+    --title="Accept song? " --width=640 --button='ABORT!gtk-cancel!Cancel':1 \
     --button='SING!gtk-yes!Perform':0;   
-    
+
     if [ $? == 1 ]; then
         colorecho "red" "Performance aborted.";
         # Get the PID of the parent process
@@ -433,6 +433,10 @@ pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" &
     fi
 
     rm -rf "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_*.*;
+
+    colorecho "white" "Loopback monitor audio ON";
+    pactl unload-module module-loopback;
+    pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
     colorecho "Let's Record with webcam and pulseaudio/pipewire default source"
     colorecho "SING!---Launching webcam;";
@@ -570,15 +574,16 @@ colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff}% ";
 
 selection=${DB_diff};
 while true; do
-    VALUE=$(yad --image=gnome-mixer --scale --text="Vocals Volume Adjustment" --min-value="0" --max-value="2500" --step="1" --button='No Adj!gtk-cancel!Do not adjust original volume':1 --value="${selection}" --button='Preview!gtk-ok!Apply new volume':0 )
+    VALUE=$(yad --image=gnome-mixer --scale --text="Vocals Volume Adjustment" --min-value="0" --max-value="2500" --step="1" --button='No Adj!gtk-no!Do not adjust original volume':1 --value="${selection}" --button='ABORT!gtk-cancel!Cancel Performance':2 --button='Preview!gtk-ok!Apply new volume':0 )
 
     case $? in
          0)
             selection=${VALUE};;
          1)
             selection="100";;
-        -1)
-            selection="100";;
+         2)
+            kill_parent_and_children $$;
+            exit;;
     esac
 
 # Check if selection is within range
@@ -589,12 +594,12 @@ while true; do
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
-    [0:a]crystalizer=c=0:i=1.0[playback];
+    [0:a]extrastereo,crystalizer=c=0:i=1.0[playback];
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
-    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=$bend_it|bendrange=0,
-    aecho=0.89:0.89:84:$echo_factor,treble=g=5,volume=volume=${DB_diff_preview},
+    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=Auto|channelf=Any|bias=1|filter=0.33|offset=$bend_it|bendrange=2|corr=1,
+    aecho=0.89:0.89:84:$echo_factor,treble=g=8,volume=volume=${DB_diff_preview},
     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98[betamix];" \
+    [playback][vocals]amix=inputs=2:weights=0.94|0.84[betamix];" \
       -map "[betamix]" -b:a 1500k "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
@@ -624,8 +629,8 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
-   lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=1|channelf=01|bias=1|filter=0.02|offset=$bend_it|bendrange=0,
-   aecho=0.89:0.89:84:$echo_factor,treble=g=5" -b:a 1500k "${VOCAL_FILE}" &
+   lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=Auto|channelf=Any|bias=1|filter=0.33|offset=$bend_it|bendrange=2|corr=1,
+   aecho=0.89:0.89:84:$echo_factor,treble=g=8" -b:a 1500k "${VOCAL_FILE}" &
         ff_pid=$!;
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
@@ -649,10 +654,10 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]crystalizer=c=0:i=1.0[playback];
+    [2:a]extrastereo,crystalizer=c=0:i=1.0[playback];
     [0:a]volume=volume=${DB_diff},
      ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.69|0.98[betamix];
+    [playback][vocals]amix=inputs=2:weights=0.94|0.84[betamix];
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];

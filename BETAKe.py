@@ -125,11 +125,11 @@ class App:
         self.video_dev_entry.insert(0, "/dev/video0")
 
         self.video_test_button = tk.Button(
-            master, text="Preview cam", image=self.cam_image, command=self.test_video_device, compound=tk.BOTTOM)
+            master, text="Preview camera", image=self.cam_image, command=self.test_video_device, compound=tk.BOTTOM)
         self.video_test_button.place(x=295, y=670)
 
         self.audio_test_button = tk.Button(
-            master, text="Just render, no rec", command=self.just_render)
+            master, text="no recording, just render", command=self.just_render)
         self.audio_test_button.place(x=295, y=700)
 
         self.get_fortune_button = tk.Button(
@@ -137,24 +137,24 @@ class App:
         self.get_fortune_button.place(x=550, y=450)
 
         self.select_mp4_button = tk.Button(
-            master, text="Select saved playback", image=self.play_image, command=self.select_mp4_file, compound=tk.BOTTOM)
-        self.select_mp4_button.place(x=560, y=700, height=55)
+            master, text="Playback Library", image=self.play_image, command=self.select_mp4_file, compound=tk.BOTTOM)
+        self.select_mp4_button.place(x=560, y=710, height=55)
 
         self.select_overlay_button = tk.Button(
-            master, text="Select saved overlay", image=self.overlay_image, command=self.select_overlay_file, compound=tk.BOTTOM)
-        self.select_overlay_button.place(x=560, y=640, height=55)
+            master, text="Overlay Library", image=self.overlay_image, command=self.select_overlay_file, compound=tk.BOTTOM)
+        self.select_overlay_button.place(x=560, y=650, height=55)
 
         self.select_dir_button = tk.Button(
-            master, text="Select saved proj", image=self.proj_image, command=self.select_proj_dir, compound=tk.BOTTOM)
-        self.select_dir_button.place(x=565, y=580, height=55)
+            master, text="Get old proj name", image=self.proj_image, command=self.select_proj_dir, compound=tk.BOTTOM)
+        self.select_dir_button.place(x=565, y=590, height=55)
 
         self.tail_log_button = tk.Button(
             master, text="FuLL Logs", command=self.tail_log)
         self.tail_log_button.place(x=400, y=450)
 
         self.optout_fun_button = tk.Button(
-            master, text="OPT-out fun effects", image=self.joy_image, command=self.optout_fun, compound=tk.BOTTOM)
-        self.optout_fun_button.place(x=100, y=450)
+            master, text="Toggle fun video effects", image=self.joy_image, command=self.optout_fun, compound=tk.BOTTOM)
+        self.optout_fun_button.place(x=70, y=450)
 
         self.bend_DOWN_button = tk.Button(
             master, text="pitch bend -2", command=self.bend_DOWN)
@@ -706,8 +706,7 @@ class App:
         # Get karaoke filename and video URL from entry widgets
         self.start_recording_button.config(state=tk.DISABLED)
         self.video_test_button.config(state=tk.DISABLED)
-        #self.audio_test_button.config(state=tk.DISABLED)
-        #self.skip_selfie_button.config(state=tk.DISABLED)
+        self.sanitize_input(None)
 
         karaoke_name = self.karaoke_name_entry.get().strip()
         video_dev = self.video_dev_entry.get().strip()
