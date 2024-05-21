@@ -297,15 +297,15 @@ overlay_url="$5";
 optout_fun="$7";
 
 if [ "${8}" == "true" ]; then
-    echo_factor="0.60";
+    echo_factor="0.56";
 else
     echo_factor="0.28";
 fi
 
 if [ "${9}" == "UP" ]; then
-    bend_it="0.69";
+    bend_it="0.84";
 elif [ "${9}" == "DOWN" ]; then
-    bend_it="-0.69";
+    bend_it="-0.84";
 else
     bend_it="0.21";
 fi
@@ -594,13 +594,19 @@ while true; do
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
     -filter_complex "  
-    [0:a]extrastereo,crystalizer=c=0:i=1.0[playback];
+    [0:a]acompressor=threshold=-20dB:ratio=2:attack=20:release=250,equalizer=f=60:width_type=h:width=100:g=5,equalizer=f=200:width_type=h:width=100:g=5,equalizer=f=400:width_type=h:width=100:g=4[playback];
     [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
     lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=Auto|channelf=Any|bias=1|filter=0.33|offset=$bend_it|bendrange=2|corr=1,
-    aecho=0.89:0.89:84:$echo_factor,treble=g=8,volume=volume=${DB_diff_preview},
-    ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.94|0.84[betamix];" \
-      -map "[betamix]" -b:a 1500k "${OUT_VOCAL%.*}"_tmp.wav &
+    aecho=0.89:0.89:84:$echo_factor,treble=g=4, 
+    equalizer=f=200:gain=1dB:f=1000:gain=-2dB:f=8000:gain=5dB,volume=volume=${DB_diff_preview},
+    ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,
+    ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057,
+     aresample=dither_method=shibata[vocals];
+    [playback][vocals]amix=inputs=2,
+    equalizer=f=1000:width_type=h:width=200:g=5,equalizer=f=3000:width_type=h:width=200:g=5,
+    compand=gain=3,adeclip
+    [betamix];" \
+      -map "[betamix]" -b:a 1500k  -ar 192k  "${OUT_VOCAL%.*}"_tmp.wav &
        ff_pid=$!; 
        
        render_display_progress "${OUT_VOCAL%.*}"_tmp.wav "$ff_pid" "AUDIO PREVIEW";
@@ -630,8 +636,11 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     colorecho "green" "tuning vocals volume"
    ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=Auto|channelf=Any|bias=1|filter=0.33|offset=$bend_it|bendrange=2|corr=1,
-   aecho=0.89:0.89:84:$echo_factor,treble=g=8" -b:a 1500k "${VOCAL_FILE}" &
+   aecho=0.89:0.89:84:$echo_factor,treble=g=4,
+   equalizer=f=200:gain=1dB:f=1000:gain=-2dB:f=8000:gain=5dB" -ar 192k  \
+                    -b:a 1500k "${VOCAL_FILE}" &
         ff_pid=$!;
+ffmpeg -i input.wav   output.wav
 
          render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
         check_validity "${VOCAL_FILE}" "wav";
@@ -654,10 +663,16 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]extrastereo,crystalizer=c=0:i=1.0[playback];
+    [2:a]acompressor=threshold=-20dB:ratio=2:attack=20:release=250,equalizer=f=60:width_type=h:width=100:g=5,equalizer=f=200:width_type=h:width=100:g=5,equalizer=f=400:width_type=h:width=100:g=4[playback];
     [0:a]volume=volume=${DB_diff},
-     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057[vocals];
-    [playback][vocals]amix=inputs=2:weights=0.94|0.84[betamix];
+     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,
+     ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057,
+      aresample=dither_method=shibata[vocals];
+    [playback][vocals]amix=inputs=2,
+    equalizer=f=1000:width_type=h:width=200:g=5,equalizer=f=3000:width_type=h:width=200:g=5,
+    compand=gain=3,adeclip
+    [betamix];
+
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
@@ -669,7 +684,7 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-           -c:a aac -b:a 360k -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
+             -c:a aac -b:a 360k -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render mix video with visuals";
 else
