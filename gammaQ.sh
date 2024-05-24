@@ -158,7 +158,8 @@ check_validity() {
 
     # Use ffprobe to check if the file is a valid MP4
     if ffprobe -v error -show_entries format=format_name -of default=noprint_wrappers=1:nokey=1 "$filename" 2>/dev/null | grep -q "${2}"; then
-        colorecho "green" "The file '$filename' is a valid ${2}"
+        echo "The file '$filename' is a valid ${2}"
+        
     else
         colorecho "red" "The file '$filename' is not a valid ${2}"
         kill_parent_and_children $$
@@ -274,7 +275,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
         -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
          -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
        -map 0:v "${OUT_VIDEO}"  \
-       -map 1:a -b:a 1500k  "${OUT_VOCAL}" \
+       -map 1:a -b:a 2222k  "${OUT_VOCAL}" \
     -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop  -x 320 -y 200 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
@@ -299,7 +300,7 @@ optout_fun="$7";
 if [ "${8}" == "true" ]; then
     echo_factor="0.56";
 else
-    echo_factor="0.28";
+    echo_factor="0.22";
 fi
 
 if [ "${9}" == "UP" ]; then
@@ -684,7 +685,7 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-             -c:a aac -b:a 360k -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
+             -c:a aac -b:a 350k -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render mix video with visuals";
 else
