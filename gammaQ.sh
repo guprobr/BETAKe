@@ -215,7 +215,7 @@ calculate_db_difference() {
 
 
 adjust_vocals_volume() {
-    target_volume_absolute="13"
+    target_volume_absolute="11"
     # Extract RMS amplitude from each file
     RMS_playback="$1"
     RMS_vocals="$2"
@@ -224,12 +224,10 @@ adjust_vocals_volume() {
     dB_calc=$(calculate_db_difference "$RMS_playback" "$RMS_vocals")
 
     # Define the fixed target volume level
-    if [ "$(echo "$dB_calc < 0" | bc)" -eq 1 ]; then
-        target_volume="$(echo "$target_volume_absolute * -1" | bc)";  # Set negative adjustment for LOUD vocals
+    if [ "$(echo "$dB_calc <= 0" | bc)" -eq 1 ]; then
+        target_volume="$(echo "$target_volume_absolute * -1" | bc)";  
     elif [ "$(echo "$dB_calc > 0" | bc)" -eq 1 ]; then
         target_volume="$target_volume_absolute";
-    else
-        target_volume=0;
     fi
 
     # Calculate the adjustment needed for the vocals as a multiplier
@@ -298,17 +296,17 @@ overlay_url="$5";
 optout_fun="$7";
 
 if [ "${8}" == "true" ]; then
-    echo_factor="0.56";
+    echo_factor="0.33";
 else
-    echo_factor="0.22";
+    echo_factor="0.18";
 fi
 
 if [ "${9}" == "UP" ]; then
-    bend_it="0.84";
+    bend_it="0.984";
 elif [ "${9}" == "DOWN" ]; then
-    bend_it="-0.84";
+    bend_it="-0.984";
 else
-    bend_it="0.21";
+    bend_it="0.00969";
 fi
 
 if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
@@ -435,9 +433,9 @@ colorecho "green" " got mic src: $SRC_mic";
 
     rm -rf "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_*.*;
 
-    colorecho "white" "Loopback monitor audio ON";
-    pactl unload-module module-loopback;
-    pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
+    #colorecho "white" "Loopback monitor audio ON";
+    #pactl unload-module module-loopback;
+    #pactl load-module module-loopback source="${SRC_mic}" sink="${SINK}" & 
 
     colorecho "Let's Record with webcam and pulseaudio/pipewire default source"
     colorecho "SING!---Launching webcam;";
@@ -541,37 +539,28 @@ fi
 cp -ra "${VOCAL_ORIG}" "${OUT_VOCAL}";
 
 ### START enhancements
-cp -ra "${OUT_VOCAL}" "${VOCAL_FILE}";
-colorecho "yellow" "DEclip..";
-lv2file -i "${VOCAL_FILE}" -o "${OUT_VOCAL}"  \
-     http://plugin.org.uk/swh-plugins/declip > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
-    check_validity "${OUT_VOCAL}" "wav";
-    rm -f lv2.tmp.log;
-
-colorecho "yellow" "Apply dithering & noise reduction with SoX";
-sox "${OUT_VOCAL}" -n trim 0 15 noiseprof "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
-sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
-    noisered "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof 0.1 \
-                            dither -s > lv2.tmp.log 2>&1
-    colorecho "white" "$( cat lv2.tmp.log )";
-check_validity "${VOCAL_FILE}" "wav";
-
-cp -ra "${VOCAL_FILE}" "${OUT_VOCAL}";
 
 colorecho "magenta" "Calculate volume discrepancy between vocals and playback";
 ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
                          check_validity "${PLAYBACK_BETA%.*}".wav "wav";
-# Extract volume info and calc adj in dB by comparing each file RMS
-PLAYBACK_dBs="$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
-VOCALS_dBs="$( sox "${VOCAL_FILE}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )";
-DB_diff=$( adjust_vocals_volume "${PLAYBACK_dBs}" "${VOCALS_dBs}" | sed 's/[[:alpha:]]//g');
- DB_diff=$( ensure_number_type "${DB_diff}");
-DB_diff=$(printf "%0.0f" "$(echo "scale=0; (${DB_diff} * 100) " | bc)"); # transform in % notation
 
-colorecho "red" "Recommend a calculated base adjustment of: ${DB_diff}% ";
+# normalize vocals before calc volume discrepancy
+ffmpeg -hide_banner -y -i "${OUT_VOCAL}" -af "afftdn,dynaudnorm,acompressor" "${VOCAL_FILE}";
+                        check_validity "${VOCAL_FILE}" "wav";
+
+# Extract volume info and calc adj in dB by comparing each file RMS
+PLAYBACK_dBs="$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )"; # get playback RMS value
+VOCALS_dBs="$( sox "${VOCAL_FILE}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )"; # get vocals RMS value
+DB_diff=$( adjust_vocals_volume "${PLAYBACK_dBs}" "${VOCALS_dBs}" | sed 's/[[:alpha:]]//g'); # actually calc discrepancy
+ DB_diff=$( ensure_number_type "${DB_diff}"); #sometimes can return NaN or a string
+DB_diff=$(printf "%0.0f" "$(echo "scale=0; ${DB_diff} * 100 " | bc)"); # transform in % notation for slider
+
+colorecho "yellow" "Recommend a calculated base adjustment of: ${DB_diff}% ";
                         rm -rf "${PLAYBACK_BETA%.*}".wav;
+
+colorecho "yellow" "Determining song key in a crappy way using aubio";
+    escala="$( ./aubio_detect_key.sh "${VOCAL_FILE}" )";
+    colorecho "magenta" "possible key: $escala";
 
 selection=${DB_diff};
 while true; do
@@ -591,29 +580,29 @@ while true; do
     if check_range "$selection" "0" "2500"; then
            DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8;  ${selection}/100" | bc)")
 
+     colorecho "yellow" "Gareus autotuner..";
+        lv2file http://gareus.org/oss/lv2/fat1#scales -p mode:Manual -p channelf:Any -p bias:1 -p filter:0.1 -p offset:$bend_it -p bendrange:2 -p corr:0.5 -p scale:"$escala" \
+        -i "${VOCAL_FILE}" -o "${OUT_VOCAL%.*}"_tmp.wav > lv2.tmp.log 2>&1
+        colorecho "white" "$( cat lv2.tmp.log )";
+        check_validity "${OUT_VOCAL%.*}"_tmp.wav "wav";
+        rm -f lv2.tmp.log;
+
            ffmpeg -y  -loglevel info -hide_banner \
                                                                       -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i "${OUT_VOCAL}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i  "${OUT_VOCAL%.*}"_tmp.wav \
     -filter_complex "  
     [0:a]acompressor=threshold=-20dB:ratio=2:attack=20:release=250,equalizer=f=60:width_type=h:width=100:g=5,equalizer=f=200:width_type=h:width=100:g=5,equalizer=f=400:width_type=h:width=100:g=4[playback];
-    [1:a]afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
-    lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=Auto|channelf=Any|bias=1|filter=0.33|offset=$bend_it|bendrange=2|corr=1,
-    aecho=0.89:0.89:84:$echo_factor,treble=g=4, 
-    equalizer=f=200:gain=1dB:f=1000:gain=-2dB:f=8000:gain=5dB,volume=volume=${DB_diff_preview},
-    ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,
-    ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057,
-     aresample=dither_method=shibata[vocals];
-    [playback][vocals]amix=inputs=2,
-    equalizer=f=1000:width_type=h:width=200:g=5,equalizer=f=3000:width_type=h:width=200:g=5,
-    compand=gain=3,adeclip
+    [1:a]volume=volume=${DB_diff_preview},
+    aecho=0.89:0.89:84:$echo_factor,treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2
     [betamix];" \
-      -map "[betamix]" -b:a 1500k  -ar 192k  "${OUT_VOCAL%.*}"_tmp.wav &
+      -map "[betamix]" -b:a 1500k  "${OUT_VOCAL%.*}"_tmp_enhanced.wav &
        ff_pid=$!; 
        
-       render_display_progress "${OUT_VOCAL%.*}"_tmp.wav "$ff_pid" "AUDIO PREVIEW";
-        check_validity "${OUT_VOCAL%.*}"_tmp.wav "wav";
-
-           totem "${OUT_VOCAL%.*}"_tmp.wav &
+       render_display_progress "${OUT_VOCAL%.*}"_tmp_enhanced.wav "$ff_pid" "AUDIO PREVIEW";
+        check_validity "${OUT_VOCAL%.*}"_tmp_enhanced.wav "wav";
+        
+           totem "${OUT_VOCAL%.*}"_tmp_enhanced.wav &
             ffplay_pid=$!
            yad --width=800 --height=640 --image=sound-card --title "Previewing vocals" --button='RENDER!gtk-ok!Accept changes':0 --button='Go back!gtk-cancel!Cancel changes':1 --text "Multiplier factor would be: ${DB_diff_preview}x Press ok to RENDER, back to go back;"
             opt_vol=$?;
@@ -634,19 +623,17 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
 
     DB_diff="$( printf "%0.8f" "$( echo "scale=8; ${THRESH_vol}/100" | bc )" )" 
     
-    colorecho "green" "tuning vocals volume"
-   ffmpeg -y -i "${OUT_VOCAL}" -af "afftdn,alimiter,speechnorm,deesser=i=1:f=0:m=1,
-   lv2=p=http\\\\://gareus.org/oss/lv2/fat1:c=mode=Auto|channelf=Any|bias=1|filter=0.33|offset=$bend_it|bendrange=2|corr=1,
-   aecho=0.89:0.89:84:$echo_factor,treble=g=4,
-   equalizer=f=200:gain=1dB:f=1000:gain=-2dB:f=8000:gain=5dB" -ar 192k  \
-                    -b:a 1500k "${VOCAL_FILE}" &
-        ff_pid=$!;
-ffmpeg -i input.wav   output.wav
+    colorecho "green" "tuning vocals";
+    
+     colorecho "yellow" "Gareus autotuner..";
+        lv2file http://gareus.org/oss/lv2/fat1#scales -p mode:Manual -p channelf:Any -p bias:1 -p filter:0.1 -p offset:$bend_it -p bendrange:2 -p corr:0.5 -p scale:"$escala" \
+        -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" > lv2.tmp.log 2>&1
+        colorecho "white" "$( cat lv2.tmp.log )";
+        check_validity "${OUT_VOCAL}" "wav";
+        rm -f lv2.tmp.log;
+  
+  colorecho "blue" "now will mix playback and vocals enhanced"
 
-         render_display_progress "${VOCAL_FILE}" "$ff_pid" "ENHANCED VOCALS";
-        check_validity "${VOCAL_FILE}" "wav";
-
-colorecho "blue" "now will mix playback and vocals enhanced"
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_beta.mp4;
 
 if [ "${optout_fun}" == "0" ]; then
@@ -660,19 +647,14 @@ if [ "${OVERLAY_BETA}" == "" ]; then
 fi
 
  if ffmpeg -y  -loglevel info -hide_banner \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${VOCAL_FILE}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${OUT_VOCAL}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [2:a]acompressor=threshold=-20dB:ratio=2:attack=20:release=250,equalizer=f=60:width_type=h:width=100:g=5,equalizer=f=200:width_type=h:width=100:g=5,equalizer=f=400:width_type=h:width=100:g=4[playback];
     [0:a]volume=volume=${DB_diff},
-     ladspa=sc4_1882:plugin=sc4:c=0|313|3|-1.4|6|10,ladspa=sc4_1882:plugin=sc4:c=1|100|350|-26.67|1.4|7|10,
-     ladspa=fast_lookahead_limiter_1913:plugin=fastLookaheadLimiter:c=0|0|0.5057,
-      aresample=dither_method=shibata[vocals];
-    [playback][vocals]amix=inputs=2,
-    equalizer=f=1000:width_type=h:width=200:g=5,equalizer=f=3000:width_type=h:width=200:g=5,
-    compand=gain=3,adeclip
-    [betamix];
+    aecho=0.89:0.89:84:$echo_factor,treble=g=5[vocals];
+    [playback][vocals]amix=inputs=2[betamix];
 
         gradients=n=6:s=640x400[vscope];
         [2:v]scale=640x400[v2];
@@ -685,7 +667,7 @@ fi
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
-             -c:a aac -b:a 350k -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
+             -c:a aac -b:a 320k -map "[betamix]" -map "[visuals]"  -f mp4 "${OUT_FILE}" &
                              ff_pid=$!; then
                 colorecho "cyan" "Started render mix video with visuals";
 else
