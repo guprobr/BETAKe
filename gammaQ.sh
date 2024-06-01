@@ -215,7 +215,7 @@ calculate_db_difference() {
 
 
 adjust_vocals_volume() {
-    target_volume_absolute="11"
+    target_volume_absolute="13"
     # Extract RMS amplitude from each file
     RMS_playback="$1"
     RMS_vocals="$2"
@@ -273,7 +273,7 @@ if ffmpeg -loglevel info  -hide_banner -f v4l2 -video_size "$video_res" -input_f
         -f pulse -ar "${RATE_mic}" -ac "${CH_mic}" -c:a pcm_"${BITS_mic}"  -i "${SRC_mic}" \
          -c:v libx264 -preset:v ultrafast -crf:v 23 -pix_fmt yuv420p -movflags +faststart \
        -map 0:v "${OUT_VIDEO}"  \
-       -map 1:a -b:a 2222k  "${OUT_VOCAL}" \
+       -map 1:a -b:a 1500k  "${OUT_VOCAL}" \
     -map 0:v -vf "format=yuv420p" -c:v rawvideo -f nut - | mplayer -really-quiet -noconsolecontrols -nomouseinput -hardframedrop -framedrop  -x 320 -y 200 -nosound - &
                     ff_pid=$!; then
        colorecho "cyan" "Success: ffmpeg process";
@@ -656,14 +656,14 @@ fi
     aecho=0.89:0.89:84:$echo_factor,treble=g=5[vocals];
     [playback][vocals]amix=inputs=2[betamix];
 
-        gradients=n=6:s=640x400[vscope];
+        gradients=n=3:s=640x400[vscope];
         [2:v]scale=640x400[v2];
         [v2][vscope]vstack,scale=640x400[hugh];
         [1:v]scale=640x400 $seedy [yikes];
         [3:v]trim=duration=${PLAYBACK_LEN},scale=640x400,format=rgba,colorchannelmixer=aa=0.45[yeah];
         [yikes][yeah]overlay[hutz];
         [hutz][hugh]xstack,
-        drawtext=fontfile=Ubuntu-B.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':
+        drawtext=fontfile=Verdana.ttf:text='%{eif\:${PLAYBACK_LEN}-t\:d}':
         fontcolor=yellow:fontsize=48:x=w-tw-20:y=th:box=1:boxcolor=black@0.5:boxborderw=10[visuals];" \
         -s 1920x1080 -t "${PLAYBACK_LEN}" \
             -r 30 -c:v libx264 -movflags faststart -preset:v ultrafast \
