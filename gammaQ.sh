@@ -215,7 +215,7 @@ calculate_db_difference() {
 
 
 adjust_vocals_volume() {
-    target_volume_absolute="13"
+    target_volume_absolute="16"
     # Extract RMS amplitude from each file
     RMS_playback="$1"
     RMS_vocals="$2"
