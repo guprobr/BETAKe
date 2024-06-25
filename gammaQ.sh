@@ -215,7 +215,7 @@ calculate_db_difference() {
 
 
 adjust_vocals_volume() {
-    target_volume_absolute="16"
+    target_volume_absolute="20"
     # Extract RMS amplitude from each file
     RMS_playback="$1"
     RMS_vocals="$2"
@@ -296,9 +296,9 @@ overlay_url="$5";
 optout_fun="$7";
 
 if [ "${8}" == "true" ]; then
-    echo_factor="0.33";
+    echo_factor="0.40";
 else
-    echo_factor="0.18";
+    echo_factor="0.22";
 fi
 
 if [ "${9}" == "UP" ]; then
@@ -591,10 +591,9 @@ while true; do
                                                                       -i "${PLAYBACK_BETA}" \
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i  "${OUT_VOCAL%.*}"_tmp.wav \
     -filter_complex "  
-    [0:a]acompressor=threshold=-20dB:ratio=2:attack=20:release=250,equalizer=f=60:width_type=h:width=100:g=5,equalizer=f=200:width_type=h:width=100:g=5,equalizer=f=400:width_type=h:width=100:g=4[playback];
     [1:a]volume=volume=${DB_diff_preview},
-    aecho=0.89:0.89:84:$echo_factor,treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2
+    aecho=0.89:0.89:64:$echo_factor,treble=g=8[vocals];
+    [0:a][vocals]amix=inputs=2
     [betamix];" \
       -map "[betamix]" -b:a 1500k  "${OUT_VOCAL%.*}"_tmp_enhanced.wav &
        ff_pid=$!; 
@@ -651,10 +650,9 @@ fi
     -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
-    [2:a]acompressor=threshold=-20dB:ratio=2:attack=20:release=250,equalizer=f=60:width_type=h:width=100:g=5,equalizer=f=200:width_type=h:width=100:g=5,equalizer=f=400:width_type=h:width=100:g=4[playback];
     [0:a]volume=volume=${DB_diff},
-    aecho=0.89:0.89:84:$echo_factor,treble=g=5[vocals];
-    [playback][vocals]amix=inputs=2[betamix];
+    aecho=0.89:0.89:64:$echo_factor,treble=g=8[vocals];
+    [2:a][vocals]amix=inputs=2[betamix];
 
         gradients=n=3:s=640x400[vscope];
         [2:v]scale=640x400[v2];
