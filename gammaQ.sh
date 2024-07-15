@@ -225,7 +225,7 @@ adjust_vocals_volume() {
 
     # Define the fixed target volume level
     if [ "$(echo "$dB_calc <= 0" | bc)" -eq 1 ]; then
-        target_volume="$(echo "$target_volume_absolute * -1" | bc)";  
+        target_volume="$(echo "($target_volume_absolute * -1)" | bc)";  
     elif [ "$(echo "$dB_calc > 0" | bc)" -eq 1 ]; then
         target_volume="$target_volume_absolute";
     fi
@@ -296,7 +296,7 @@ overlay_url="$5";
 optout_fun="$7";
 
 if [ "${8}" == "true" ]; then
-    echo_factor="0.40";
+    echo_factor="0.44";
 else
     echo_factor="0.22";
 fi
@@ -306,7 +306,7 @@ if [ "${9}" == "UP" ]; then
 elif [ "${9}" == "DOWN" ]; then
     bend_it="-0.984";
 else
-    bend_it="0.00969";
+    bend_it="0.0969";
 fi
 
 if [ "${karaoke_name}" == "" ]; then karaoke_name="BETA"; fi
@@ -445,36 +445,41 @@ colorecho "green" " got mic src: $SRC_mic";
     # launch webcam recorder
     launch_ffmpeg_webcam true;
     epoch_ff=$( get_process_start_time );
-    renice -n -19 "$ff_pid"
     colorecho "red" "RECORDER start Epoch: $epoch_ff";
+    renice -n -19 "$ff_pid"
 
-    # Wait for the output file to be created and not empty; only then we run ffplay
+   # Wait for the output file to be created and not empty; only then we run ffplay
     while [ ! -s "${OUT_VIDEO}" ]; do
-        sleep 0.00001; # Adjust sleep time as needed
+           epoch_ffplay=$( get_process_start_time  );
+           diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
+           echo "${diff_ss}" > "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}".diff_ss;
+        sleep 0.1; # Adjust sleep time as needed
     done | yad --image=view-refresh --progress --progress-text="Waiting webcam (ESC to cancel)" \
                --pulsate --auto-close --no-buttons --escape-ok --borders=5 
-
-    colorecho "yellow" "Launch lyrics video";
+    
+    
+            colorecho "yellow" "Launch lyrics video";
 
 	        ffplay \
 			        -window_title "SING" -loglevel quiet -hide_banner \
                     -vf "scale=1024x768" "${PLAYBACK_BETA}" &
             ffplay_pid=$!;
-            epoch_ffplay=$( get_process_start_time  );
-
-    colorecho "red" "ffplay start Epoch: $epoch_ffplay";
-        diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
-        echo "${diff_ss}" > "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}".diff_ss;
+            #epoch_ffplay=$( get_process_start_time  );
+            #colorecho "red" "ffplay start Epoch: $epoch_ffplay";
+            #diff_ss="$(time_diff_seconds "${epoch_ff}" "${epoch_ffplay}")"
+            #echo "${diff_ss}" > "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}".diff_ss;
+        
+        diff_ss=$( cat "${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}".diff_ss );
         colorecho "magenta" "diff_ss: $diff_ss"; # will try to adj sync brutally when rendering
 
     cronos_play=1 
     wmctrl -r "SING" -e 0,-$(( 1024+(SCREEN_WIDTH/2) )),$(( SCREEN_HEIGHT+768 )),-1,-1
+
     ### RECORDING PROGRESS! 
     # If FFmpeg or FFplayback quits, or if click cancel, webcam capture stops
-
     while [ "$(printf "%.0f" "${cronos_play}")" -le "$(printf "%.0f" "${PLAYBACK_LEN}")" ]; do
     export LC_ALL=C;
-        sleep 1;
+        sleep 1.0;
 
         wmctrl -r "MPlayer" -b add,above 
         wmctrl -r "Recording" -b add,above 
@@ -539,20 +544,36 @@ fi
 cp -ra "${VOCAL_ORIG}" "${OUT_VOCAL}";
 
 ### START enhancements
-
-colorecho "magenta" "Calculate volume discrepancy between vocals and playback";
 ffmpeg -hide_banner -y -i "${PLAYBACK_BETA}" "${PLAYBACK_BETA%.*}".wav; #sox cant work with mp4
                          check_validity "${PLAYBACK_BETA%.*}".wav "wav";
 
+colorecho "magenta" "Calculate volume discrepancy between vocals and playback";
+
+
+
+
+######### sox noise reduction and dither
+
+colorecho "yellow" "Apply dithering & noise reduction with SoX";
+sox "${OUT_VOCAL}" -n trim 0 30 noiseprof "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+sox "${OUT_VOCAL}" "${VOCAL_FILE}" \
+    noisered "$OUT_DIR"/"$karaoke_name"/"${karaoke_name}".prof 0.25 \
+                            dither -s > lv2.tmp.log 2>&1
+    colorecho "white" "$( cat lv2.tmp.log )";
+check_validity "${VOCAL_FILE}" "wav";
+
+cp -ra "${VOCAL_FILE}" "${OUT_VOCAL}";
 # normalize vocals before calc volume discrepancy
-ffmpeg -hide_banner -y -i "${OUT_VOCAL}" -af "afftdn,dynaudnorm,acompressor" "${VOCAL_FILE}";
+ffmpeg -hide_banner -y -i "${OUT_VOCAL}" -af "afftdn,loudnorm,acompressor" "${VOCAL_FILE}";
                         check_validity "${VOCAL_FILE}" "wav";
+
 
 # Extract volume info and calc adj in dB by comparing each file RMS
 PLAYBACK_dBs="$( sox "${PLAYBACK_BETA%.*}".wav -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )"; # get playback RMS value
 VOCALS_dBs="$( sox "${VOCAL_FILE}" -n stat 2>&1 | grep -e 'RMS.*amplitude' | awk '{ print $3}' )"; # get vocals RMS value
 DB_diff=$( adjust_vocals_volume "${PLAYBACK_dBs}" "${VOCALS_dBs}" | sed 's/[[:alpha:]]//g'); # actually calc discrepancy
- DB_diff=$( ensure_number_type "${DB_diff}"); #sometimes can return NaN or a string
+DB_diff=$( ensure_number_type "${DB_diff}"); #sometimes can return NaN or a string
 DB_diff=$(printf "%0.0f" "$(echo "scale=0; ${DB_diff} * 100 " | bc)"); # transform in % notation for slider
 
 colorecho "yellow" "Recommend a calculated base adjustment of: ${DB_diff}% ";
@@ -589,14 +610,17 @@ while true; do
 
            ffmpeg -y  -loglevel info -hide_banner \
                                                                       -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} " | bc )" )" -i  "${OUT_VOCAL%.*}"_tmp.wav \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i  "${OUT_VOCAL%.*}"_tmp.wav \
     -filter_complex "  
     [1:a]volume=volume=${DB_diff_preview},
-    aecho=0.89:0.89:64:$echo_factor,treble=g=8[vocals];
-    [0:a][vocals]amix=inputs=2
+    aecho=0.89:0.89:84:$echo_factor,treble=g=8[vocals];
+    [0:a][vocals]amix=inputs=2,
+    acompressor=threshold=-30dB:ratio=2:attack=5:release=50:makeup=8
     [betamix];" \
       -map "[betamix]" -b:a 1500k  "${OUT_VOCAL%.*}"_tmp_enhanced.wav &
        ff_pid=$!; 
+
+       #loudnorm=I=-23:TP=-1.5:LRA=7
        
        render_display_progress "${OUT_VOCAL%.*}"_tmp_enhanced.wav "$ff_pid" "AUDIO PREVIEW";
         check_validity "${OUT_VOCAL%.*}"_tmp_enhanced.wav "wav";
@@ -636,9 +660,9 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
 OUT_FILE="${OUT_DIR}"/"${karaoke_name}"/"${karaoke_name}"_beta.mp4;
 
 if [ "${optout_fun}" == "0" ]; then
-    seedy=",hue=h=7*PI*t/$(fortune|wc -l):s=1,lagfun";
+    seedy=",hue=h=2*PI*t/$(fortune|wc -l):s=1,lagfun";
 else
-    seedy="";
+    seedy=",lagfun";
 fi
 
 if [ "${OVERLAY_BETA}" == "" ]; then
@@ -651,8 +675,10 @@ fi
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [0:a]volume=volume=${DB_diff},
-    aecho=0.89:0.89:64:$echo_factor,treble=g=8[vocals];
-    [2:a][vocals]amix=inputs=2[betamix];
+    aecho=0.89:0.89:84:$echo_factor,treble=g=8[vocals];
+    [2:a][vocals]amix=inputs=2,
+    acompressor=threshold=-30dB:ratio=2:attack=5:release=50:makeup=8
+    [betamix];
 
         gradients=n=3:s=640x400[vscope];
         [2:v]scale=640x400[v2];
