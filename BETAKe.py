@@ -295,7 +295,7 @@ class App:
                 plt.gcf().canvas.mpl_connect('close_event', self.close_plot)
 
                 # Inicializa o array para armazenar os dados das ondas sonoras
-                buffer_size = sample_rate * 10  # 25 segundos de áudio
+                buffer_size = sample_rate * 3  # 3 segundos de áudio
                 waveform_buffer = np.zeros(buffer_size, dtype=np.int16)
 
                 # Loop infinito para capturar e plotar continuamente as ondas sonoras

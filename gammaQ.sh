@@ -215,7 +215,7 @@ calculate_db_difference() {
 
 
 adjust_vocals_volume() {
-    target_volume_absolute="20"
+    target_volume_absolute="23"
     # Extract RMS amplitude from each file
     RMS_playback="$1"
     RMS_vocals="$2"
@@ -602,7 +602,7 @@ while true; do
            DB_diff_preview=$(printf "%0.8f" "$(echo "scale=8;  ${selection}/100" | bc)")
 
      colorecho "yellow" "Gareus autotuner..";
-        lv2file http://gareus.org/oss/lv2/fat1#scales -p mode:Manual -p channelf:Any -p bias:1 -p filter:0.1 -p offset:$bend_it -p bendrange:2 -p corr:0.5 -p scale:"$escala" \
+        lv2file http://gareus.org/oss/lv2/fat1#scales -p mode:Manual -p channelf:Any -p bias:1 -p filter:1.0 -p offset:$bend_it -p bendrange:2 -p corr:1.0 -p scale:"$escala" \
         -i "${VOCAL_FILE}" -o "${OUT_VOCAL%.*}"_tmp.wav > lv2.tmp.log 2>&1
         colorecho "white" "$( cat lv2.tmp.log )";
         check_validity "${OUT_VOCAL%.*}"_tmp.wav "wav";
@@ -610,13 +610,11 @@ while true; do
 
            ffmpeg -y  -loglevel info -hide_banner \
                                                                       -i "${PLAYBACK_BETA}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i  "${OUT_VOCAL%.*}"_tmp.wav \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 0.69 " | bc )" )" -i  "${OUT_VOCAL%.*}"_tmp.wav \
     -filter_complex "  
     [1:a]volume=volume=${DB_diff_preview},
-    aecho=0.89:0.89:84:$echo_factor,treble=g=8[vocals];
-    [0:a][vocals]amix=inputs=2,
-    acompressor=threshold=-30dB:ratio=2:attack=5:release=50:makeup=8
-    [betamix];" \
+    aecho=0.89:0.89:84:$echo_factor,treble=g=8,speechnorm[vocals];
+    [0:a][vocals]amix=inputs=2[betamix];" \
       -map "[betamix]" -b:a 1500k  "${OUT_VOCAL%.*}"_tmp_enhanced.wav &
        ff_pid=$!; 
 
@@ -649,7 +647,7 @@ colorecho "magenta" "Selected adj vol factor: ${THRESH_vol}%"
     colorecho "green" "tuning vocals";
     
      colorecho "yellow" "Gareus autotuner..";
-        lv2file http://gareus.org/oss/lv2/fat1#scales -p mode:Manual -p channelf:Any -p bias:1 -p filter:0.1 -p offset:$bend_it -p bendrange:2 -p corr:0.5 -p scale:"$escala" \
+        lv2file http://gareus.org/oss/lv2/fat1#scales -p mode:Manual -p channelf:Any -p bias:1 -p filter:1.0 -p offset:$bend_it -p bendrange:2 -p corr:1.0 -p scale:"$escala" \
         -i "${VOCAL_FILE}" -o "${OUT_VOCAL}" > lv2.tmp.log 2>&1
         colorecho "white" "$( cat lv2.tmp.log )";
         check_validity "${OUT_VOCAL}" "wav";
@@ -670,15 +668,13 @@ if [ "${OVERLAY_BETA}" == "" ]; then
 fi
 
  if ffmpeg -y  -loglevel info -hide_banner \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1 " | bc )" )" -i "${OUT_VOCAL}" \
-    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 2 " | bc )" )" -i "${OUT_VIDEO}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 0.69 " | bc )" )" -i "${OUT_VOCAL}" \
+    -ss "$( printf "%0.8f" "$( echo "scale=8; ${diff_ss} * 1.2 " | bc )" )" -i "${OUT_VIDEO}" \
     -i "${PLAYBACK_BETA}" -i "${OVERLAY_BETA}" \
     -filter_complex "  
     [0:a]volume=volume=${DB_diff},
-    aecho=0.89:0.89:84:$echo_factor,treble=g=8[vocals];
-    [2:a][vocals]amix=inputs=2,
-    acompressor=threshold=-30dB:ratio=2:attack=5:release=50:makeup=8
-    [betamix];
+    aecho=0.89:0.89:84:$echo_factor,treble=g=8,speechnorm[vocals];
+    [2:a][vocals]amix=inputs=2[betamix];
 
         gradients=n=3:s=640x400[vscope];
         [2:v]scale=640x400[v2];
